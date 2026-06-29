@@ -72,13 +72,14 @@
   - `auth` 패키지: `POST /api/auth/signup`(이메일/비번 → **BCrypt** 해시 저장, 중복 이메일 거부, 가입 즉시 FREE). `PasswordConfig`(BCrypt 인코더만, 전체 시큐리티 필터체인 없음 → 기존 엔드포인트 잠그지 않음). 응답에 비번 해시 미노출(`AuthUserView`).
   - `build.gradle` 에 `spring-security-crypto` 추가. `ApiExceptionHandler` 적용 범위에 auth/subscription 추가.
   - ⚠️ PRO 가격(₩9,900)·플랜 한도는 임시 정책값 → `PlanType` 한 곳만 고치면 됨. 확정 필요.
-  - [ ] Phase 2: 로그인/세션(현재 userId/accountId 직접 받음 → 인증 주체로 대체) + 엔드포인트 보호 + 플랜 한도 게이팅.
+  - [x] Phase 2(로그인/세션): `POST /api/auth/login`(BCrypt 검증 → 세션에 `USER_ID` 저장, 세션 고정 방지 위해 로그인 시 새 세션 발급), `POST /api/auth/logout`(세션 무효화, 204·멱등), `GET /api/auth/me`(세션 없으면 401). 실패 사유(미존재/비번불일치) 미구분(계정 열거 방지). `UnauthorizedException` → `ApiExceptionHandler` 에서 **401 JSON**. 시큐리티 필터체인 없이 컨트롤러가 직접 `HttpSession` 처리. `AuthController.SESSION_USER_ID` 키 공유. 검증: signup 201 → me 401 → login 200(JSESSIONID) → me 200 → 오타 비번 400 → logout 204 → me 401.
+    - [ ] (Phase 2 잔여, 프론트 작업 때) 엔드포인트 보호 "벽" + 플랜 한도 게이팅(현재 userId/accountId 직접 받음 → 세션 주체로 대체). 사용자 결정대로 로그인 API 먼저, 벽은 프론트 붙일 때.
   - [ ] Phase 3: **토스페이먼츠 빌링(정기결제)** — 빌링키 발급/저장(암호화) + 구독 ACTIVE 전환 + 월 자동결제 스케줄러 + 만료/실패(PAST_DUE/CANCELED) 처리.
 
 ## 다음 단계 (여기서 이어서)
 
-1. **인증/구독 Phase 2 — 로그인/세션 + 엔드포인트 보호 + 플랜 한도 게이팅** (위 Phase 1 이어서).
-2. **인증/구독 Phase 3 — 토스페이먼츠 빌링 정기결제**.
+1. **인증/구독 Phase 3 — 토스페이먼츠 빌링 정기결제** (플레이스홀더 env 키로 스캐폴딩부터).
+2. **(Phase 2 잔여) 엔드포인트 보호 + 플랜 한도 게이팅** — 프론트 작업과 함께.
 3. **프론트(React/Next)** — 현재는 단일 `static/index.html`(바닐라). 입력 폼·요금 페이지가 붙으면 본격 화면으로. (사용자 요청상 **가장 마지막**)
 4. (보강 후보) 반품 사유 표준화(쿠팡 사유 코드 매핑), 사유 추세(기간 비교).
 
