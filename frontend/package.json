@@ -1,0 +1,21 @@
+{
+  "name": "seller-profit-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "셀러프로핏 React 프론트엔드 (Vite). 빌드 산출물은 ../src/main/resources/static 으로 나가 Spring Boot 가 같은 오리진으로 서빙한다(세션 쿠키 그대로 동작).",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^5.4.11"
+  }
+}

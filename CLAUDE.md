@@ -83,11 +83,20 @@
     - 검증: status `{"enabled":false}`, 미로그인 subscribe 401, 로그인+키미설정 subscribe **503**("토스 시크릿 키 미설정"), authKey 공백 400, cancel 200(CANCELED). 기존 대시보드/plans 200 회귀 없음. V3 Flyway 적용·Hibernate validate 통과 확인.
     - ⚠️ [확정 필요] **실 토스 키**(`TOSS_SECRET_KEY`) 와 토스 응답 JSON 필드(`billingKey`/`status`/`paymentKey`)·에러 코드 처리(재시도/연체 안내 정책)는 키 확보 후 라이브로 마무리. 현재는 골격만.
 
+- [x] **프론트(React/Vite SPA)** — `frontend/`(Vite+React+React Router). 바닐라 `index.html` 을 대체.
+  - **같은 오리진 전략**: `vite build` 산출물이 `src/main/resources/static/` 으로 나가 Spring Boot 가 SPA+API 를 함께 :8088 로 서빙 → **세션 쿠키(JSESSIONID)가 CORS 없이 동작**. 개발(`npm run dev`, :5173)은 `/api` 를 :8088 로 프록시.
+  - 화면: **로그인/가입**(`/login`,`/signup`, 가입 즉시 자동 로그인), **대시보드**(`/`, 기존 순이익·반품사유·원가/기타비용 입력 100% 이식), **요금제**(`/pricing`, `/api/plans`+`/api/subscription`+`/api/billing/status`, PRO 구독/해지). 인증 상태는 `auth.jsx`(앱 시작 시 `GET /api/auth/me`), 비로그인이면 `/login` 으로 보내는 **벽** 적용.
+  - `SpaForwardingController`(`web` 패키지): `/login`,`/signup`,`/pricing` 딥링크/새로고침을 `index.html` 로 forward(클라이언트 라우팅 유지). 새 라우트 추가 시 여기에도 추가.
+  - 결제 버튼은 `billing.status.enabled`(토스 키 설정 여부)로 게이팅 — 키 미설정 시 비활성+안내. 토스 SDK 카드등록(authKey 발급) 실연동은 `Pricing.jsx` 의 `subscribe()` TODO 로 표시(키 확보 후 마무리).
+  - ⚠️ **빌드 산출물(`static/index.html`,`static/assets/`)을 커밋**한다(단일 jar 가 그대로 동작하게). **프론트 코드 수정 시 `cd frontend && npm run build` 후 커밋** 필요. (Gradle-node 통합 자동화는 후속 과제 — 지금은 수동 빌드.) `frontend/node_modules`·`dist` 는 gitignore.
+  - 검증: :8088 루트가 React 앱 서빙(asset 200, `text/javascript`), `/login`·`/pricing` 딥링크 forward 200, 미리보기로 로그인 화면 렌더+벽 동작 확인(콘솔 에러 0, 라우터 future-flag 경고만). signup→login→me→대시보드/plans API 200.
+
 ## 다음 단계 (여기서 이어서)
 
-1. **프론트(React/Next)** — 사용자 요청상 **가장 마지막**. 입력 폼·요금/결제 페이지(토스 SDK 카드 등록 → `authKey` → `/api/billing/subscribe`) + 로그인 벽.
-2. **(Phase 2 잔여) 엔드포인트 보호 + 플랜 한도 게이팅** — 프론트 작업과 함께.
-3. **토스 빌링 마무리** — 실 키 주입 + 응답/에러 코드 라이브 확정(위 ⚠️).
+1. **(Phase 2 잔여) 엔드포인트 보호 + 플랜 한도 게이팅** — 현재 백엔드는 userId/accountId 를 직접 받고 소유 검증을 안 한다(프론트만 벽). 세션 주체로 대체 + 플랜 한도(계정 수/조회 기간) 게이팅.
+2. **토스 빌링 마무리(#2, 보류 중)** — 실 키(`TOSS_SECRET_KEY`/클라이언트 키) 주입 + 토스 SDK 카드등록(`Pricing.jsx` subscribe TODO) + 응답/에러 코드 라이브 확정.
+3. **프론트 빌드 Gradle 통합**(선택) — `npm run build` 를 Gradle 빌드에 묶어 산출물 커밋 제거.
+4. (보강 후보) 반품 사유 표준화(쿠팡 사유 코드 매핑), 사유 추세(기간 비교).
 3. **프론트(React/Next)** — 현재는 단일 `static/index.html`(바닐라). 입력 폼·요금 페이지가 붙으면 본격 화면으로. (사용자 요청상 **가장 마지막**)
 4. (보강 후보) 반품 사유 표준화(쿠팡 사유 코드 매핑), 사유 추세(기간 비교).
 
@@ -145,9 +154,12 @@ export APP_ENCRYPTION_KEY=$(openssl rand -base64 32)
    ```bash
    ./gradlew bootRun --args='--spring.profiles.active=seed'
    ```
-3. 브라우저에서 **대시보드 열기** → `http://localhost:8088/`
+3. 브라우저에서 **앱 열기** → `http://localhost:8088/`
+   - 비로그인이면 **로그인 화면**이 뜬다 → "무료로 시작하기"로 가입(즉시 자동 로그인) 후 대시보드 진입.
    - 적자상품 B 가 빨간 배경 + `적자` 뱃지로 맨 위에 보이면 정상.
    - 원본 JSON 확인: `GET http://localhost:8088/api/dashboard/profit?accountId=1`
 
-> 정적 대시보드는 `src/main/resources/static/index.html` (바닐라 HTML/CSS/JS, 빌드 불필요).
+> 화면은 이제 **React SPA**(`frontend/`, Vite). :8088 이 서빙하는 건 빌드 산출물(`static/`).
+> **프론트 수정 시**: `cd frontend && npm run build`(산출물이 `static/` 으로 나감) 후 앱 재기동.
+> **프론트 개발(핫리로드)**: `cd frontend && npm run dev` → `http://localhost:5173`(/api 는 :8088 로 프록시).
 > 시드를 다시 깔고 싶으면 `docker compose down -v` 로 볼륨까지 지우고 1번부터.

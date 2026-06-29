@@ -1,0 +1,64 @@
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../auth.jsx";
+
+export default function Login() {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function onSubmit(e) {
+    e.preventDefault();
+    setError("");
+    setBusy(true);
+    try {
+      await login(email.trim(), password);
+      navigate("/", { replace: true });
+    } catch (err) {
+      setError(err.message || "로그인에 실패했습니다.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="auth-wrap">
+      <div className="auth-card">
+        <h1>로그인</h1>
+        <form onSubmit={onSubmit}>
+          <div className="field">
+            <label>이메일</label>
+            <input
+              type="email"
+              value={email}
+              autoComplete="username"
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              required
+            />
+          </div>
+          <div className="field">
+            <label>비밀번호</label>
+            <input
+              type="password"
+              value={password}
+              autoComplete="current-password"
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          {error ? <div className="note err">{error}</div> : null}
+          <button type="submit" disabled={busy}>
+            {busy ? "로그인 중…" : "로그인"}
+          </button>
+        </form>
+        <div className="auth-switch">
+          계정이 없으신가요? <Link to="/signup">무료로 시작하기</Link>
+        </div>
+      </div>
+    </div>
+  );
+}
