@@ -22,7 +22,8 @@ import java.util.stream.Collectors;
         "com.sellerprofit.manage",
         "com.sellerprofit.profit",
         "com.sellerprofit.auth",
-        "com.sellerprofit.subscription"})
+        "com.sellerprofit.subscription",
+        "com.sellerprofit.billing"})
 public class ApiExceptionHandler {
 
     /** 잘못된 입력값/존재하지 않는 리소스 등. */
@@ -35,6 +36,12 @@ public class ApiExceptionHandler {
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<Map<String, String>> handleUnauthorized(UnauthorizedException e) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
+    }
+
+    /** 기능이 아직 준비 안 됨(예: 토스 결제 키 미설정) → 503. */
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalState(IllegalStateException e) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of("error", e.getMessage()));
     }
 
     /** @Valid 검증 실패 → 필드별 메시지를 모아서 내려준다. */

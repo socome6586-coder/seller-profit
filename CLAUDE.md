@@ -74,12 +74,20 @@
   - ⚠️ PRO 가격(₩9,900)·플랜 한도는 임시 정책값 → `PlanType` 한 곳만 고치면 됨. 확정 필요.
   - [x] Phase 2(로그인/세션): `POST /api/auth/login`(BCrypt 검증 → 세션에 `USER_ID` 저장, 세션 고정 방지 위해 로그인 시 새 세션 발급), `POST /api/auth/logout`(세션 무효화, 204·멱등), `GET /api/auth/me`(세션 없으면 401). 실패 사유(미존재/비번불일치) 미구분(계정 열거 방지). `UnauthorizedException` → `ApiExceptionHandler` 에서 **401 JSON**. 시큐리티 필터체인 없이 컨트롤러가 직접 `HttpSession` 처리. `AuthController.SESSION_USER_ID` 키 공유. 검증: signup 201 → me 401 → login 200(JSESSIONID) → me 200 → 오타 비번 400 → logout 204 → me 401.
     - [ ] (Phase 2 잔여, 프론트 작업 때) 엔드포인트 보호 "벽" + 플랜 한도 게이팅(현재 userId/accountId 직접 받음 → 세션 주체로 대체). 사용자 결정대로 로그인 API 먼저, 벽은 프론트 붙일 때.
-  - [ ] Phase 3: **토스페이먼츠 빌링(정기결제)** — 빌링키 발급/저장(암호화) + 구독 ACTIVE 전환 + 월 자동결제 스케줄러 + 만료/실패(PAST_DUE/CANCELED) 처리.
+  - [x] Phase 3(토스 빌링 스캐폴딩): `billing` 패키지. **실 키 미설정이어도 안전하게 빌드/배포**되는 골격(키 주입만 하면 동작).
+    - `TossBillingClient`(RestClient, Basic 인증=secretKey+`:` Base64): `issueBillingKey(authKey,customerKey)` → POST `/v1/billing/authorizations/issue`, `charge(billingKey,customerKey,amount,orderId,orderName)` → POST `/v1/billing/{billingKey}`. 시크릿 키가 placeholder/공백이면 `isConfigured()=false` 라 `ensureConfigured()` 가 `IllegalStateException` 으로 호출 차단.
+    - `BillingService`: `subscribe(userId,authKey)`(customerKey 없으면 UUID 생성→빌링키 발급·**암호화 저장**→첫 달 결제→ACTIVE + `currentPeriodEnd=now+1M`), `renewDue(now)`(ACTIVE & 주기 만료분 재청구, 유저별 예외 격리, 실패→PAST_DUE, 빌링키 없음→PAST_DUE), `cancel(userId)`(상태만 CANCELED, 남은 기간 유지). orderId=`customerKey+yyyyMM` 로 **중복청구 방지**.
+    - `BillingScheduler`: 매일 03:10 KST `renewDue`. `BillingController`: `GET /api/billing/status`(활성여부), `POST /api/billing/subscribe`(세션 필수, 401/503), `POST /api/billing/cancel`. `SubscribeRequest(@NotBlank authKey)`.
+    - DB: `V3__billing.sql` — `users` 에 `billing_key_encrypted`(BYTEA, 암호화), `billing_customer_key`, `last_billed_at` + 정기결제 조회 인덱스. `User` 엔티티에 동 필드(`billingKey` 는 `@Convert(EncryptedStringConverter)`).
+    - 설정: `application.yml` `toss.billing.secret-key=${TOSS_SECRET_KEY:test_sk_PLACEHOLDER}`, `base-url=${TOSS_BASE_URL:...}`. `ApiExceptionHandler` 에 `IllegalStateException`→**503**(기능 준비중) 추가, basePackages 에 billing 추가.
+    - 검증: status `{"enabled":false}`, 미로그인 subscribe 401, 로그인+키미설정 subscribe **503**("토스 시크릿 키 미설정"), authKey 공백 400, cancel 200(CANCELED). 기존 대시보드/plans 200 회귀 없음. V3 Flyway 적용·Hibernate validate 통과 확인.
+    - ⚠️ [확정 필요] **실 토스 키**(`TOSS_SECRET_KEY`) 와 토스 응답 JSON 필드(`billingKey`/`status`/`paymentKey`)·에러 코드 처리(재시도/연체 안내 정책)는 키 확보 후 라이브로 마무리. 현재는 골격만.
 
 ## 다음 단계 (여기서 이어서)
 
-1. **인증/구독 Phase 3 — 토스페이먼츠 빌링 정기결제** (플레이스홀더 env 키로 스캐폴딩부터).
+1. **프론트(React/Next)** — 사용자 요청상 **가장 마지막**. 입력 폼·요금/결제 페이지(토스 SDK 카드 등록 → `authKey` → `/api/billing/subscribe`) + 로그인 벽.
 2. **(Phase 2 잔여) 엔드포인트 보호 + 플랜 한도 게이팅** — 프론트 작업과 함께.
+3. **토스 빌링 마무리** — 실 키 주입 + 응답/에러 코드 라이브 확정(위 ⚠️).
 3. **프론트(React/Next)** — 현재는 단일 `static/index.html`(바닐라). 입력 폼·요금 페이지가 붙으면 본격 화면으로. (사용자 요청상 **가장 마지막**)
 4. (보강 후보) 반품 사유 표준화(쿠팡 사유 코드 매핑), 사유 추세(기간 비교).
 

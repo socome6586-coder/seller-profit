@@ -29,6 +29,14 @@ app:
     # 생성: openssl rand -base64 32
     key: ${APP_ENCRYPTION_KEY}
 
+toss:
+  billing:
+    # 토스페이먼츠 빌링(정기결제) 키. 실 키는 반드시 환경변수로 주입, 절대 커밋 금지.
+    # 미설정(placeholder)이면 결제 호출이 차단된다(요금 카탈로그/무료 가입은 정상 동작).
+    #   발급: 토스 개발자센터 > API 키 (테스트/라이브). secret-key 만 서버가 사용.
+    secret-key: ${TOSS_SECRET_KEY:test_sk_PLACEHOLDER}
+    base-url: ${TOSS_BASE_URL:https://api.tosspayments.com}
+
 coupang:
   base-url: https://api-gateway.coupang.com
   # 발주서 목록 1페이지 최대 건수. 페이징은 nextToken 으로 이어받는다.
