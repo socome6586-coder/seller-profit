@@ -107,8 +107,9 @@ export APP_ENCRYPTION_KEY=$(openssl rand -base64 32)
 
 1. Postgres 띄우기 (compose 사용)
    ```bash
-   docker compose up -d        # docker-compose.yml 제공됨. 데이터는 볼륨에 보존.
+   docker compose up -d        # docker-compose.yml 제공됨. 호스트 5433→컨테이너 5432, 데이터는 볼륨에 보존.
    ```
+   - 호스트 5432 는 다른 프로젝트(lightdrone-pg)가 점유 → 셀러는 **5433** 사용. 다르게 쓰려면 `DB_PORT` 환경변수.
 2. `seed` 프로파일로 앱 실행
    ```bash
    ./gradlew bootRun --args='--spring.profiles.active=seed'

@@ -11,7 +11,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      # 호스트 5432 는 다른 프로젝트(lightdrone-pg)가 쓰므로 5433 으로 매핑한다.
+      - "5433:5432"
     volumes:
       - seller-pg-data:/var/lib/postgresql/data
     healthcheck:

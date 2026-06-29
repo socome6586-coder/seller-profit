@@ -3,7 +3,9 @@ spring:
     name: seller-profit
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/seller_profit
+    # 호스트 5432 는 다른 프로젝트(lightdrone-pg)가 쓰므로 셀러는 5433 사용.
+    # 필요 시 DB_HOST / DB_PORT 환경변수로 덮어쓸 수 있다.
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/seller_profit
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:postgres}
 
