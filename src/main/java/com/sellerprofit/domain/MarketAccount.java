@@ -54,6 +54,9 @@ public class MarketAccount {
     @Column(name = "last_settlement_synced_at")
     private OffsetDateTime lastSettlementSyncedAt;
 
+    @Column(name = "last_return_synced_at")
+    private OffsetDateTime lastReturnSyncedAt;
+
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private OffsetDateTime createdAt;
 

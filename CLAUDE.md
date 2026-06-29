@@ -24,7 +24,7 @@
 ## 패키지 구조 (`com.sellerprofit`)
 
 - `crypto/` — API 키 AES-256-GCM 암복호화 (`AesGcmEncryptor`, `EncryptedStringConverter`)
-- `domain/` — JPA 엔티티 (`User`, `MarketAccount`, `Product`, `OrderItem`, `Settlement`, `Cost`), `domain/type/` 에 enum
+- `domain/` — JPA 엔티티 (`User`, `MarketAccount`, `Product`, `OrderItem`, `Settlement`, `ReturnItem`, `Cost`), `domain/type/` 에 enum
 - `repository/` — Spring Data 리포지토리 + 순이익 집계 네이티브 쿼리(`ProductRepository.findProfitByPeriod`, 결과는 `ProductProfitRow`)
 - `coupang/` — 쿠팡 Open API 연동 (`CoupangHmacSigner` 완료, 이하 작업 중)
 
@@ -48,12 +48,17 @@
 - [x] **로컬 E2E 검증 완료** — Docker Postgres + `seed` 프로파일로 기동, `GET /api/dashboard/profit?accountId=1` 응답 확인. 적자상품이 맨 위, 기타비용 매출비율 배분·마진율 정상.
   - 수정: `V1__init.sql` 말미의 예시 쿼리(`:account` 등 named param)가 실행돼 Flyway 문법 에러 → 주석 안내로 교체.
   - 수정: Windows `javac` 기본 charset(CP949)로 한글 리터럴 깨짐 → `build.gradle` 에 `options.encoding='UTF-8'` 고정.
+- [x] **정적 대시보드 + 1-명령 로컬 실행** — `static/index.html`(다크, 적자 빨강+뱃지) + `application-seed.yml`(포트 8088, 개발용 고정 키 → env 불필요) + `docker-compose.yml`(로컬 Postgres).
+- [x] **반품/취소 수집** — Flyway `V2__return_items.sql`(반품 테이블 + `market_accounts.last_return_synced_at`) + `ReturnItem` 엔티티/리포 + 반품 DTO(`ReturnRequestResponse`/`ReturnRequest`/`CoupangReturnItem`) + `CoupangApiClient.fetchReturnRequests` + `ReturnIngestionService`(receiptId+상품 멱등) + `ReturnSyncScheduler`(1시간, lookback 14일).
+  - **순이익 보정**: `findProfitByPeriod` 에 `return_items` CTE 추가 → **COGS 기준 수량 = 주문수량 − 반품수량**(GREATEST 0). 매출(payout)은 정산이 이미 반품을 음수로 반영하므로 추가 차감 안 함(이중 차감 방지). 대시보드에 `반품` 컬럼/`returnedUnits` 노출, 시드에 반품 시나리오 추가.
+  - ⚠️ [검증 필요] 반품요청 **엔드포인트 경로·쿼리 키·JSON 필드명(receiptId/createdAt/receiptStatus/returnItems[].purchaseCount)·페이징 토큰 키**는 라이브 문서로 확정. 코드에 `[검증 포인트]` 주석 표시. `external_ref`(receiptId:vendorItemId)는 1접수=상품당 1라인 가정 → 라인이 복수면 순번 추가 필요.
+  - 검증: `seed` 재기동 → A 주문100/반품10 → 판매90·COGS 270k, B 주문50/반품5 → 판매45·COGS 405k(적자 유지), `totalReturnedUnits=15`. 적자상품 B 맨 위 정상.
 
 ## 다음 단계 (여기서 이어서)
 
-1. **반품/취소 수집** — 발주서 목록에선 완료 반품 조회 불가 → 별도 '반품/취소 요청 목록 조회' API.
-2. **프론트(React/Next)** — 대시보드 화면(적자 빨강 표시), 원가/비용 입력, 키 연동 폼.
-3. **인증/로그인 + 구독 결제**.
+1. **프론트(React/Next)** — 현재는 단일 `static/index.html`(바닐라). 본격 화면: 원가/비용 입력 폼, 키 연동 폼, 기간 필터 UX.
+2. **인증/로그인 + 구독 결제**.
+3. (보강) 반품 라인이 한 접수번호에 복수로 올 때 `external_ref` 충돌 방지(순번/고유 id), 반품 사유별 통계.
 
 > 로컬에서 눈으로 확인하는 법은 아래 "빌드 / 실행 → 시드로 로컬 확인" 참고.
 

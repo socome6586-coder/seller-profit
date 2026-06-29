@@ -35,6 +35,8 @@ coupang:
   default-lookback-days: 7
   # 정산은 판매보다 늦게 확정되므로 더 넉넉히 거슬러 본다.
   settlement-lookback-days: 14
+  # 반품은 접수 후 상태가 바뀌므로(회수중→완료) 넉넉히 거슬러 재확인한다.
+  return-lookback-days: 14
 
 logging:
   level:

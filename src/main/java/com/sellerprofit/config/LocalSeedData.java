@@ -4,6 +4,7 @@ import com.sellerprofit.domain.Cost;
 import com.sellerprofit.domain.MarketAccount;
 import com.sellerprofit.domain.OrderItem;
 import com.sellerprofit.domain.Product;
+import com.sellerprofit.domain.ReturnItem;
 import com.sellerprofit.domain.Settlement;
 import com.sellerprofit.domain.User;
 import com.sellerprofit.domain.type.CostType;
@@ -11,6 +12,7 @@ import com.sellerprofit.repository.CostRepository;
 import com.sellerprofit.repository.MarketAccountRepository;
 import com.sellerprofit.repository.OrderItemRepository;
 import com.sellerprofit.repository.ProductRepository;
+import com.sellerprofit.repository.ReturnItemRepository;
 import com.sellerprofit.repository.SettlementRepository;
 import com.sellerprofit.repository.UserRepository;
 import org.slf4j.Logger;
@@ -45,6 +47,7 @@ public class LocalSeedData implements CommandLineRunner {
     private final ProductRepository productRepository;
     private final OrderItemRepository orderItemRepository;
     private final SettlementRepository settlementRepository;
+    private final ReturnItemRepository returnItemRepository;
     private final CostRepository costRepository;
 
     public LocalSeedData(UserRepository userRepository,
@@ -52,12 +55,14 @@ public class LocalSeedData implements CommandLineRunner {
                          ProductRepository productRepository,
                          OrderItemRepository orderItemRepository,
                          SettlementRepository settlementRepository,
+                         ReturnItemRepository returnItemRepository,
                          CostRepository costRepository) {
         this.userRepository = userRepository;
         this.marketAccountRepository = marketAccountRepository;
         this.productRepository = productRepository;
         this.orderItemRepository = orderItemRepository;
         this.settlementRepository = settlementRepository;
+        this.returnItemRepository = returnItemRepository;
         this.costRepository = costRepository;
     }
 
@@ -77,13 +82,14 @@ public class LocalSeedData implements CommandLineRunner {
         LocalDate settledAt = today.minusDays(1);
         OffsetDateTime orderedAt = OffsetDateTime.now(KST).minusDays(2);
 
-        // (상품명, vendorItemId, COGS단가, 수량, 판매단가, 정산실수령합)
+        // (상품명, vendorItemId, COGS단가, 주문수량, 판매단가, 정산실수령합(반품 환불 반영), 반품수량)
+        //  COGS 기준 수량 = 주문수량 − 반품수량. 매출(정산)은 반품 환불을 이미 차감한 값.
         seedProduct(account, settledAt, orderedAt, "흑자상품 A", "1001",
-                bd(3000), 100, bd(8000), bd(800000));   // profit ≈ +500,000
+                bd(3000), 100, bd(8000), bd(720000), 10);  // 판매 90, profit ≈ +450,000
         seedProduct(account, settledAt, orderedAt, "적자상품 B", "1002",
-                bd(9000), 50, bd(6000), bd(300000));    // profit ≈ -150,000 (적자!)
+                bd(9000), 50, bd(6000), bd(270000), 5);    // 판매 45, profit ≈ -135,000 (적자!)
         seedProduct(account, settledAt, orderedAt, "흑자상품 C", "1003",
-                bd(1500), 30, bd(5000), bd(150000));    // profit ≈ +105,000
+                bd(1500), 30, bd(5000), bd(150000), 0);    // 반품 없음, profit ≈ +105,000
 
         // 기타비용(광고비) — 기간 총액을 매출 비율로 배분
         costRepository.save(Cost.create(user, CostType.AD, bd(50000),
@@ -96,7 +102,7 @@ public class LocalSeedData implements CommandLineRunner {
     private void seedProduct(MarketAccount account, LocalDate settledAt, OffsetDateTime orderedAt,
                              String name, String vendorItemId,
                              BigDecimal cogs, int quantity, BigDecimal salePrice,
-                             BigDecimal payout) {
+                             BigDecimal payout, int returnedUnits) {
         Product product = Product.create(account, vendorItemId, name);
         product.setCogs(cogs);
         productRepository.save(product);
@@ -108,6 +114,13 @@ public class LocalSeedData implements CommandLineRunner {
         settlementRepository.save(Settlement.create(
                 account, product, vendorItemId, "seed-settle-" + vendorItemId,
                 payout, BigDecimal.ZERO, settledAt));
+
+        if (returnedUnits > 0) {
+            returnItemRepository.save(ReturnItem.create(
+                    account, product, "seed-order-" + vendorItemId, vendorItemId,
+                    "seed-return-" + vendorItemId, returnedUnits,
+                    "단순변심", "RETURNS_COMPLETED", settledAt));
+        }
     }
 
     private static BigDecimal bd(long v) {

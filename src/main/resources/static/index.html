@@ -87,12 +87,12 @@
   <table>
     <thead>
       <tr>
-        <th>상품</th><th>매출</th><th>수량</th><th>원가</th>
+        <th>상품</th><th>매출</th><th>수량</th><th>반품</th><th>원가</th>
         <th>배분비용</th><th>순이익</th><th>마진율</th>
       </tr>
     </thead>
     <tbody id="rows">
-      <tr><td colspan="7" class="empty">「조회」를 눌러 데이터를 불러오세요.</td></tr>
+      <tr><td colspan="8" class="empty">「조회」를 눌러 데이터를 불러오세요.</td></tr>
     </tbody>
   </table>
 </div>
@@ -134,7 +134,7 @@
     const tbody = document.getElementById("rows");
     const items = d.products || [];
     if (items.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" class="empty">해당 기간 데이터가 없습니다.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="empty">해당 기간 데이터가 없습니다.</td></tr>';
       return;
     }
     tbody.innerHTML = items.map((it) => `
@@ -142,6 +142,7 @@
         <td>${escapeHtml(it.name)}${it.loss ? '<span class="badge">적자</span>' : ""}</td>
         <td>${won(it.revenue)}</td>
         <td>${Number(it.units).toLocaleString("ko-KR")}</td>
+        <td class="${Number(it.returnedUnits) > 0 ? "neg" : "muted"}">${Number(it.returnedUnits).toLocaleString("ko-KR")}</td>
         <td>${won(it.cogsTotal)}</td>
         <td>${won(it.allocatedCost)}</td>
         <td class="${signClass(it.profit)}">${won(it.profit)}</td>

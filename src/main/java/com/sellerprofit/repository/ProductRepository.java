@@ -18,8 +18,11 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     /**
      * 기간별 상품 순이익 집계 (적자 상품이 위로 정렬).
-     * ⚠️ settlements 와 order_items 를 한 번에 JOIN 하면 fan-out 으로 합계가 부풀려진다.
-     *    각각 CTE 로 먼저 집계한 뒤 LEFT JOIN 한다.
+     * ⚠️ settlements / order_items / return_items 를 한 번에 JOIN 하면 fan-out 으로 합계가
+     *    부풀려진다. 각각 CTE 로 먼저 집계한 뒤 LEFT JOIN 한다.
+     *
+     * COGS 기준 수량 = 주문수량 − 반품수량 (0 미만이면 0). 매출(payout)은 정산이 반품을
+     * 음수로 이미 반영하므로 추가 차감하지 않는다(이중 차감 방지).
      */
     @Query(value = """
         WITH s AS (
@@ -35,17 +38,28 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             WHERE market_account_id = :accountId
               AND ordered_at::date BETWEEN :from AND :to
             GROUP BY product_id
+        ),
+        r AS (
+            SELECT product_id, SUM(quantity) AS returned
+            FROM return_items
+            WHERE market_account_id = :accountId
+              AND requested_at BETWEEN :from AND :to
+            GROUP BY product_id
         )
         SELECT p.id                                                       AS productId,
                p.name                                                     AS name,
                COALESCE(s.payout, 0)                                      AS payout,
-               COALESCE(o.units, 0)                                       AS units,
-               COALESCE(o.units, 0) * COALESCE(p.cogs, 0)                 AS cogsTotal,
+               GREATEST(COALESCE(o.units, 0) - COALESCE(r.returned, 0), 0) AS units,
+               COALESCE(r.returned, 0)                                    AS returnedUnits,
+               GREATEST(COALESCE(o.units, 0) - COALESCE(r.returned, 0), 0)
+                   * COALESCE(p.cogs, 0)                                  AS cogsTotal,
                COALESCE(s.payout, 0)
-                   - COALESCE(o.units, 0) * COALESCE(p.cogs, 0)          AS profit
+                   - GREATEST(COALESCE(o.units, 0) - COALESCE(r.returned, 0), 0)
+                       * COALESCE(p.cogs, 0)                              AS profit
         FROM products p
         LEFT JOIN s ON s.product_id = p.id
         LEFT JOIN o ON o.product_id = p.id
+        LEFT JOIN r ON r.product_id = p.id
         WHERE p.market_account_id = :accountId
         ORDER BY profit ASC
         """, nativeQuery = true)

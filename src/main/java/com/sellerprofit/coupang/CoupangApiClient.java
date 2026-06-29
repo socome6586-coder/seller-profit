@@ -1,6 +1,7 @@
 package com.sellerprofit.coupang;
 
 import com.sellerprofit.coupang.dto.OrderSheetResponse;
+import com.sellerprofit.coupang.dto.ReturnRequestResponse;
 import com.sellerprofit.coupang.dto.RevenueHistoryResponse;
 import com.sellerprofit.domain.MarketAccount;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,6 +32,10 @@ public class CoupangApiClient {
     // [검증 포인트] 매출내역 엔드포인트 경로는 쿠팡 라이브 문서로 최종 확인 필요.
     private static final String REVENUE_HISTORY_PATH =
             "/v2/providers/marketplace_openapi/apis/api/v1/vendors/%s/revenue-history";
+
+    // [검증 포인트] 반품요청 목록 엔드포인트 경로/쿼리 키는 쿠팡 라이브 문서로 최종 확인 필요.
+    private static final String RETURN_REQUESTS_PATH =
+            "/v2/providers/openapi/apis/api/v4/vendors/%s/returnRequests";
 
     private final RestClient restClient;
     private final CoupangHmacSigner signer;
@@ -78,6 +83,26 @@ public class CoupangApiClient {
         }
         String path = REVENUE_HISTORY_PATH.formatted(account.getVendorId());
         return get(account, path, params, RevenueHistoryResponse.class);
+    }
+
+    /**
+     * 반품요청 목록 한 페이지를 조회한다. nextToken 이 null/blank 면 첫 페이지.
+     *
+     * [검증 포인트] createdAtFrom/createdAtTo 의 날짜 포맷·status 필수 여부는 라이브 문서로 확인.
+     * 발주서 목록과 달리 반품은 접수일(createdAt) 기준으로 거슬러 조회한다.
+     */
+    public ReturnRequestResponse fetchReturnRequests(MarketAccount account,
+                                                     LocalDate from, LocalDate to,
+                                                     String nextToken) {
+        Map<String, String> params = new LinkedHashMap<>();
+        params.put("createdAtFrom", from.toString());
+        params.put("createdAtTo", to.toString());
+        params.put("maxPerPage", String.valueOf(maxPerPage));
+        if (hasToken(nextToken)) {
+            params.put("nextToken", nextToken);
+        }
+        String path = RETURN_REQUESTS_PATH.formatted(account.getVendorId());
+        return get(account, path, params, ReturnRequestResponse.class);
     }
 
     /**

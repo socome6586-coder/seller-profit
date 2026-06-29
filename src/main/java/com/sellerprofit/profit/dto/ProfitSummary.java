@@ -12,6 +12,7 @@ import java.util.List;
  * @param totalAllocatedCost 기간에 배분된 기타비용 합
  * @param totalProfit        총 순이익
  * @param avgMarginPct       평균 마진율(%), 매출 0 이면 null
+ * @param totalReturnedUnits 총 반품 수량
  */
 public record ProfitSummary(
         LocalDate from,
@@ -21,6 +22,7 @@ public record ProfitSummary(
         BigDecimal totalAllocatedCost,
         BigDecimal totalProfit,
         BigDecimal avgMarginPct,
+        long totalReturnedUnits,
         List<ProductProfit> products
 ) {
 }

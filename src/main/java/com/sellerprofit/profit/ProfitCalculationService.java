@@ -89,6 +89,7 @@ public class ProfitCalculationService {
                     r.getName(),
                     money(revenue),
                     r.getUnits() == null ? 0L : r.getUnits(),
+                    r.getReturnedUnits() == null ? 0L : r.getReturnedUnits(),
                     money(nz(r.getCogsTotal())),
                     money(allocated),
                     profit,
@@ -102,13 +103,14 @@ public class ProfitCalculationService {
         BigDecimal totalRevenue = money(sum(products, ProductProfit::revenue));
         BigDecimal totalCogs = money(sum(products, ProductProfit::cogsTotal));
         BigDecimal totalProfit = money(sum(products, ProductProfit::profit));
+        long totalReturnedUnits = products.stream().mapToLong(ProductProfit::returnedUnits).sum();
         BigDecimal avgMargin = totalRevenue.signum() != 0
                 ? totalProfit.multiply(HUNDRED).divide(totalRevenue, MARGIN_SCALE, RoundingMode.HALF_UP)
                 : null;
 
         return new ProfitSummary(from, to,
                 totalRevenue, totalCogs, money(totalAllocated), totalProfit, avgMargin,
-                products);
+                totalReturnedUnits, products);
     }
 
     private static BigDecimal sum(List<ProductProfit> list,
