@@ -158,43 +158,10 @@ CREATE TRIGGER trg_costs_updated
 
 
 -- =====================================================================
--- 검증용 예시 쿼리 — 기간별 상품 순이익 (기타비용 배분 前)
+-- 검증용 예시 쿼리(기간별 상품 순이익)는 여기서 실행하지 않는다.
+--   * 운영 쿼리: ProductRepository.findProfitByPeriod (네이티브)
+--   * 설명/주석 버전: docs/schema.sql
+-- ⚠️ 함정: settlements 와 order_items 를 한 번에 JOIN 하면 fan-out 으로 SUM 이
+--    부풀려진다 → 각각 CTE 로 먼저 집계 후 LEFT JOIN. (named param `:account` 등은
+--    JDBC 바인딩용이라 마이그레이션에 그대로 두면 문법 에러가 난다.)
 -- =====================================================================
--- ⚠️ 함정 주의: settlements 와 order_items 를 한 번에 JOIN 하면
---    행이 곱해져(fan-out) SUM이 부풀려진다. 반드시 각각 먼저 집계(CTE) 후 JOIN.
---
---   순이익 = 정산 실지급액 합 − (판매수량 × COGS)
---           − [기타비용은 이 결과 위에서 앱이 매출 비율로 배분]
--- ---------------------------------------------------------------------
-WITH s AS (
-    SELECT product_id, SUM(payout_amount) AS payout
-    FROM settlements
-    WHERE market_account_id = :account
-      AND settled_at BETWEEN :from AND :to
-    GROUP BY product_id
-),
-o AS (
-    SELECT product_id, SUM(quantity) AS units
-    FROM order_items
-    WHERE market_account_id = :account
-      AND ordered_at::date BETWEEN :from AND :to
-    GROUP BY product_id
-)
-SELECT
-    p.id,
-    p.name,
-    COALESCE(s.payout, 0)                                          AS payout,        -- 실수령
-    COALESCE(o.units, 0)                                           AS units,         -- 판매수량
-    COALESCE(o.units, 0) * COALESCE(p.cogs, 0)                     AS cogs_total,    -- 원가 합
-    COALESCE(s.payout, 0)
-        - COALESCE(o.units, 0) * COALESCE(p.cogs, 0)              AS profit,        -- 순이익(배분 前)
-    CASE WHEN COALESCE(s.payout, 0) <> 0
-         THEN ROUND(
-              (COALESCE(s.payout,0) - COALESCE(o.units,0)*COALESCE(p.cogs,0))
-              / s.payout * 100, 1)
-         END                                                       AS margin_pct     -- 마진율(%)
-FROM products p
-LEFT JOIN s ON s.product_id = p.id
-LEFT JOIN o ON o.product_id = p.id
-WHERE p.market_account_id = :account
-ORDER BY profit ASC;   -- 적자 상품이 위로 (핵심 화면의 정렬과 동일)

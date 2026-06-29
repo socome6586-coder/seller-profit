@@ -1,1 +1,6 @@
+plugins {
+    // JDK 25 만 설치된 환경에서도 컴파일용 JDK 21 툴체인을 자동 다운로드한다.
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
+}
+
 rootProject.name = 'seller-profit'

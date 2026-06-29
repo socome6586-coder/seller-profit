@@ -39,4 +39,12 @@ public class User {
 
     @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
     private OffsetDateTime updatedAt;
+
+    /** 회원 생성용. passwordHash 는 호출측에서 BCrypt 등으로 해싱해 전달한다. */
+    public static User create(String email, String passwordHash) {
+        User u = new User();
+        u.email = email;
+        u.passwordHash = passwordHash;
+        return u;
+    }
 }

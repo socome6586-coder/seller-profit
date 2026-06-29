@@ -52,4 +52,20 @@ public class Settlement {
 
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private OffsetDateTime createdAt;
+
+    /** 정산 수집 시 생성용. product 는 매칭되는 상품이 없으면 null 허용. */
+    public static Settlement create(MarketAccount marketAccount, Product product,
+                                    String vendorItemId, String externalRef,
+                                    BigDecimal payoutAmount, BigDecimal feeAmount,
+                                    LocalDate settledAt) {
+        Settlement s = new Settlement();
+        s.marketAccount = marketAccount;
+        s.product = product;
+        s.vendorItemId = vendorItemId;
+        s.externalRef = externalRef;
+        s.payoutAmount = payoutAmount;
+        s.feeAmount = feeAmount;
+        s.settledAt = settledAt;
+        return s;
+    }
 }

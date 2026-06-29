@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>셀러 순이익 대시보드</title>
+  <style>
+    :root {
+      --bg: #0f1216; --panel: #171c22; --line: #262d36;
+      --text: #e6e9ee; --muted: #8b95a3;
+      --loss: #ff5d5d; --loss-bg: #2a1518; --profit: #34d399; --accent: #4f8cff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font-family: -apple-system, "Segoe UI", "Malgun Gothic", sans-serif;
+      padding: 28px 20px 60px;
+    }
+    .wrap { max-width: 1040px; margin: 0 auto; }
+    h1 { font-size: 22px; margin: 0 0 4px; }
+    .sub { color: var(--muted); font-size: 13px; margin-bottom: 22px; }
+    .controls {
+      display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;
+      background: var(--panel); border: 1px solid var(--line);
+      border-radius: 12px; padding: 14px 16px; margin-bottom: 20px;
+    }
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label { font-size: 11px; color: var(--muted); }
+    .field input {
+      background: #0d1115; border: 1px solid var(--line); color: var(--text);
+      border-radius: 8px; padding: 8px 10px; font-size: 14px; min-width: 120px;
+    }
+    button {
+      background: var(--accent); color: #fff; border: 0; border-radius: 8px;
+      padding: 9px 18px; font-size: 14px; cursor: pointer; font-weight: 600;
+    }
+    button:hover { filter: brightness(1.08); }
+    .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 22px; }
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+    .card .k { color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+    .card .v { font-size: 22px; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; background: var(--panel);
+      border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+    th, td { padding: 12px 14px; text-align: right; font-size: 14px; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); font-weight: 600; font-size: 12px; background: #131820; }
+    th:first-child, td:first-child { text-align: left; }
+    tr:last-child td { border-bottom: 0; }
+    tr.loss td { background: var(--loss-bg); }
+    .badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px;
+      border-radius: 999px; margin-left: 8px; background: var(--loss); color: #fff; }
+    .pos { color: var(--profit); } .neg { color: var(--loss); }
+    .muted { color: var(--muted); }
+    #error { color: var(--loss); margin: 14px 0; font-size: 14px; display: none; }
+    .empty { text-align: center; color: var(--muted); padding: 30px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>셀러 순이익 대시보드</h1>
+  <div class="sub">정산 실수령 − 원가 − 배분된 기타비용 = 진짜 순이익. 적자 상품이 맨 위로 올라옵니다.</div>
+
+  <div class="controls">
+    <div class="field">
+      <label>마켓 계정 ID</label>
+      <input id="accountId" type="number" value="1" />
+    </div>
+    <div class="field">
+      <label>시작일 (선택)</label>
+      <input id="from" type="date" />
+    </div>
+    <div class="field">
+      <label>종료일 (선택)</label>
+      <input id="to" type="date" />
+    </div>
+    <button id="load">조회</button>
+  </div>
+
+  <div id="error"></div>
+
+  <div class="cards">
+    <div class="card"><div class="k">총매출 (정산 실수령)</div><div class="v" id="c-revenue">–</div></div>
+    <div class="card"><div class="k">총순이익</div><div class="v" id="c-profit">–</div></div>
+    <div class="card"><div class="k">평균 마진율</div><div class="v" id="c-margin">–</div></div>
+    <div class="card"><div class="k">배분 기타비용</div><div class="v" id="c-cost">–</div></div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>상품</th><th>매출</th><th>수량</th><th>원가</th>
+        <th>배분비용</th><th>순이익</th><th>마진율</th>
+      </tr>
+    </thead>
+    <tbody id="rows">
+      <tr><td colspan="7" class="empty">「조회」를 눌러 데이터를 불러오세요.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+  const won = (n) => (n == null ? "–" : "₩" + Number(n).toLocaleString("ko-KR"));
+  const pct = (n) => (n == null ? "–" : Number(n).toFixed(1) + "%");
+  const signClass = (n) => (Number(n) < 0 ? "neg" : "pos");
+
+  async function load() {
+    const accountId = document.getElementById("accountId").value || "1";
+    const from = document.getElementById("from").value;
+    const to = document.getElementById("to").value;
+    const err = document.getElementById("error");
+    err.style.display = "none";
+
+    const params = new URLSearchParams({ accountId });
+    if (from) params.set("from", from);
+    if (to) params.set("to", to);
+
+    try {
+      const res = await fetch("/api/dashboard/profit?" + params.toString());
+      if (!res.ok) throw new Error("HTTP " + res.status + " — " + (await res.text()));
+      render(await res.json());
+    } catch (e) {
+      err.textContent = "불러오기 실패: " + e.message;
+      err.style.display = "block";
+    }
+  }
+
+  function render(d) {
+    document.getElementById("c-revenue").textContent = won(d.totalRevenue);
+    const p = document.getElementById("c-profit");
+    p.textContent = won(d.totalProfit);
+    p.className = "v " + signClass(d.totalProfit);
+    document.getElementById("c-margin").textContent = pct(d.avgMarginPct);
+    document.getElementById("c-cost").textContent = won(d.totalAllocatedCost);
+
+    const tbody = document.getElementById("rows");
+    const items = d.products || [];
+    if (items.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty">해당 기간 데이터가 없습니다.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = items.map((it) => `
+      <tr class="${it.loss ? "loss" : ""}">
+        <td>${escapeHtml(it.name)}${it.loss ? '<span class="badge">적자</span>' : ""}</td>
+        <td>${won(it.revenue)}</td>
+        <td>${Number(it.units).toLocaleString("ko-KR")}</td>
+        <td>${won(it.cogsTotal)}</td>
+        <td>${won(it.allocatedCost)}</td>
+        <td class="${signClass(it.profit)}">${won(it.profit)}</td>
+        <td class="${signClass(it.profit)}">${pct(it.marginPct)}</td>
+      </tr>`).join("");
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+
+  document.getElementById("load").addEventListener("click", load);
+  load(); // 첫 진입 시 자동 조회
+</script>
+</body>
+</html>

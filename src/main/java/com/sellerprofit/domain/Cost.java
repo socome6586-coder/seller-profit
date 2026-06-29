@@ -47,4 +47,17 @@ public class Cost {
 
     @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
     private OffsetDateTime updatedAt;
+
+    /** 기타비용 입력용. 기간 총액을 앱이 매출 비율로 배분한다. */
+    public static Cost create(User user, CostType costType, BigDecimal amount,
+                              LocalDate periodStart, LocalDate periodEnd, String memo) {
+        Cost c = new Cost();
+        c.user = user;
+        c.costType = costType;
+        c.amount = amount;
+        c.periodStart = periodStart;
+        c.periodEnd = periodEnd;
+        c.memo = memo;
+        return c;
+    }
 }

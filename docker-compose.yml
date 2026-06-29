@@ -1,0 +1,24 @@
+# 로컬 개발용 Postgres. 쿠팡 키 없이 대시보드를 확인할 때 사용한다.
+#   docker compose up -d   → 띄우기
+#   docker compose down    → 내리기 (데이터 유지)
+#   docker compose down -v  → 데이터까지 삭제
+services:
+  db:
+    image: postgres:16
+    container_name: seller-pg
+    environment:
+      POSTGRES_DB: seller_profit
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - seller-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d seller_profit"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  seller-pg-data:

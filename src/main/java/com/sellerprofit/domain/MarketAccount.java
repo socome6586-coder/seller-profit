@@ -61,4 +61,15 @@ public class MarketAccount {
     private OffsetDateTime updatedAt;
 
     // toString 자동 생성 시 키가 찍히지 않도록 의도적으로 Lombok @ToString 미사용
+
+    /** 채널 연동 생성용. accessKey/secretKey 는 평문으로 받아 컨버터가 암호화 저장한다. */
+    public static MarketAccount create(User user, String vendorId,
+                                       String accessKey, String secretKey) {
+        MarketAccount m = new MarketAccount();
+        m.user = user;
+        m.vendorId = vendorId;
+        m.accessKey = accessKey;
+        m.secretKey = secretKey;
+        return m;
+    }
 }

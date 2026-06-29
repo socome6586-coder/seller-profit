@@ -27,6 +27,15 @@ app:
     # 생성: openssl rand -base64 32
     key: ${APP_ENCRYPTION_KEY}
 
+coupang:
+  base-url: https://api-gateway.coupang.com
+  # 발주서 목록 1페이지 최대 건수. 페이징은 nextToken 으로 이어받는다.
+  max-per-page: 50
+  # 스케줄러 1회 수집 시 거슬러 올라갈 일 수 (마지막 동기화 시각이 없을 때의 기본 조회 범위).
+  default-lookback-days: 7
+  # 정산은 판매보다 늦게 확정되므로 더 넉넉히 거슬러 본다.
+  settlement-lookback-days: 14
+
 logging:
   level:
     org.hibernate.SQL: debug
