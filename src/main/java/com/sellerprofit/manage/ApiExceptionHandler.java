@@ -17,7 +17,11 @@ import java.util.stream.Collectors;
  * 여기서 400 + 메시지로 내려 사용자가 무엇이 잘못됐는지 알 수 있게 한다.
  * (예: 존재하지 않는 accountId → "MarketAccount 없음: 999")
  */
-@RestControllerAdvice(basePackages = {"com.sellerprofit.manage", "com.sellerprofit.profit"})
+@RestControllerAdvice(basePackages = {
+        "com.sellerprofit.manage",
+        "com.sellerprofit.profit",
+        "com.sellerprofit.auth",
+        "com.sellerprofit.subscription"})
 public class ApiExceptionHandler {
 
     /** 잘못된 입력값/존재하지 않는 리소스 등. */

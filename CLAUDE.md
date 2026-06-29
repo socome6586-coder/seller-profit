@@ -66,11 +66,21 @@
   - ⚠️ 한글 메모를 Windows `curl`/셸로 POST 하면 CP949 → `0xbf` UTF-8 에러. 코드 버그 아님(브라우저 fetch+JSON 은 정상 UTF-8). 검증은 브라우저로.
   - 검증: cogs 음수 → `{"error":"cogs: 0 이상이어야 합니다"}`, 없는 accountId → `{"error":"MarketAccount 없음: 999"}`, 기간 역전 → `{"error":"기간 종료일이 시작일보다 빠를 수 없습니다."}`. PATCH 로 B 의 COGS 낮추면 적자→흑자 전환 확인.
 
+- [x] **구독/인증 Phase 1 — 요금제 카탈로그 + 무료 가입 + 구독 상태 조회** — 결제 PG 는 **토스페이먼츠** 기준(무료 즉시 테스트 가능), 유저 확보 우선이라 **FREE 플랜 상시 제공**(가입 기본값).
+  - `subscription` 패키지: `PlanType`(FREE ₩0 / PRO ₩9,900, 가격·한도·혜택을 한 곳에 고정. 한도 -1=무제한) + `SubscriptionService` + `SubscriptionController`.
+    - `GET /api/plans` (요금 페이지용 공개 카탈로그), `GET /api/subscription?userId=` (현재 상태+적용 플랜).
+  - `auth` 패키지: `POST /api/auth/signup`(이메일/비번 → **BCrypt** 해시 저장, 중복 이메일 거부, 가입 즉시 FREE). `PasswordConfig`(BCrypt 인코더만, 전체 시큐리티 필터체인 없음 → 기존 엔드포인트 잠그지 않음). 응답에 비번 해시 미노출(`AuthUserView`).
+  - `build.gradle` 에 `spring-security-crypto` 추가. `ApiExceptionHandler` 적용 범위에 auth/subscription 추가.
+  - ⚠️ PRO 가격(₩9,900)·플랜 한도는 임시 정책값 → `PlanType` 한 곳만 고치면 됨. 확정 필요.
+  - [ ] Phase 2: 로그인/세션(현재 userId/accountId 직접 받음 → 인증 주체로 대체) + 엔드포인트 보호 + 플랜 한도 게이팅.
+  - [ ] Phase 3: **토스페이먼츠 빌링(정기결제)** — 빌링키 발급/저장(암호화) + 구독 ACTIVE 전환 + 월 자동결제 스케줄러 + 만료/실패(PAST_DUE/CANCELED) 처리.
+
 ## 다음 단계 (여기서 이어서)
 
-1. **프론트(React/Next)** — 현재는 단일 `static/index.html`(바닐라). 입력 폼은 붙었으니, 본격 화면: 키 연동 폼, 기간 필터 UX, 입력값 검증/수정 UX 고도화.
-2. **인증/로그인 + 구독 결제**.
-3. (보강) ~~반품 사유별 통계~~, ~~`external_ref` 충돌 방지~~ 는 완료(위 반품 항목 참고). 추가 보강 후보: 반품 사유 표준화(쿠팡 사유 코드 매핑), 사유 추세(기간 비교).
+1. **인증/구독 Phase 2 — 로그인/세션 + 엔드포인트 보호 + 플랜 한도 게이팅** (위 Phase 1 이어서).
+2. **인증/구독 Phase 3 — 토스페이먼츠 빌링 정기결제**.
+3. **프론트(React/Next)** — 현재는 단일 `static/index.html`(바닐라). 입력 폼·요금 페이지가 붙으면 본격 화면으로. (사용자 요청상 **가장 마지막**)
+4. (보강 후보) 반품 사유 표준화(쿠팡 사유 코드 매핑), 사유 추세(기간 비교).
 
 > 로컬에서 눈으로 확인하는 법은 아래 "빌드 / 실행 → 시드로 로컬 확인" 참고.
 
