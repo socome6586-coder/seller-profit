@@ -82,14 +82,20 @@ public class LocalSeedData implements CommandLineRunner {
         LocalDate settledAt = today.minusDays(1);
         OffsetDateTime orderedAt = OffsetDateTime.now(KST).minusDays(2);
 
-        // (상품명, vendorItemId, COGS단가, 주문수량, 판매단가, 정산실수령합(반품 환불 반영), 반품수량)
+        // (상품명, vendorItemId, COGS단가, 주문수량, 판매단가, 정산실수령합(반품 환불 반영))
         //  COGS 기준 수량 = 주문수량 − 반품수량. 매출(정산)은 반품 환불을 이미 차감한 값.
-        seedProduct(account, settledAt, orderedAt, "흑자상품 A", "1001",
-                bd(3000), 100, bd(8000), bd(720000), 10);  // 판매 90, profit ≈ +450,000
-        seedProduct(account, settledAt, orderedAt, "적자상품 B", "1002",
-                bd(9000), 50, bd(6000), bd(270000), 5);    // 판매 45, profit ≈ -135,000 (적자!)
+        Product a = seedProduct(account, settledAt, orderedAt, "흑자상품 A", "1001",
+                bd(3000), 100, bd(8000), bd(720000));  // 판매 90, profit ≈ +450,000
+        Product b = seedProduct(account, settledAt, orderedAt, "적자상품 B", "1002",
+                bd(9000), 50, bd(6000), bd(270000));   // 판매 45, profit ≈ -135,000 (적자!)
         seedProduct(account, settledAt, orderedAt, "흑자상품 C", "1003",
-                bd(1500), 30, bd(5000), bd(150000), 0);    // 반품 없음, profit ≈ +105,000
+                bd(1500), 30, bd(5000), bd(150000));   // 반품 없음, profit ≈ +105,000
+
+        // 반품 사유별 통계 데모용: 상품별 총 반품수량은 유지(A=10, B=5)하되 사유를 쪼갠다.
+        //   → 순이익 수치는 그대로, 사유 분포만 다양해진다.
+        seedReturn(account, a, settledAt, "단순변심", 6, 1);
+        seedReturn(account, a, settledAt, "배송지연", 4, 2);
+        seedReturn(account, b, settledAt, "상품불량", 5, 1);
 
         // 기타비용(광고비) — 기간 총액을 매출 비율로 배분
         costRepository.save(Cost.create(user, CostType.AD, bd(50000),
@@ -99,10 +105,10 @@ public class LocalSeedData implements CommandLineRunner {
                 account.getId(), account.getId());
     }
 
-    private void seedProduct(MarketAccount account, LocalDate settledAt, OffsetDateTime orderedAt,
-                             String name, String vendorItemId,
-                             BigDecimal cogs, int quantity, BigDecimal salePrice,
-                             BigDecimal payout, int returnedUnits) {
+    private Product seedProduct(MarketAccount account, LocalDate settledAt, OffsetDateTime orderedAt,
+                                String name, String vendorItemId,
+                                BigDecimal cogs, int quantity, BigDecimal salePrice,
+                                BigDecimal payout) {
         Product product = Product.create(account, vendorItemId, name);
         product.setCogs(cogs);
         productRepository.save(product);
@@ -115,12 +121,17 @@ public class LocalSeedData implements CommandLineRunner {
                 account, product, vendorItemId, "seed-settle-" + vendorItemId,
                 payout, BigDecimal.ZERO, settledAt));
 
-        if (returnedUnits > 0) {
-            returnItemRepository.save(ReturnItem.create(
-                    account, product, "seed-order-" + vendorItemId, vendorItemId,
-                    "seed-return-" + vendorItemId, returnedUnits,
-                    "단순변심", "RETURNS_COMPLETED", settledAt));
-        }
+        return product;
+    }
+
+    /** 반품 라인 1건 시드. ordinal 로 external_ref 를 유일하게 만든다(한 상품 복수 사유 허용). */
+    private void seedReturn(MarketAccount account, Product product, LocalDate requestedAt,
+                            String reason, int quantity, int ordinal) {
+        String vendorItemId = product.getVendorItemId();
+        returnItemRepository.save(ReturnItem.create(
+                account, product, "seed-order-" + vendorItemId, vendorItemId,
+                "seed-return-" + vendorItemId + "-" + ordinal, quantity,
+                reason, "RETURNS_COMPLETED", requestedAt));
     }
 
     private static BigDecimal bd(long v) {

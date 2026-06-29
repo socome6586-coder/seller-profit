@@ -65,6 +65,9 @@
     .cost-list { margin-top: 14px; font-size: 13px; color: var(--muted); }
     .cost-list div { padding: 5px 0; border-top: 1px solid var(--line); }
     @media (max-width: 720px) { .manage { grid-template-columns: 1fr; } }
+    .bar { display: inline-block; vertical-align: middle; height: 8px; border-radius: 999px;
+      background: var(--accent); margin-left: 8px; min-width: 2px; }
+    .bar-wrap { display: inline-flex; align-items: center; }
   </style>
 </head>
 <body>
@@ -106,6 +109,16 @@
     </thead>
     <tbody id="rows">
       <tr><td colspan="8" class="empty">「조회」를 눌러 데이터를 불러오세요.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>반품 사유 분석 <span id="reason-total" class="muted" style="font-size:12px;font-weight:400"></span></h2>
+  <table>
+    <thead>
+      <tr><th>반품 사유</th><th>반품수량</th><th>건수</th><th>비중</th></tr>
+    </thead>
+    <tbody id="reason-rows">
+      <tr><td colspan="4" class="empty">「조회」를 눌러 데이터를 불러오세요.</td></tr>
     </tbody>
   </table>
 
@@ -216,6 +229,47 @@
       ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
 
+  // ---- 반품 사유 분석 -------------------------------------------------------
+  async function loadReturns() {
+    const accountId = document.getElementById("accountId").value || "1";
+    const from = document.getElementById("from").value;
+    const to = document.getElementById("to").value;
+    const params = new URLSearchParams({ accountId });
+    if (from) params.set("from", from);
+    if (to) params.set("to", to);
+    try {
+      const res = await fetch("/api/dashboard/returns?" + params.toString());
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      renderReasons(await res.json());
+    } catch (e) {
+      document.getElementById("reason-rows").innerHTML =
+        '<tr><td colspan="4" class="empty">반품 통계 불러오기 실패</td></tr>';
+    }
+  }
+
+  function renderReasons(d) {
+    const total = document.getElementById("reason-total");
+    total.textContent = "총 반품 " + Number(d.totalQuantity || 0).toLocaleString("ko-KR") + "개";
+    const tbody = document.getElementById("reason-rows");
+    const items = d.reasons || [];
+    if (items.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" class="empty">해당 기간 반품이 없습니다.</td></tr>';
+      return;
+    }
+    const maxShare = Math.max(...items.map((it) => Number(it.sharePct) || 0), 1);
+    tbody.innerHTML = items.map((it) => {
+      const share = Number(it.sharePct) || 0;
+      const w = Math.round((share / maxShare) * 120);
+      return `
+      <tr>
+        <td>${escapeHtml(it.reason)}</td>
+        <td>${Number(it.quantity).toLocaleString("ko-KR")}</td>
+        <td>${Number(it.lineCount).toLocaleString("ko-KR")}</td>
+        <td><span class="bar-wrap">${share.toFixed(1)}%<span class="bar" style="width:${w}px"></span></span></td>
+      </tr>`;
+    }).join("");
+  }
+
   // ---- 입력 / 관리 ----------------------------------------------------------
   const $ = (id) => document.getElementById(id);
   const acct = () => $("accountId").value || "1";
@@ -312,7 +366,7 @@
     }
   }
 
-  function refreshAll() { load(); loadProducts(); loadCosts(); }
+  function refreshAll() { load(); loadReturns(); loadProducts(); loadCosts(); }
 
   $("load").addEventListener("click", refreshAll);
   $("cogs-save").addEventListener("click", saveCogs);

@@ -11,12 +11,13 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * 입력 API 공통 예외 → 사람이 읽을 수 있는 400 JSON 으로 변환.
+ * 입력/대시보드 API 공통 예외 → 사람이 읽을 수 있는 400 JSON 으로 변환.
  *
  * 기본 동작이면 IllegalArgumentException 은 500 으로 새어 나가 화면에 원인이 안 보인다.
  * 여기서 400 + 메시지로 내려 사용자가 무엇이 잘못됐는지 알 수 있게 한다.
+ * (예: 존재하지 않는 accountId → "MarketAccount 없음: 999")
  */
-@RestControllerAdvice(basePackages = "com.sellerprofit.manage")
+@RestControllerAdvice(basePackages = {"com.sellerprofit.manage", "com.sellerprofit.profit"})
 public class ApiExceptionHandler {
 
     /** 잘못된 입력값/존재하지 않는 리소스 등. */
