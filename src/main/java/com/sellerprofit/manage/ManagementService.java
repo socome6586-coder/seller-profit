@@ -45,10 +45,15 @@ public class ManagementService {
                 .toList();
     }
 
-    /** 상품 매입원가(COGS) 입력/수정. */
+    /**
+     * 상품 매입원가(COGS) 입력/수정.
+     *
+     * <p>상품→계정→유저 소유가 세션 주체와 다르면 "상품 없음" 으로 처리한다(타 셀러 상품 id 추측 차단).
+     */
     @Transactional
-    public ProductView updateCogs(Long productId, BigDecimal cogs) {
+    public ProductView updateCogs(Long productId, BigDecimal cogs, Long userId) {
         Product product = productRepository.findById(productId)
+                .filter(p -> p.getMarketAccount().getUser().getId().equals(userId))
                 .orElseThrow(() -> new IllegalArgumentException("상품 없음: " + productId));
         product.setCogs(cogs);
         return ProductView.of(product);

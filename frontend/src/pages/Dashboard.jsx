@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { api, won, pct, num, signClass } from "../api";
 
 export default function Dashboard() {
-  const [accountId, setAccountId] = useState("1");
+  const [accounts, setAccounts] = useState(null); // null=로딩, []=계정없음
+  const [accountId, setAccountId] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [error, setError] = useState("");
@@ -13,7 +14,7 @@ export default function Dashboard() {
   const [costs, setCosts] = useState([]);
 
   const periodParams = useCallback(() => {
-    const p = new URLSearchParams({ accountId: accountId || "1" });
+    const p = new URLSearchParams({ accountId });
     if (from) p.set("from", from);
     if (to) p.set("to", to);
     return p.toString();
@@ -39,7 +40,7 @@ export default function Dashboard() {
 
   const loadProducts = useCallback(async () => {
     try {
-      setProducts(await api("/api/products?accountId=" + (accountId || "1")));
+      setProducts(await api("/api/products?accountId=" + accountId));
     } catch {
       setProducts([]);
     }
@@ -47,24 +48,40 @@ export default function Dashboard() {
 
   const loadCosts = useCallback(async () => {
     try {
-      setCosts(await api("/api/costs?accountId=" + (accountId || "1")));
+      setCosts(await api("/api/costs?accountId=" + accountId));
     } catch {
       setCosts([]);
     }
   }, [accountId]);
 
   const refreshAll = useCallback(() => {
+    if (!accountId) return;
     loadProfit();
     loadReturns();
     loadProducts();
     loadCosts();
-  }, [loadProfit, loadReturns, loadProducts, loadCosts]);
+  }, [accountId, loadProfit, loadReturns, loadProducts, loadCosts]);
 
+  // 내 마켓 계정 목록을 받아 첫 계정을 기본 선택.
+  useEffect(() => {
+    (async () => {
+      try {
+        const list = await api("/api/me/accounts");
+        setAccounts(list);
+        if (list.length > 0) setAccountId(String(list[0].id));
+      } catch {
+        setAccounts([]);
+      }
+    })();
+  }, []);
+
+  // 계정이 정해지면(또는 바뀌면) 자동 조회.
   useEffect(() => {
     refreshAll();
-    // 최초 1회만 자동 조회. 이후는 「조회」 버튼.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [accountId]);
+
+  const noAccounts = accounts != null && accounts.length === 0;
 
   return (
     <div className="wrap">
@@ -73,10 +90,28 @@ export default function Dashboard() {
         정산 실수령 − 원가 − 배분된 기타비용 = 진짜 순이익. 적자 상품이 맨 위로 올라옵니다.
       </div>
 
+      {noAccounts ? (
+        <div className="error-banner">
+          연결된 마켓 계정이 없습니다. 쿠팡 계정을 연동하면 여기에서 순이익을 볼 수 있어요.
+        </div>
+      ) : null}
+
       <div className="controls">
         <div className="field">
-          <label>마켓 계정 ID</label>
-          <input type="number" value={accountId} onChange={(e) => setAccountId(e.target.value)} />
+          <label>마켓 계정</label>
+          <select value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+            {accounts == null ? (
+              <option value="">불러오는 중…</option>
+            ) : accounts.length === 0 ? (
+              <option value="">계정 없음</option>
+            ) : (
+              accounts.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.channel} · {a.vendorId} (#{a.id})
+                </option>
+              ))
+            )}
+          </select>
         </div>
         <div className="field">
           <label>시작일 (선택)</label>
@@ -86,7 +121,7 @@ export default function Dashboard() {
           <label>종료일 (선택)</label>
           <input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
         </div>
-        <button onClick={refreshAll}>조회</button>
+        <button onClick={refreshAll} disabled={!accountId}>조회</button>
       </div>
 
       {error ? <div className="error-banner">{error}</div> : null}
@@ -114,7 +149,7 @@ export default function Dashboard() {
       <div className="manage">
         <CogsPanel products={products} onSaved={() => { loadProducts(); loadProfit(); }} />
         <CostPanel
-          accountId={accountId || "1"}
+          accountId={accountId}
           costs={costs}
           onSaved={() => { loadCosts(); loadProfit(); }}
         />

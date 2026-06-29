@@ -58,6 +58,9 @@ export default function Login() {
         <div className="auth-switch">
           계정이 없으신가요? <Link to="/signup">무료로 시작하기</Link>
         </div>
+        <div className="note muted" style={{ marginTop: 12, textAlign: "center" }}>
+          데모 체험: demo@demo.local / demo1234 (seed 프로파일)
+        </div>
       </div>
     </div>
   );

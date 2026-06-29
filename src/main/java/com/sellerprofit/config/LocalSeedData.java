@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +43,10 @@ public class LocalSeedData implements CommandLineRunner {
     private static final Logger log = LoggerFactory.getLogger(LocalSeedData.class);
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
+    /** 데모 로그인 계정(로그인 벽 뒤에서 시드 데이터를 보려면 이 계정으로 로그인). */
+    private static final String DEMO_EMAIL = "demo@demo.local";
+    private static final String DEMO_PASSWORD = "demo1234";
+
     private final UserRepository userRepository;
     private final MarketAccountRepository marketAccountRepository;
     private final ProductRepository productRepository;
@@ -49,6 +54,7 @@ public class LocalSeedData implements CommandLineRunner {
     private final SettlementRepository settlementRepository;
     private final ReturnItemRepository returnItemRepository;
     private final CostRepository costRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public LocalSeedData(UserRepository userRepository,
                          MarketAccountRepository marketAccountRepository,
@@ -56,7 +62,8 @@ public class LocalSeedData implements CommandLineRunner {
                          OrderItemRepository orderItemRepository,
                          SettlementRepository settlementRepository,
                          ReturnItemRepository returnItemRepository,
-                         CostRepository costRepository) {
+                         CostRepository costRepository,
+                         PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.marketAccountRepository = marketAccountRepository;
         this.productRepository = productRepository;
@@ -64,6 +71,7 @@ public class LocalSeedData implements CommandLineRunner {
         this.settlementRepository = settlementRepository;
         this.returnItemRepository = returnItemRepository;
         this.costRepository = costRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -74,7 +82,9 @@ public class LocalSeedData implements CommandLineRunner {
             return;
         }
 
-        User user = userRepository.save(User.create("seed@demo.local", "{noop}seed"));
+        // 로그인 벽 뒤에서 시드 데이터를 보려면 이 계정으로 로그인해야 한다(BCrypt 해시 저장).
+        User user = userRepository.save(
+                User.create(DEMO_EMAIL, passwordEncoder.encode(DEMO_PASSWORD)));
         MarketAccount account = marketAccountRepository.save(
                 MarketAccount.create(user, "SEEDVENDOR", "seed-access-key", "seed-secret-key"));
 
@@ -101,8 +111,8 @@ public class LocalSeedData implements CommandLineRunner {
         costRepository.save(Cost.create(user, CostType.AD, bd(50000),
                 today.minusDays(7), today, "샘플 광고비"));
 
-        log.info("[seed] 완료 — accountId={} (대시보드: GET /api/dashboard/profit?accountId={})",
-                account.getId(), account.getId());
+        log.info("[seed] 완료 — accountId={} / 데모 로그인: {} / {} (대시보드: 로그인 후 계정 선택)",
+                account.getId(), DEMO_EMAIL, DEMO_PASSWORD);
     }
 
     private Product seedProduct(MarketAccount account, LocalDate settledAt, OffsetDateTime orderedAt,

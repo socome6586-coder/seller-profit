@@ -73,7 +73,13 @@
   - `build.gradle` 에 `spring-security-crypto` 추가. `ApiExceptionHandler` 적용 범위에 auth/subscription 추가.
   - ⚠️ PRO 가격(₩9,900)·플랜 한도는 임시 정책값 → `PlanType` 한 곳만 고치면 됨. 확정 필요.
   - [x] Phase 2(로그인/세션): `POST /api/auth/login`(BCrypt 검증 → 세션에 `USER_ID` 저장, 세션 고정 방지 위해 로그인 시 새 세션 발급), `POST /api/auth/logout`(세션 무효화, 204·멱등), `GET /api/auth/me`(세션 없으면 401). 실패 사유(미존재/비번불일치) 미구분(계정 열거 방지). `UnauthorizedException` → `ApiExceptionHandler` 에서 **401 JSON**. 시큐리티 필터체인 없이 컨트롤러가 직접 `HttpSession` 처리. `AuthController.SESSION_USER_ID` 키 공유. 검증: signup 201 → me 401 → login 200(JSESSIONID) → me 200 → 오타 비번 400 → logout 204 → me 401.
-    - [ ] (Phase 2 잔여, 프론트 작업 때) 엔드포인트 보호 "벽" + 플랜 한도 게이팅(현재 userId/accountId 직접 받음 → 세션 주체로 대체). 사용자 결정대로 로그인 API 먼저, 벽은 프론트 붙일 때.
+    - [x] **(Phase 2 잔여) 백엔드 엔드포인트 보호 "벽" — 세션 주체 기반 소유권 강제.** 컨트롤러가 userId/accountId 를 그냥 받던 걸 세션 주체로 검증한다.
+      - `auth/CurrentUser` — 세션의 `USER_ID` 를 꺼내는 공통 헬퍼(없으면 `UnauthorizedException`→401). `account/AccountAccess` — `assertOwner(accountId,userId)` 소유권 가드(`MarketAccountRepository.existsByIdAndUserId`). **소유 아님/없음을 동일한 "MarketAccount 없음"** 으로 처리해 **계정 열거 차단**. `myAccounts(userId)`→`AccountView`(민감키 미노출).
+      - 적용: `ProfitDashboardController`(/profit,/returns), `ProductManagementController`(list=계정소유, updateCogs=상품→계정→유저 소유를 서비스에서 "상품 없음" 으로), `CostController`(list/create), `SubscriptionController`(/api/subscription 가 `@RequestParam userId` 제거→세션 주체). 신규 `auth/MeController` `GET /api/me/accounts`(내 계정 목록, 대시보드 선택용).
+      - 시드: 데모 로그인 계정 `demo@demo.local` / `demo1234`(BCrypt 해시). 로그인 벽 뒤에서 시드 데이터를 보려면 이 계정으로 로그인. (기존 `{noop}seed` 는 BCrypt 와 안 맞아 로그인 불가였음 → 교체.)
+      - 프론트: 대시보드가 accountId **수동 입력 → `/api/me/accounts` 드롭다운**(첫 계정 기본, 계정 변경 시 자동 조회, 계정 0개 안내). 요금제는 `/api/subscription` 를 세션으로(userId 미전달). 로그인 화면에 데모 계정 힌트.
+      - 검증(curl): 미로그인 dashboard/me 401 → demo 로그인 200 → `/api/me/accounts`=[#1] → 본인 accountId=1 데이터 OK → accountId=999 **400 "없음"**(열거 차단) → `/api/subscription` 세션 FREE → products 200 / 본인 cogs 200 / 타 상품 99999 **400 "상품 없음"** → costs 200 → plans 공개 200 → logout 204 → me 401. seed 볼륨 리셋 후 데모 계정 생성 확인.
+      - ⚠️ 남음: **플랜 한도 게이팅**(maxMarketAccounts=계정 수 제한, dashboardLookbackDays=조회 기간 제한)은 아직 미적용 — `PlanType` 에 값은 있으나 강제는 후속.
   - [x] Phase 3(토스 빌링 스캐폴딩): `billing` 패키지. **실 키 미설정이어도 안전하게 빌드/배포**되는 골격(키 주입만 하면 동작).
     - `TossBillingClient`(RestClient, Basic 인증=secretKey+`:` Base64): `issueBillingKey(authKey,customerKey)` → POST `/v1/billing/authorizations/issue`, `charge(billingKey,customerKey,amount,orderId,orderName)` → POST `/v1/billing/{billingKey}`. 시크릿 키가 placeholder/공백이면 `isConfigured()=false` 라 `ensureConfigured()` 가 `IllegalStateException` 으로 호출 차단.
     - `BillingService`: `subscribe(userId,authKey)`(customerKey 없으면 UUID 생성→빌링키 발급·**암호화 저장**→첫 달 결제→ACTIVE + `currentPeriodEnd=now+1M`), `renewDue(now)`(ACTIVE & 주기 만료분 재청구, 유저별 예외 격리, 실패→PAST_DUE, 빌링키 없음→PAST_DUE), `cancel(userId)`(상태만 CANCELED, 남은 기간 유지). orderId=`customerKey+yyyyMM` 로 **중복청구 방지**.
@@ -93,7 +99,7 @@
 
 ## 다음 단계 (여기서 이어서)
 
-1. **(Phase 2 잔여) 엔드포인트 보호 + 플랜 한도 게이팅** — 현재 백엔드는 userId/accountId 를 직접 받고 소유 검증을 안 한다(프론트만 벽). 세션 주체로 대체 + 플랜 한도(계정 수/조회 기간) 게이팅.
+1. **플랜 한도 게이팅** — 엔드포인트 보호(세션 주체 소유권)는 완료. 남은 건 플랜 한도 강제: FREE=계정 1개/조회 30일, PRO=무제한. 계정 연동 시 `maxMarketAccounts` 초과 거부 + 대시보드 기간이 `dashboardLookbackDays` 넘으면 자르거나 거부.
 2. **토스 빌링 마무리(#2, 보류 중)** — 실 키(`TOSS_SECRET_KEY`/클라이언트 키) 주입 + 토스 SDK 카드등록(`Pricing.jsx` subscribe TODO) + 응답/에러 코드 라이브 확정.
 3. **프론트 빌드 Gradle 통합**(선택) — `npm run build` 를 Gradle 빌드에 묶어 산출물 커밋 제거.
 4. (보강 후보) 반품 사유 표준화(쿠팡 사유 코드 매핑), 사유 추세(기간 비교).

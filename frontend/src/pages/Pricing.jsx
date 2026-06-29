@@ -18,7 +18,7 @@ export default function Pricing() {
   const loadSub = useCallback(async () => {
     if (!user) return;
     try {
-      setSub(await api("/api/subscription?userId=" + user.userId));
+      setSub(await api("/api/subscription")); // 세션 주체로 조회(userId 미전달)
     } catch {
       setSub(null);
     }
