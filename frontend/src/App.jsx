@@ -4,6 +4,7 @@ import Nav from "./components/Nav.jsx";
 import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
+import Accounts from "./pages/Accounts.jsx";
 import Pricing from "./pages/Pricing.jsx";
 
 // 로그인 필요한 라우트의 '벽'. 확인 중이면 로딩, 비로그인이면 /login 으로.
@@ -28,6 +29,14 @@ export default function App() {
           element={
             <Protected>
               <Dashboard />
+            </Protected>
+          }
+        />
+        <Route
+          path="/accounts"
+          element={
+            <Protected>
+              <Accounts />
             </Protected>
           }
         />

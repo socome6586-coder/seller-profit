@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { api, won, pct, num, signClass } from "../api";
 
 export default function Dashboard() {
@@ -92,7 +93,8 @@ export default function Dashboard() {
 
       {noAccounts ? (
         <div className="error-banner">
-          연결된 마켓 계정이 없습니다. 쿠팡 계정을 연동하면 여기에서 순이익을 볼 수 있어요.
+          연결된 마켓 계정이 없습니다. <Link to="/accounts">쿠팡 계정을 연동</Link>하면
+          여기에서 순이익을 볼 수 있어요.
         </div>
       ) : null}
 

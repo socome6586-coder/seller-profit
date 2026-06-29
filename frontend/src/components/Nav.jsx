@@ -9,6 +9,9 @@ export default function Nav() {
       <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : "")}>
         대시보드
       </NavLink>
+      <NavLink to="/accounts" className={({ isActive }) => (isActive ? "active" : "")}>
+        계정 연동
+      </NavLink>
       <NavLink to="/pricing" className={({ isActive }) => (isActive ? "active" : "")}>
         요금제
       </NavLink>

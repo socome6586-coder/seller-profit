@@ -79,7 +79,15 @@
       - 시드: 데모 로그인 계정 `demo@demo.local` / `demo1234`(BCrypt 해시). 로그인 벽 뒤에서 시드 데이터를 보려면 이 계정으로 로그인. (기존 `{noop}seed` 는 BCrypt 와 안 맞아 로그인 불가였음 → 교체.)
       - 프론트: 대시보드가 accountId **수동 입력 → `/api/me/accounts` 드롭다운**(첫 계정 기본, 계정 변경 시 자동 조회, 계정 0개 안내). 요금제는 `/api/subscription` 를 세션으로(userId 미전달). 로그인 화면에 데모 계정 힌트.
       - 검증(curl): 미로그인 dashboard/me 401 → demo 로그인 200 → `/api/me/accounts`=[#1] → 본인 accountId=1 데이터 OK → accountId=999 **400 "없음"**(열거 차단) → `/api/subscription` 세션 FREE → products 200 / 본인 cogs 200 / 타 상품 99999 **400 "상품 없음"** → costs 200 → plans 공개 200 → logout 204 → me 401. seed 볼륨 리셋 후 데모 계정 생성 확인.
-      - ⚠️ 남음: **플랜 한도 게이팅**(maxMarketAccounts=계정 수 제한, dashboardLookbackDays=조회 기간 제한)은 아직 미적용 — `PlanType` 에 값은 있으나 강제는 후속.
+      - ⚠️ 남음: **조회 기간 한도(dashboardLookbackDays) 게이팅**은 아직 미적용 — `PlanType` 에 값은 있으나 강제는 후속.
+
+- [x] **쿠팡 계정 연동 플로우 + 플랜 한도(계정 수) 게이팅** — 시드(가짜) → 실사용을 잇는 입구. 로그인 셀러가 자기 쿠팡 키를 화면에서 등록한다.
+  - `account/AccountConnectionService`: `connect(userId, vendorId, accessKey, secretKey)`(유저 로드→**플랜 한도 `PlanType.maxMarketAccounts` 강제**: FREE=1개, 초과 시 400 → "PRO 로 업그레이드"; 중복 업체코드 400; 키는 평문으로 받아 `MarketAccount.create`→컨버터가 **AES-GCM 암호화 저장**), `disconnect(userId, accountId)`(소유 아님/없음을 동일 "없음"=열거 차단, DB FK `ON DELETE CASCADE` 라 상품/주문/정산/반품 동반 정리).
+  - `MarketAccountRepository`: `countByUserId`(한도), `existsByUserIdAndVendorId`(중복). `AccountConnectRequest`(@NotBlank vendorId/accessKey/secretKey, MVP 단일 채널이라 channel 미수신=COUPANG 기본).
+  - `auth/MeController`: `POST /api/me/accounts`(201, 연동), `DELETE /api/me/accounts/{id}`(204, 해제). (`GET` 은 기존 목록.) ApiExceptionHandler basePackages(auth) 로 400/401 JSON 처리.
+  - 프론트: 새 화면 `Accounts.jsx`(`/accounts`) — 연동 목록(채널/업체코드/계정ID + 해제 버튼) + 연동 폼(키 입력, Secret 은 password 타입) + **한도 표시(count/max)**, 한도 도달 시 폼 잠그고 요금제 링크. Nav 에 "계정 연동" 추가, `App.jsx` 라우트 + `SpaForwardingController` 에 `/accounts` 포워드 추가. 대시보드 "계정 없음" 안내가 `/accounts` 로 링크.
+  - ⚠️ **키 보안**: AccountView/응답/로그에 access/secret 키 절대 미노출(목록은 id/channel/vendorId 만). 연동 폼 입력 키는 저장 후 화면에서 비움.
+  - 검증(curl, 신규 유저로): 로그인→1번째 연동 **201** → 목록(키 미노출) → 2번째 연동 **400(FREE 1개 한도)** → 빈 vendorId **400(검증)** → 타 유저 계정 #1 해제 시도 **400 "없음"**(열거 차단) → 본인 계정 해제 **204** → 목록 빈 배열 → 슬롯 풀려 재연동 **201** → 데모 계정 #1·대시보드 무손상 200. (signup 은 세션 미생성 → 연동 전 login 필요 확인.)
   - [x] Phase 3(토스 빌링 스캐폴딩): `billing` 패키지. **실 키 미설정이어도 안전하게 빌드/배포**되는 골격(키 주입만 하면 동작).
     - `TossBillingClient`(RestClient, Basic 인증=secretKey+`:` Base64): `issueBillingKey(authKey,customerKey)` → POST `/v1/billing/authorizations/issue`, `charge(billingKey,customerKey,amount,orderId,orderName)` → POST `/v1/billing/{billingKey}`. 시크릿 키가 placeholder/공백이면 `isConfigured()=false` 라 `ensureConfigured()` 가 `IllegalStateException` 으로 호출 차단.
     - `BillingService`: `subscribe(userId,authKey)`(customerKey 없으면 UUID 생성→빌링키 발급·**암호화 저장**→첫 달 결제→ACTIVE + `currentPeriodEnd=now+1M`), `renewDue(now)`(ACTIVE & 주기 만료분 재청구, 유저별 예외 격리, 실패→PAST_DUE, 빌링키 없음→PAST_DUE), `cancel(userId)`(상태만 CANCELED, 남은 기간 유지). orderId=`customerKey+yyyyMM` 로 **중복청구 방지**.
@@ -99,7 +107,8 @@
 
 ## 다음 단계 (여기서 이어서)
 
-1. **플랜 한도 게이팅** — 엔드포인트 보호(세션 주체 소유권)는 완료. 남은 건 플랜 한도 강제: FREE=계정 1개/조회 30일, PRO=무제한. 계정 연동 시 `maxMarketAccounts` 초과 거부 + 대시보드 기간이 `dashboardLookbackDays` 넘으면 자르거나 거부.
+1. **실 쿠팡 키 라이브 검증** — 계정 연동 입구가 생겼으니(`POST /api/me/accounts`), **당신의 실제 쿠팡 vendorId/키**로 연동→수집을 돌려 `[검증 필요]` 마커(엔드포인트 경로·JSON 필드명·페이징 토큰·정산/반품 라인 고유 id)를 라이브로 확정. (연동 직후 1회 수동 동기화 트리거 버튼도 이때 같이.)
+2. **조회 기간 한도(dashboardLookbackDays) 게이팅** — 계정 수 한도(maxMarketAccounts)는 적용 완료. 남은 건 대시보드 from/to 가 플랜 기간(FREE=30일)을 넘으면 자르거나 거부.
 2. **토스 빌링 마무리(#2, 보류 중)** — 실 키(`TOSS_SECRET_KEY`/클라이언트 키) 주입 + 토스 SDK 카드등록(`Pricing.jsx` subscribe TODO) + 응답/에러 코드 라이브 확정.
 3. **프론트 빌드 Gradle 통합**(선택) — `npm run build` 를 Gradle 빌드에 묶어 산출물 커밋 제거.
 4. (보강 후보) 반품 사유 표준화(쿠팡 사유 코드 매핑), 사유 추세(기간 비교).
