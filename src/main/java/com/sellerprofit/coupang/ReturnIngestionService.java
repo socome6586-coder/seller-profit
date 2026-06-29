@@ -18,7 +18,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 쿠팡 반품요청 목록 수집 → 상품 매칭 → 반품 라인 멱등 저장.
@@ -85,8 +87,16 @@ public class ReturnIngestionService {
                 if (lines == null) {
                     continue;
                 }
+                // 한 접수번호 안에서 같은 vendorItemId 가 여러 번 나올 수 있으므로
+                // 옵션상품별 등장 순번을 매겨 멱등 키 충돌(=반품 수량 누락)을 막는다.
+                Map<String, Integer> occurrence = new HashMap<>();
                 for (CoupangReturnItem line : lines) {
-                    if (persistLine(account, accountId, request, line)) {
+                    if (line.vendorItemId() == null) {
+                        continue;
+                    }
+                    String vendorItemId = String.valueOf(line.vendorItemId());
+                    int ordinal = occurrence.merge(vendorItemId, 1, Integer::sum) - 1;
+                    if (persistLine(account, accountId, request, line, vendorItemId, ordinal)) {
                         count++;
                     }
                 }
@@ -97,14 +107,13 @@ public class ReturnIngestionService {
 
     /** 반품 라인 1건 멱등 저장. 이미 있거나 수량이 없으면 건너뛰고 false 를 반환한다. */
     private boolean persistLine(MarketAccount account, Long accountId,
-                                ReturnRequest request, CoupangReturnItem line) {
-        if (line.vendorItemId() == null
-                || line.purchaseCount() == null || line.purchaseCount() <= 0) {
+                                ReturnRequest request, CoupangReturnItem line,
+                                String vendorItemId, int ordinal) {
+        if (line.purchaseCount() == null || line.purchaseCount() <= 0) {
             return false;
         }
 
-        String vendorItemId = String.valueOf(line.vendorItemId());
-        String externalRef = buildExternalRef(request, vendorItemId);
+        String externalRef = buildExternalRef(request.receiptId(), vendorItemId, ordinal);
 
         if (returnItemRepository.existsByMarketAccountIdAndExternalRef(accountId, externalRef)) {
             return false;
@@ -122,12 +131,18 @@ public class ReturnIngestionService {
     }
 
     /**
-     * 멱등 키. 쿠팡 반품 접수번호(receiptId)+옵션상품으로 구성한다.
-     * ⚠️ [검증 포인트] 한 접수번호에 같은 vendorItemId 라인이 둘 이상 올 수 있으면
-     *    여기에 라인 순번/고유 id 를 더해야 한다(현재는 1접수=상품당 1라인 가정).
+     * 멱등 키. 쿠팡 반품 접수번호(receiptId)+옵션상품(+등장 순번)으로 구성한다.
+     *
+     * 한 접수번호에 같은 vendorItemId 라인이 둘 이상 와도 순번(ordinal)으로 구분해
+     * 둘째 라인부터 키가 충돌해 누락되는 일을 막는다. 첫 라인(ordinal 0)은 기존 형식
+     * (`receiptId:vendorItemId`)을 그대로 유지해 단일 라인 케이스의 키가 바뀌지 않게 한다.
+     *
+     * ⚠️ [검증 포인트] 쿠팡이 returnItems[] 순서를 호출마다 동일하게 준다는 가정이다.
+     *    라인 고유 id 가 응답에 있으면 순번 대신 그 id 를 쓰는 것이 더 안전하다.
      */
-    private static String buildExternalRef(ReturnRequest request, String vendorItemId) {
-        return request.receiptId() + ":" + vendorItemId;
+    static String buildExternalRef(Object receiptId, String vendorItemId, int ordinal) {
+        String base = receiptId + ":" + vendorItemId;
+        return ordinal == 0 ? base : base + "#" + ordinal;
     }
 
     private static String statusOf(ReturnRequest request) {

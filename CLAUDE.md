@@ -52,7 +52,8 @@
 - [x] **정적 대시보드 + 1-명령 로컬 실행** — `static/index.html`(다크, 적자 빨강+뱃지) + `application-seed.yml`(포트 8088, 개발용 고정 키 → env 불필요) + `docker-compose.yml`(로컬 Postgres).
 - [x] **반품/취소 수집** — Flyway `V2__return_items.sql`(반품 테이블 + `market_accounts.last_return_synced_at`) + `ReturnItem` 엔티티/리포 + 반품 DTO(`ReturnRequestResponse`/`ReturnRequest`/`CoupangReturnItem`) + `CoupangApiClient.fetchReturnRequests` + `ReturnIngestionService`(receiptId+상품 멱등) + `ReturnSyncScheduler`(1시간, lookback 14일).
   - **순이익 보정**: `findProfitByPeriod` 에 `return_items` CTE 추가 → **COGS 기준 수량 = 주문수량 − 반품수량**(GREATEST 0). 매출(payout)은 정산이 이미 반품을 음수로 반영하므로 추가 차감 안 함(이중 차감 방지). 대시보드에 `반품` 컬럼/`returnedUnits` 노출, 시드에 반품 시나리오 추가.
-  - ⚠️ [검증 필요] 반품요청 **엔드포인트 경로·쿼리 키·JSON 필드명(receiptId/createdAt/receiptStatus/returnItems[].purchaseCount)·페이징 토큰 키**는 라이브 문서로 확정. 코드에 `[검증 포인트]` 주석 표시. `external_ref`(receiptId:vendorItemId)는 1접수=상품당 1라인 가정 → 라인이 복수면 순번 추가 필요.
+  - ⚠️ [검증 필요] 반품요청 **엔드포인트 경로·쿼리 키·JSON 필드명(receiptId/createdAt/receiptStatus/returnItems[].purchaseCount)·페이징 토큰 키**는 라이브 문서로 확정. 코드에 `[검증 포인트]` 주석 표시.
+  - **[보강 완료] `external_ref` 충돌 방지** — 한 접수번호에 같은 vendorItemId 라인이 복수로 와도 옵션상품별 등장 순번(ordinal)을 키에 붙여 누락을 막음. 첫 라인(ordinal 0)은 기존 형식(`receiptId:vendorItemId`) 유지, 둘째부터 `#1`,`#2`. `ReturnIngestionService.buildExternalRef`, 단위 테스트 `ReturnExternalRefTest`. (가정: 쿠팡이 returnItems[] 순서를 호출마다 동일하게 줌. 라인 고유 id 있으면 그걸로 교체 권장.)
   - 검증: `seed` 재기동 → A 주문100/반품10 → 판매90·COGS 270k, B 주문50/반품5 → 판매45·COGS 405k(적자 유지), `totalReturnedUnits=15`. 적자상품 B 맨 위 정상.
 - [x] **원가·기타비용 직접 입력 API + 대시보드 폼** — `manage` 패키지. 셀러가 화면에서 순이익 입력값을 채우는 경로.
   - `GET /api/products?accountId=` (상품+원가 목록), `PATCH /api/products/{id}/cogs` `{"cogs":3000}` (매입원가 입력/수정).
@@ -67,7 +68,7 @@
 
 1. **프론트(React/Next)** — 현재는 단일 `static/index.html`(바닐라). 입력 폼은 붙었으니, 본격 화면: 키 연동 폼, 기간 필터 UX, 입력값 검증/수정 UX 고도화.
 2. **인증/로그인 + 구독 결제**.
-3. (보강) 반품 라인이 한 접수번호에 복수로 올 때 `external_ref` 충돌 방지(순번/고유 id), 반품 사유별 통계.
+3. (보강) 반품 사유별 통계. ~~`external_ref` 충돌 방지~~ 는 완료(위 반품 항목 참고).
 
 > 로컬에서 눈으로 확인하는 법은 아래 "빌드 / 실행 → 시드로 로컬 확인" 참고.
 
