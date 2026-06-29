@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: seller-profit
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/seller_profit
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+
+  jpa:
+    hibernate:
+      # 스키마는 Flyway 가 관리. JPA 는 엔티티↔테이블 정합성 '검증'만 한다.
+      # 혹시 검증이 막히면 임시로 'none' 으로 두고 원인을 본 뒤 되돌릴 것.
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+app:
+  encryption:
+    # Base64 인코딩된 32 byte(AES-256) 키. 반드시 환경변수로 주입, 절대 커밋 금지.
+    # 생성: openssl rand -base64 32
+    key: ${APP_ENCRYPTION_KEY}
+
+logging:
+  level:
+    org.hibernate.SQL: debug

@@ -1,0 +1,32 @@
+# Gradle
+.gradle/
+build/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Eclipse / VS Code
+.classpath
+.project
+.settings/
+.vscode/
+bin/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# 환경변수 / 시크릿 (절대 커밋 금지)
+.env
+*.env
+application-local.yml
+application-secret.yml
+
+# ※ gradle/wrapper/ 와 gradlew 는 커밋해야 하므로 제외하지 않음
