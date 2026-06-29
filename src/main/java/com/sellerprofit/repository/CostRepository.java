@@ -11,4 +11,7 @@ public interface CostRepository extends JpaRepository<Cost, Long> {
     // 조회 기간과 겹치는 비용들 (앱에서 매출 비율로 배분)
     List<Cost> findByUserIdAndPeriodStartLessThanEqualAndPeriodEndGreaterThanEqual(
             Long userId, LocalDate to, LocalDate from);
+
+    // 입력 화면: 해당 셀러의 비용 목록(최근 기간 먼저)
+    List<Cost> findByUserIdOrderByPeriodStartDescIdDesc(Long userId);
 }

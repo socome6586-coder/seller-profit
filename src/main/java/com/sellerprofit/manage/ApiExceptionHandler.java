@@ -1,0 +1,41 @@
+package com.sellerprofit.manage;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.Map;
+import java.util.stream.Collectors;
+
+/**
+ * 입력 API 공통 예외 → 사람이 읽을 수 있는 400 JSON 으로 변환.
+ *
+ * 기본 동작이면 IllegalArgumentException 은 500 으로 새어 나가 화면에 원인이 안 보인다.
+ * 여기서 400 + 메시지로 내려 사용자가 무엇이 잘못됐는지 알 수 있게 한다.
+ */
+@RestControllerAdvice(basePackages = "com.sellerprofit.manage")
+public class ApiExceptionHandler {
+
+    /** 잘못된 입력값/존재하지 않는 리소스 등. */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException e) {
+        return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+    }
+
+    /** @Valid 검증 실패 → 필드별 메시지를 모아서 내려준다. */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, String>> handleValidation(MethodArgumentNotValidException e) {
+        String detail = e.getBindingResult().getFieldErrors().stream()
+                .map(ApiExceptionHandler::describe)
+                .collect(Collectors.joining(", "));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", detail.isBlank() ? "입력값이 올바르지 않습니다." : detail));
+    }
+
+    private static String describe(FieldError fe) {
+        return fe.getField() + ": " + fe.getDefaultMessage();
+    }
+}

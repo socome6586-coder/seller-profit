@@ -27,6 +27,7 @@
 - `domain/` — JPA 엔티티 (`User`, `MarketAccount`, `Product`, `OrderItem`, `Settlement`, `ReturnItem`, `Cost`), `domain/type/` 에 enum
 - `repository/` — Spring Data 리포지토리 + 순이익 집계 네이티브 쿼리(`ProductRepository.findProfitByPeriod`, 결과는 `ProductProfitRow`)
 - `coupang/` — 쿠팡 Open API 연동 (`CoupangHmacSigner` 완료, 이하 작업 중)
+- `manage/` — 셀러 직접 입력 도메인(원가·기타비용) API. `ManagementService` + `ProductManagementController`/`CostController` + `ApiExceptionHandler`, DTO 는 `manage/dto/`
 
 ## 지금까지 완료된 것
 
@@ -53,10 +54,18 @@
   - **순이익 보정**: `findProfitByPeriod` 에 `return_items` CTE 추가 → **COGS 기준 수량 = 주문수량 − 반품수량**(GREATEST 0). 매출(payout)은 정산이 이미 반품을 음수로 반영하므로 추가 차감 안 함(이중 차감 방지). 대시보드에 `반품` 컬럼/`returnedUnits` 노출, 시드에 반품 시나리오 추가.
   - ⚠️ [검증 필요] 반품요청 **엔드포인트 경로·쿼리 키·JSON 필드명(receiptId/createdAt/receiptStatus/returnItems[].purchaseCount)·페이징 토큰 키**는 라이브 문서로 확정. 코드에 `[검증 포인트]` 주석 표시. `external_ref`(receiptId:vendorItemId)는 1접수=상품당 1라인 가정 → 라인이 복수면 순번 추가 필요.
   - 검증: `seed` 재기동 → A 주문100/반품10 → 판매90·COGS 270k, B 주문50/반품5 → 판매45·COGS 405k(적자 유지), `totalReturnedUnits=15`. 적자상품 B 맨 위 정상.
+- [x] **원가·기타비용 직접 입력 API + 대시보드 폼** — `manage` 패키지. 셀러가 화면에서 순이익 입력값을 채우는 경로.
+  - `GET /api/products?accountId=` (상품+원가 목록), `PATCH /api/products/{id}/cogs` `{"cogs":3000}` (매입원가 입력/수정).
+  - `GET /api/costs?accountId=` (기타비용 목록), `POST /api/costs` (광고비/배송비/기타 신규 입력, 201).
+  - 검증: record DTO 에 jakarta `@NotNull/@PositiveOrZero/@Digits/@Size`, 기간 역전(periodEnd<periodStart) 거부(스키마 CHECK 와 동일 규칙), 소유관계는 `accountId→MarketAccount→User` 로 해석.
+  - `ApiExceptionHandler`(@RestControllerAdvice) 로 `IllegalArgumentException`/검증 실패를 사람이 읽는 **400 JSON**(`{"error":...}`)으로 변환. 기본 동작이면 500 으로 새어 원인이 안 보임.
+  - `static/index.html` 하단에 "입력/관리" 패널(원가 입력 select+저장, 기타비용 입력 폼) 추가, 저장 후 대시보드 자동 갱신.
+  - ⚠️ 한글 메모를 Windows `curl`/셸로 POST 하면 CP949 → `0xbf` UTF-8 에러. 코드 버그 아님(브라우저 fetch+JSON 은 정상 UTF-8). 검증은 브라우저로.
+  - 검증: cogs 음수 → `{"error":"cogs: 0 이상이어야 합니다"}`, 없는 accountId → `{"error":"MarketAccount 없음: 999"}`, 기간 역전 → `{"error":"기간 종료일이 시작일보다 빠를 수 없습니다."}`. PATCH 로 B 의 COGS 낮추면 적자→흑자 전환 확인.
 
 ## 다음 단계 (여기서 이어서)
 
-1. **프론트(React/Next)** — 현재는 단일 `static/index.html`(바닐라). 본격 화면: 원가/비용 입력 폼, 키 연동 폼, 기간 필터 UX.
+1. **프론트(React/Next)** — 현재는 단일 `static/index.html`(바닐라). 입력 폼은 붙었으니, 본격 화면: 키 연동 폼, 기간 필터 UX, 입력값 검증/수정 UX 고도화.
 2. **인증/로그인 + 구독 결제**.
 3. (보강) 반품 라인이 한 접수번호에 복수로 올 때 `external_ref` 충돌 방지(순번/고유 id), 반품 사유별 통계.
 

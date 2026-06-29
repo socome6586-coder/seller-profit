@@ -52,6 +52,19 @@
     .muted { color: var(--muted); }
     #error { color: var(--loss); margin: 14px 0; font-size: 14px; display: none; }
     .empty { text-align: center; color: var(--muted); padding: 30px; }
+    select { background: #0d1115; border: 1px solid var(--line); color: var(--text);
+      border-radius: 8px; padding: 8px 10px; font-size: 14px; min-width: 120px; }
+    h2 { font-size: 16px; margin: 32px 0 12px; }
+    .manage { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+    .panel h3 { margin: 0 0 12px; font-size: 14px; }
+    .panel .field { margin-bottom: 10px; }
+    .panel .field input, .panel .field select { width: 100%; }
+    .note { font-size: 12px; margin-top: 8px; min-height: 16px; }
+    .note.ok { color: var(--profit); } .note.err { color: var(--loss); }
+    .cost-list { margin-top: 14px; font-size: 13px; color: var(--muted); }
+    .cost-list div { padding: 5px 0; border-top: 1px solid var(--line); }
+    @media (max-width: 720px) { .manage { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -95,6 +108,54 @@
       <tr><td colspan="8" class="empty">「조회」를 눌러 데이터를 불러오세요.</td></tr>
     </tbody>
   </table>
+
+  <h2>입력 / 관리</h2>
+  <div class="manage">
+    <div class="panel">
+      <h3>상품 원가(COGS) 입력</h3>
+      <div class="field">
+        <label>상품 선택</label>
+        <select id="cogs-product"></select>
+      </div>
+      <div class="field">
+        <label>매입원가 (개당, 원)</label>
+        <input id="cogs-value" type="number" min="0" step="1" placeholder="예: 3000" />
+      </div>
+      <button id="cogs-save">원가 저장</button>
+      <div class="note" id="cogs-note"></div>
+    </div>
+
+    <div class="panel">
+      <h3>기타비용 입력 (기간 총액)</h3>
+      <div class="field">
+        <label>유형</label>
+        <select id="cost-type">
+          <option value="AD">광고비 (AD)</option>
+          <option value="SHIPPING">배송비 (SHIPPING)</option>
+          <option value="ETC">기타 (ETC)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>금액 (원)</label>
+        <input id="cost-amount" type="number" min="0" step="1" placeholder="예: 50000" />
+      </div>
+      <div class="field">
+        <label>시작일</label>
+        <input id="cost-start" type="date" />
+      </div>
+      <div class="field">
+        <label>종료일</label>
+        <input id="cost-end" type="date" />
+      </div>
+      <div class="field">
+        <label>메모 (선택)</label>
+        <input id="cost-memo" type="text" placeholder="예: 6월 광고비" />
+      </div>
+      <button id="cost-save">비용 추가</button>
+      <div class="note" id="cost-note"></div>
+      <div class="cost-list" id="cost-list"></div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -155,8 +216,108 @@
       ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
 
-  document.getElementById("load").addEventListener("click", load);
-  load(); // 첫 진입 시 자동 조회
+  // ---- 입력 / 관리 ----------------------------------------------------------
+  const $ = (id) => document.getElementById(id);
+  const acct = () => $("accountId").value || "1";
+
+  async function apiError(res) {
+    try { const j = await res.json(); return j.error || ("HTTP " + res.status); }
+    catch { return "HTTP " + res.status; }
+  }
+
+  function setNote(id, ok, msg) {
+    const n = $(id);
+    n.className = "note " + (ok ? "ok" : "err");
+    n.textContent = msg;
+  }
+
+  async function loadProducts() {
+    const sel = $("cogs-product");
+    try {
+      const res = await fetch("/api/products?accountId=" + acct());
+      if (!res.ok) throw new Error(await apiError(res));
+      const items = await res.json();
+      sel.innerHTML = items.length === 0
+        ? '<option value="">상품 없음</option>'
+        : items.map((p) => `<option value="${p.id}">${escapeHtml(p.name)} ${
+            p.cogs == null ? "(원가 미입력)" : "(₩" + Number(p.cogs).toLocaleString("ko-KR") + ")"
+          }</option>`).join("");
+    } catch (e) {
+      sel.innerHTML = '<option value="">불러오기 실패</option>';
+    }
+  }
+
+  async function saveCogs() {
+    const id = $("cogs-product").value;
+    const cogs = $("cogs-value").value;
+    if (!id) return setNote("cogs-note", false, "상품을 선택하세요.");
+    if (cogs === "") return setNote("cogs-note", false, "원가를 입력하세요.");
+    try {
+      const res = await fetch("/api/products/" + id + "/cogs", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cogs: Number(cogs) }),
+      });
+      if (!res.ok) throw new Error(await apiError(res));
+      setNote("cogs-note", true, "저장됐습니다. 대시보드를 갱신합니다.");
+      await loadProducts();
+      await load();
+    } catch (e) {
+      setNote("cogs-note", false, "실패: " + e.message);
+    }
+  }
+
+  async function loadCosts() {
+    const box = $("cost-list");
+    try {
+      const res = await fetch("/api/costs?accountId=" + acct());
+      if (!res.ok) throw new Error(await apiError(res));
+      const items = await res.json();
+      box.innerHTML = items.length === 0
+        ? "등록된 비용이 없습니다."
+        : items.map((c) => `<div>${c.periodStart} ~ ${c.periodEnd} · ${c.costType} · ₩${
+            Number(c.amount).toLocaleString("ko-KR")
+          }${c.memo ? " · " + escapeHtml(c.memo) : ""}</div>`).join("");
+    } catch (e) {
+      box.innerHTML = "비용 목록 불러오기 실패";
+    }
+  }
+
+  async function saveCost() {
+    const body = {
+      accountId: Number(acct()),
+      costType: $("cost-type").value,
+      amount: Number($("cost-amount").value),
+      periodStart: $("cost-start").value,
+      periodEnd: $("cost-end").value,
+      memo: $("cost-memo").value || null,
+    };
+    if (!$("cost-amount").value || !body.periodStart || !body.periodEnd) {
+      return setNote("cost-note", false, "금액·시작일·종료일을 입력하세요.");
+    }
+    try {
+      const res = await fetch("/api/costs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error(await apiError(res));
+      setNote("cost-note", true, "추가됐습니다. 대시보드를 갱신합니다.");
+      $("cost-amount").value = "";
+      $("cost-memo").value = "";
+      await loadCosts();
+      await load();
+    } catch (e) {
+      setNote("cost-note", false, "실패: " + e.message);
+    }
+  }
+
+  function refreshAll() { load(); loadProducts(); loadCosts(); }
+
+  $("load").addEventListener("click", refreshAll);
+  $("cogs-save").addEventListener("click", saveCogs);
+  $("cost-save").addEventListener("click", saveCost);
+  refreshAll(); // 첫 진입 시 자동 조회
 </script>
 </body>
 </html>
