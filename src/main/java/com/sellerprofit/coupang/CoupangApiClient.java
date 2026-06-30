@@ -29,9 +29,10 @@ public class CoupangApiClient {
     private static final String ORDERSHEETS_PATH =
             "/v2/providers/openapi/apis/api/v4/vendors/%s/ordersheets";
 
-    // [검증 포인트] 매출내역 엔드포인트 경로는 쿠팡 라이브 문서로 최종 확인 필요.
+    // 매출내역(정산) 조회. ⚠️ 발주서/반품과 달리 vendorId 가 경로가 아니라 쿼리 파라미터다.
+    // (이전 경로 .../vendors/{vendorId}/revenue-history 는 404 "No exactly matching API specification" 였음.)
     private static final String REVENUE_HISTORY_PATH =
-            "/v2/providers/marketplace_openapi/apis/api/v1/vendors/%s/revenue-history";
+            "/v2/providers/openapi/apis/api/v1/revenue-history";
 
     // [검증 포인트] 반품요청 목록 엔드포인트 경로/쿼리 키는 쿠팡 라이브 문서로 최종 확인 필요.
     private static final String RETURN_REQUESTS_PATH =
@@ -74,15 +75,16 @@ public class CoupangApiClient {
     public RevenueHistoryResponse fetchRevenueHistory(MarketAccount account,
                                                       LocalDate from, LocalDate to,
                                                       String nextToken) {
+        // vendorId 는 경로가 아니라 쿼리로 보낸다. 페이징 키는 'token'(응답 봉투는 nextToken 으로 돌려준다).
         Map<String, String> params = new LinkedHashMap<>();
+        params.put("vendorId", account.getVendorId());
         params.put("recognitionDateFrom", from.toString());
         params.put("recognitionDateTo", to.toString());
         params.put("maxPerPage", String.valueOf(maxPerPage));
         if (hasToken(nextToken)) {
-            params.put("nextToken", nextToken);
+            params.put("token", nextToken);
         }
-        String path = REVENUE_HISTORY_PATH.formatted(account.getVendorId());
-        return get(account, path, params, RevenueHistoryResponse.class);
+        return get(account, REVENUE_HISTORY_PATH, params, RevenueHistoryResponse.class);
     }
 
     /**

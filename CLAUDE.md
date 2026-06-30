@@ -42,7 +42,11 @@
 - [x] **`OrderIngestionService`** — nextToken 페이징 수집, HTTP는 트랜잭션 밖 / 영속화는 `TransactionTemplate` 페이지 단위, 상품 upsert + 주문 라인 멱등 저장 + `lastOrderSyncedAt` 갱신
 - [x] **`OrderSyncScheduler`** — 30분마다 쿠팡 계정 전체 순회, 계정별 예외 격리
 - [x] **정산(Settlement) 수집** — `CoupangApiClient.fetchRevenueHistory` + `RevenueHistory*` DTO + `SettlementIngestionService`(payout=판매금액−수수료, 멱등 `external_ref`) + `SettlementSyncScheduler`(1시간 주기, lookback 14일)
-  - ⚠️ [검증 필요] 쿠팡 매출내역 API의 **엔드포인트 경로·JSON 필드명·페이징 토큰 키·정산 라인 고유 id**는 라이브 문서로 확정해야 함. 해당 부분은 코드에 `[검증 포인트]` 주석으로 표시. 특히 `external_ref` 는 현재 (인식일+상품+유형) 조합 → 고유 id 있으면 교체.
+  - [x] **[라이브 문서로 정산 엔드포인트 확정 — 404 해결]** 쿠팡 '매출내역 조회'(Sales Detail Query) 문서 기준으로 경로·구조 수정.
+    - **경로**: `GET /v2/providers/openapi/apis/api/v1/revenue-history`. ⚠️ 발주서/반품과 달리 **vendorId 가 경로가 아니라 쿼리 파라미터**다(이전 `.../vendors/{vendorId}/revenue-history` 가 404 "No exactly matching API specification" 의 원인). 페이징 요청 키는 `token`(응답 봉투는 `nextToken`).
+    - **응답 구조(중첩)**: `data[]`(주문 묶음: `orderId`/`saleType`/`recognitionDate`/`settlementDate`) → 각 묶음의 `items[]`(옵션상품 라인: `vendorItemId`/`vendorItemName`/`salePrice`/`quantity`/`saleAmount`/`serviceFee`/`serviceFeeVat`). DTO 를 `RevenueHistory`(묶음) + `RevenueHistoryItem`(라인)로 분리.
+    - **payout** = `saleAmount − (serviceFee + serviceFeeVat)`. **멱등 키** = `orderId:saleType:recognitionDate:vendorItemId:순번`(한 묶음 내 동일 옵션상품 중복 줄은 등장 순번으로 구분).
+    - ⚠️ [실 키로 잔여 확인] 필드명/날짜포맷/페이징 토큰 키는 문서 기준 반영했으나, **실 쿠팡 키로 200 응답을 받아 최종 대조** 필요(특히 `recognitionDate` 포맷, REFUND 음수 부호, 정산 라인 고유 id 존재 여부 → 있으면 멱등 키 교체).
 - [x] **순이익 계산 서비스 + 대시보드 API** — `ProfitCalculationService`(기타비용 매출 비율 배분, 마진율) + `ProfitDashboardController`(`GET /api/dashboard/profit`). DTO `ProfitSummary`/`ProductProfit`.
 - [x] **로컬 샘플 시드** — `LocalSeedData`(`@Profile("seed")`, 멱등). 흑자 2 + 적자 1 시나리오. 쿠팡 키 없이 대시보드 확인 가능.
 - [x] **도메인 팩토리 추가** — `User.create`, `MarketAccount.create`, `Cost.create` (가입/연동/비용입력 + 시드 공용)
@@ -92,7 +96,7 @@
 - [x] **수동 동기화 트리거(라이브 키 검증용)** — 연동 직후 스케줄러(30분/1시간)를 기다리지 않고 즉시 한 계정 수집. `POST /api/me/accounts/{id}/sync`(로그인+소유 필수). `account/ManualSyncService`(소유 확인→주문/정산/반품 ingest 를 **소스별 예외 격리** 실행, lookback `coupang.manual-sync-lookback-days:14`) + `SyncResult`(소스별 `{ok,count,error}`, 일부 실패해도 전체 200 으로 결과 반환 → 어디가 막혔는지 화면/로그로 즉시 확인). 프론트 `/accounts` 각 계정 행에 "지금 동기화" 버튼 + 결과 표시. 키는 결과/로그에 미노출(transactionId 등만).
   - 🔎 **[라이브 검증 결과 — 중요]** 시드 가짜 키(SEEDVENDOR)로 동기화 시 쿠팡 실 API 에 실제로 도달함:
     - **주문/반품 → 401 "Specified key is not registered"** = 경로·HMAC 서명 **구조는 정상**(키만 가짜). 실 키 넣으면 동작 예상.
-    - **정산 → 404 "No exactly matching API specification for `/api/v1/vendors/{vendorId}/revenue-history`"** = **정산 엔드포인트 경로가 틀림**(`CoupangApiClient.fetchRevenueHistory` 의 `[검증 포인트]`). 실 키와 무관하게 경로부터 라이브 문서로 수정 필요. ← **다음 작업 1순위**
+    - **정산 → 404 "No exactly matching API specification for `/api/v1/vendors/{vendorId}/revenue-history`"** = **정산 엔드포인트 경로가 틀림**. → **[해결됨]** 라이브 문서('매출내역 조회') 기준으로 경로를 `/v2/providers/openapi/apis/api/v1/revenue-history`(vendorId 는 쿼리), 응답을 중첩 구조(`data[].items[]`)로 수정. 위 "정산 수집" 항목 참고. 실 키로 200 응답 최종 대조만 남음.
   - [x] Phase 3(토스 빌링 스캐폴딩): `billing` 패키지. **실 키 미설정이어도 안전하게 빌드/배포**되는 골격(키 주입만 하면 동작).
     - `TossBillingClient`(RestClient, Basic 인증=secretKey+`:` Base64): `issueBillingKey(authKey,customerKey)` → POST `/v1/billing/authorizations/issue`, `charge(billingKey,customerKey,amount,orderId,orderName)` → POST `/v1/billing/{billingKey}`. 시크릿 키가 placeholder/공백이면 `isConfigured()=false` 라 `ensureConfigured()` 가 `IllegalStateException` 으로 호출 차단.
     - `BillingService`: `subscribe(userId,authKey)`(customerKey 없으면 UUID 생성→빌링키 발급·**암호화 저장**→첫 달 결제→ACTIVE + `currentPeriodEnd=now+1M`), `renewDue(now)`(ACTIVE & 주기 만료분 재청구, 유저별 예외 격리, 실패→PAST_DUE, 빌링키 없음→PAST_DUE), `cancel(userId)`(상태만 CANCELED, 남은 기간 유지). orderId=`customerKey+yyyyMM` 로 **중복청구 방지**.
@@ -112,7 +116,7 @@
 
 ## 다음 단계 (여기서 이어서)
 
-1. **실 쿠팡 키 라이브 검증** — 계정 연동 입구가 생겼으니(`POST /api/me/accounts`), **당신의 실제 쿠팡 vendorId/키**로 연동→수집을 돌려 `[검증 필요]` 마커(엔드포인트 경로·JSON 필드명·페이징 토큰·정산/반품 라인 고유 id)를 라이브로 확정. (연동 직후 1회 수동 동기화 트리거 버튼도 이때 같이.)
+1. **실 쿠팡 키 라이브 검증** — 계정 연동 입구가 생겼으니(`POST /api/me/accounts`), **당신의 실제 쿠팡 vendorId/키**로 연동→수집을 돌려 `[검증 필요]` 마커(JSON 필드명·페이징 토큰·정산/반품 라인 고유 id)를 라이브로 확정. (연동 직후 1회 수동 동기화 트리거 버튼도 이때 같이.) **정산 엔드포인트 경로 404 는 문서 기준으로 수정 완료** — 남은 건 실 키로 200 응답을 받아 필드명·REFUND 음수 부호·고유 id 유무를 대조하는 것.
 2. **조회 기간 한도(dashboardLookbackDays) 게이팅** — 계정 수 한도(maxMarketAccounts)는 적용 완료. 남은 건 대시보드 from/to 가 플랜 기간(FREE=30일)을 넘으면 자르거나 거부.
 2. **토스 빌링 마무리(#2, 보류 중)** — 실 키(`TOSS_SECRET_KEY`/클라이언트 키) 주입 + 토스 SDK 카드등록(`Pricing.jsx` subscribe TODO) + 응답/에러 코드 라이브 확정.
 3. **프론트 빌드 Gradle 통합**(선택) — `npm run build` 를 Gradle 빌드에 묶어 산출물 커밋 제거.

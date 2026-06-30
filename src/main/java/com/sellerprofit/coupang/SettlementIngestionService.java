@@ -1,5 +1,6 @@
 package com.sellerprofit.coupang;
 
+import com.sellerprofit.coupang.dto.RevenueHistory;
 import com.sellerprofit.coupang.dto.RevenueHistoryItem;
 import com.sellerprofit.coupang.dto.RevenueHistoryResponse;
 import com.sellerprofit.domain.MarketAccount;
@@ -62,9 +63,9 @@ public class SettlementIngestionService {
         String nextToken = null;
         do {
             RevenueHistoryResponse response = client.fetchRevenueHistory(account, from, to, nextToken);
-            List<RevenueHistoryItem> items = response.data();
-            if (items != null && !items.isEmpty()) {
-                saved += persistPage(accountId, items);
+            List<RevenueHistory> groups = response.data();
+            if (groups != null && !groups.isEmpty()) {
+                saved += persistPage(accountId, groups);
             }
             nextToken = response.nextToken();
         } while (nextToken != null && !nextToken.isBlank());
@@ -74,14 +75,21 @@ public class SettlementIngestionService {
         return saved;
     }
 
-    /** 한 페이지를 한 트랜잭션으로 영속화한다. */
-    private int persistPage(Long accountId, List<RevenueHistoryItem> items) {
+    /** 한 페이지(주문 묶음 목록)를 한 트랜잭션으로 영속화한다. */
+    private int persistPage(Long accountId, List<RevenueHistory> groups) {
         return txTemplate.execute(status -> {
             MarketAccount account = marketAccountRepository.getReferenceById(accountId);
             int count = 0;
-            for (RevenueHistoryItem item : items) {
-                if (persistLine(account, accountId, item)) {
-                    count++;
+            for (RevenueHistory group : groups) {
+                if (group.items() == null) {
+                    continue;
+                }
+                int ordinal = 0;  // 한 주문 안 동일 옵션상품 라인 중복 시 멱등 키 충돌 방지
+                for (RevenueHistoryItem item : group.items()) {
+                    if (persistLine(account, accountId, group, item, ordinal)) {
+                        count++;
+                    }
+                    ordinal++;
                 }
             }
             return count;
@@ -89,9 +97,10 @@ public class SettlementIngestionService {
     }
 
     /** 정산 라인 1건 멱등 저장. 이미 있으면 건너뛰고 false 를 반환한다. */
-    private boolean persistLine(MarketAccount account, Long accountId, RevenueHistoryItem item) {
+    private boolean persistLine(MarketAccount account, Long accountId,
+                                RevenueHistory group, RevenueHistoryItem item, int ordinal) {
         String vendorItemId = String.valueOf(item.vendorItemId());
-        String externalRef = buildExternalRef(item, vendorItemId);
+        String externalRef = buildExternalRef(group, vendorItemId, ordinal);
 
         if (settlementRepository.existsByMarketAccountIdAndExternalRef(accountId, externalRef)) {
             return false;
@@ -101,27 +110,34 @@ public class SettlementIngestionService {
 
         Settlement settlement = Settlement.create(
                 account, product, vendorItemId, externalRef,
-                payout(item), item.serviceFee(),
-                LocalDate.parse(item.recognitionDate()));
+                payout(item), fee(item),
+                LocalDate.parse(group.recognitionDate()));
         settlementRepository.save(settlement);
         return true;
     }
 
-    /** 실지급액 = 판매금액 − 판매수수료 (spec 4장). 반품/취소는 쿠팡이 음수로 내려준다. */
+    /** 실지급액 = 판매금액 − (판매수수료 + 수수료 부가세). 반품/취소는 쿠팡이 음수로 내려준다. */
     private static BigDecimal payout(RevenueHistoryItem item) {
         BigDecimal sale = item.saleAmount() == null ? BigDecimal.ZERO : item.saleAmount();
+        return sale.subtract(fee(item));
+    }
+
+    /** 참고용 총수수료 = 판매수수료 + 수수료 부가세. */
+    private static BigDecimal fee(RevenueHistoryItem item) {
         BigDecimal fee = item.serviceFee() == null ? BigDecimal.ZERO : item.serviceFee();
-        return sale.subtract(fee);
+        BigDecimal vat = item.serviceFeeVat() == null ? BigDecimal.ZERO : item.serviceFeeVat();
+        return fee.add(vat);
     }
 
     /**
-     * 멱등 키. 쿠팡이 정산 라인 고유 id 를 주면 그것을 쓰는 게 가장 안전하다.
-     * ⚠️ [검증 포인트] 현재는 (인식일+옵션상품+정산유형) 조합으로 구성 →
-     *    같은 날 동일 상품·유형이 여러 건이면 충돌해 한 건만 저장될 수 있다.
-     *    라이브 응답에 고유 식별자가 있으면 그 필드로 교체할 것.
+     * 멱등 키 = orderId:판매유형:인식일:옵션상품:라인순번.
+     * 같은 주문이라도 판매/반품(saleType)·인식일이 다르면 별개 라인으로 잡고,
+     * 한 묶음 안 동일 옵션상품이 여러 줄이면 등장 순번(ordinal)으로 구분해 누락을 막는다.
+     * (쿠팡이 정산 라인 고유 id 를 주면 그 값으로 교체하는 게 가장 안전하다.)
      */
-    private static String buildExternalRef(RevenueHistoryItem item, String vendorItemId) {
-        return item.recognitionDate() + ":" + vendorItemId + ":" + item.settlementType();
+    private static String buildExternalRef(RevenueHistory group, String vendorItemId, int ordinal) {
+        return group.orderId() + ":" + group.saleType() + ":"
+                + group.recognitionDate() + ":" + vendorItemId + ":" + ordinal;
     }
 
     /** 기존 상품에 매칭. 없고 상품명이 있으면 생성, 둘 다 없으면 null(스키마상 허용). */
