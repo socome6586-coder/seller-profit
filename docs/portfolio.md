@@ -36,7 +36,20 @@
 | **계정 연동** | 쿠팡 vendorId/Access/Secret 키 등록(AES-GCM 암호화 저장). 플랜 한도(FREE=1계정) 강제. "지금 동기화" 버튼. |
 | **요금제** | FREE/PRO 카탈로그 + 구독 상태. 토스페이먼츠 빌링 스캐폴딩. |
 
-> 스크린샷: [`docs/screenshots/`](./screenshots/) (캡처 가이드는 §7 참고)
+### 화면 미리보기
+
+**순이익 대시보드** — 적자 상품 B 가 빨간 배경 + `적자` 뱃지로 맨 위에 고정된다.
+![대시보드](./screenshots/02-dashboard.png)
+
+**계정 연동** — 쿠팡 키 등록, 한도 표시(1/1), "지금 동기화" 버튼, 한도 도달 시 PRO 업그레이드 안내.
+![계정 연동](./screenshots/03-accounts.png)
+
+<table>
+<tr>
+<td width="50%"><b>로그인</b><br><img src="./screenshots/01-login.png" alt="로그인"></td>
+<td width="50%"><b>요금제</b><br><img src="./screenshots/04-pricing.png" alt="요금제"></td>
+</tr>
+</table>
 
 ---
 
