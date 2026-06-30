@@ -88,6 +88,11 @@
   - 프론트: 새 화면 `Accounts.jsx`(`/accounts`) — 연동 목록(채널/업체코드/계정ID + 해제 버튼) + 연동 폼(키 입력, Secret 은 password 타입) + **한도 표시(count/max)**, 한도 도달 시 폼 잠그고 요금제 링크. Nav 에 "계정 연동" 추가, `App.jsx` 라우트 + `SpaForwardingController` 에 `/accounts` 포워드 추가. 대시보드 "계정 없음" 안내가 `/accounts` 로 링크.
   - ⚠️ **키 보안**: AccountView/응답/로그에 access/secret 키 절대 미노출(목록은 id/channel/vendorId 만). 연동 폼 입력 키는 저장 후 화면에서 비움.
   - 검증(curl, 신규 유저로): 로그인→1번째 연동 **201** → 목록(키 미노출) → 2번째 연동 **400(FREE 1개 한도)** → 빈 vendorId **400(검증)** → 타 유저 계정 #1 해제 시도 **400 "없음"**(열거 차단) → 본인 계정 해제 **204** → 목록 빈 배열 → 슬롯 풀려 재연동 **201** → 데모 계정 #1·대시보드 무손상 200. (signup 은 세션 미생성 → 연동 전 login 필요 확인.)
+
+- [x] **수동 동기화 트리거(라이브 키 검증용)** — 연동 직후 스케줄러(30분/1시간)를 기다리지 않고 즉시 한 계정 수집. `POST /api/me/accounts/{id}/sync`(로그인+소유 필수). `account/ManualSyncService`(소유 확인→주문/정산/반품 ingest 를 **소스별 예외 격리** 실행, lookback `coupang.manual-sync-lookback-days:14`) + `SyncResult`(소스별 `{ok,count,error}`, 일부 실패해도 전체 200 으로 결과 반환 → 어디가 막혔는지 화면/로그로 즉시 확인). 프론트 `/accounts` 각 계정 행에 "지금 동기화" 버튼 + 결과 표시. 키는 결과/로그에 미노출(transactionId 등만).
+  - 🔎 **[라이브 검증 결과 — 중요]** 시드 가짜 키(SEEDVENDOR)로 동기화 시 쿠팡 실 API 에 실제로 도달함:
+    - **주문/반품 → 401 "Specified key is not registered"** = 경로·HMAC 서명 **구조는 정상**(키만 가짜). 실 키 넣으면 동작 예상.
+    - **정산 → 404 "No exactly matching API specification for `/api/v1/vendors/{vendorId}/revenue-history`"** = **정산 엔드포인트 경로가 틀림**(`CoupangApiClient.fetchRevenueHistory` 의 `[검증 포인트]`). 실 키와 무관하게 경로부터 라이브 문서로 수정 필요. ← **다음 작업 1순위**
   - [x] Phase 3(토스 빌링 스캐폴딩): `billing` 패키지. **실 키 미설정이어도 안전하게 빌드/배포**되는 골격(키 주입만 하면 동작).
     - `TossBillingClient`(RestClient, Basic 인증=secretKey+`:` Base64): `issueBillingKey(authKey,customerKey)` → POST `/v1/billing/authorizations/issue`, `charge(billingKey,customerKey,amount,orderId,orderName)` → POST `/v1/billing/{billingKey}`. 시크릿 키가 placeholder/공백이면 `isConfigured()=false` 라 `ensureConfigured()` 가 `IllegalStateException` 으로 호출 차단.
     - `BillingService`: `subscribe(userId,authKey)`(customerKey 없으면 UUID 생성→빌링키 발급·**암호화 저장**→첫 달 결제→ACTIVE + `currentPeriodEnd=now+1M`), `renewDue(now)`(ACTIVE & 주기 만료분 재청구, 유저별 예외 격리, 실패→PAST_DUE, 빌링키 없음→PAST_DUE), `cancel(userId)`(상태만 CANCELED, 남은 기간 유지). orderId=`customerKey+yyyyMM` 로 **중복청구 방지**.

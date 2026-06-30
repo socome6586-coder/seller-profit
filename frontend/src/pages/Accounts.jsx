@@ -12,6 +12,7 @@ export default function Accounts() {
   const [secretKey, setSecretKey] = useState("");
   const [note, setNote] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [syncingId, setSyncingId] = useState(null);
 
   const load = useCallback(async () => {
     try {
@@ -59,6 +60,27 @@ export default function Accounts() {
     }
   }
 
+  async function syncNow(id) {
+    setNote(null);
+    setSyncingId(id);
+    try {
+      const r = await api("/api/me/accounts/" + id + "/sync", { method: "POST" });
+      const line = (label, s) =>
+        s.ok ? `${label} ${s.count}건` : `${label} 실패(${s.error})`;
+      const allOk = r.orders.ok && r.settlements.ok && r.returns.ok;
+      setNote({
+        ok: allOk,
+        msg:
+          "동기화 결과 — " +
+          [line("주문", r.orders), line("정산", r.settlements), line("반품", r.returns)].join(" · "),
+      });
+    } catch (err) {
+      setNote({ ok: false, msg: "동기화 실패: " + err.message });
+    } finally {
+      setSyncingId(null);
+    }
+  }
+
   async function disconnect(id) {
     if (!window.confirm("이 계정을 연동 해제할까요? 수집된 주문/정산/반품 데이터도 함께 삭제됩니다.")) return;
     setNote(null);
@@ -89,19 +111,24 @@ export default function Accounts() {
       </h2>
       <table>
         <thead>
-          <tr><th>채널</th><th>업체코드</th><th>계정 ID</th><th></th></tr>
+          <tr><th>채널</th><th>업체코드</th><th>계정 ID</th><th></th><th></th></tr>
         </thead>
         <tbody>
           {accounts == null ? (
             <tr><td colSpan={4} className="empty">불러오는 중…</td></tr>
           ) : accounts.length === 0 ? (
-            <tr><td colSpan={4} className="empty">아직 연동된 계정이 없습니다. 아래에서 추가하세요.</td></tr>
+            <tr><td colSpan={5} className="empty">아직 연동된 계정이 없습니다. 아래에서 추가하세요.</td></tr>
           ) : (
             accounts.map((a) => (
               <tr key={a.id}>
                 <td>{a.channel}</td>
                 <td>{a.vendorId}</td>
                 <td className="muted">#{a.id}</td>
+                <td>
+                  <button onClick={() => syncNow(a.id)} disabled={syncingId === a.id}>
+                    {syncingId === a.id ? "동기화 중…" : "지금 동기화"}
+                  </button>
+                </td>
                 <td>
                   <button className="ghost" onClick={() => disconnect(a.id)}>해제</button>
                 </td>

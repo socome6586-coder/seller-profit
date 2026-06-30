@@ -4,6 +4,8 @@ import com.sellerprofit.account.AccountAccess;
 import com.sellerprofit.account.AccountConnectRequest;
 import com.sellerprofit.account.AccountConnectionService;
 import com.sellerprofit.account.AccountView;
+import com.sellerprofit.account.ManualSyncService;
+import com.sellerprofit.account.SyncResult;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -14,9 +16,10 @@ import java.util.List;
 /**
  * 로그인 유저 본인 리소스 API.
  *
- * 예) GET    /api/me/accounts        → 내 마켓 계정 목록(대시보드 계정 선택용)
- *     POST   /api/me/accounts        → 쿠팡 계정 연동(키 등록, 플랜 한도 적용)
- *     DELETE /api/me/accounts/{id}   → 계정 연동 해제
+ * 예) GET    /api/me/accounts          → 내 마켓 계정 목록(대시보드 계정 선택용)
+ *     POST   /api/me/accounts          → 쿠팡 계정 연동(키 등록, 플랜 한도 적용)
+ *     DELETE /api/me/accounts/{id}     → 계정 연동 해제
+ *     POST   /api/me/accounts/{id}/sync → 즉시 수동 동기화(주문/정산/반품)
  *
  * ※ 로그인 필수. accountId 를 직접 입력하지 않고 이 목록에서 고르게 해 타 셀러 계정 추측을 막는다.
  */
@@ -26,13 +29,16 @@ public class MeController {
     private final CurrentUser currentUser;
     private final AccountAccess accountAccess;
     private final AccountConnectionService accountConnectionService;
+    private final ManualSyncService manualSyncService;
 
     public MeController(CurrentUser currentUser,
                         AccountAccess accountAccess,
-                        AccountConnectionService accountConnectionService) {
+                        AccountConnectionService accountConnectionService,
+                        ManualSyncService manualSyncService) {
         this.currentUser = currentUser;
         this.accountAccess = accountAccess;
         this.accountConnectionService = accountConnectionService;
+        this.manualSyncService = manualSyncService;
     }
 
     @GetMapping("/api/me/accounts")
@@ -52,5 +58,10 @@ public class MeController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void disconnect(@PathVariable Long id, HttpServletRequest http) {
         accountConnectionService.disconnect(currentUser.requireUserId(http), id);
+    }
+
+    @PostMapping("/api/me/accounts/{id}/sync")
+    public SyncResult sync(@PathVariable Long id, HttpServletRequest http) {
+        return manualSyncService.syncNow(currentUser.requireUserId(http), id);
     }
 }
