@@ -129,6 +129,14 @@
   - ⚠️ **빌드 산출물(`static/index.html`,`static/assets/`)을 커밋**한다(단일 jar 가 그대로 동작하게). **프론트 코드 수정 시 `cd frontend && npm run build` 후 커밋** 필요. (Gradle-node 통합 자동화는 후속 과제 — 지금은 수동 빌드.) `frontend/node_modules`·`dist` 는 gitignore.
   - 검증: :8088 루트가 React 앱 서빙(asset 200, `text/javascript`), `/login`·`/pricing` 딥링크 forward 200, 미리보기로 로그인 화면 렌더+벽 동작 확인(콘솔 에러 0, 라우터 future-flag 경고만). signup→login→me→대시보드/plans API 200.
 
+- [x] **광고 ROI × 순이익 옵티마이저** — `docs/ad-roi-spec.md`/`docs/ad-roi-tasks.md` T1~T6 전체 완료. CSV/수기 광고비 → SKU(vendor_item_id) 귀속 → "광고 돌릴수록 손해인 SKU"(광고손실) 적발.
+  - **스키마/도메인(T1)**: Flyway `V4__ad_spends.sql`(`ad_spends`, `(market_account_id, external_ref)` UNIQUE 멱등) + `ads/domain/AdSpend` 엔티티/리포지토리.
+  - **인제스트(T2)**: `POST /api/ads/spends`(수기 1건) + `POST /api/ads/spends/import`(CSV, 잘못된 행은 사유와 함께 skip 리포트). 소스는 서버가 `MANUAL`로 고정, `external_ref` 로 재업로드 시 중복 방지.
+  - **⚠️ 이중차감 제거(T3, 가장 중요)**: 광고비는 이제 `ad_spends` 로만 관리한다. `ProfitCalculationService` 의 기타비용(매출비율 배분)에서 `CostType.AD` 를 제외해 이중차감을 막음. `ManagementService` 는 신규 `Cost(AD)` 입력 자체를 400 으로 거부(안내 메시지로 `/api/ads/spends` 유도). **불변식**(광고비를 Cost→ad_spends 로 옮겨도 전체 순이익 합계는 불변)을 `ProfitCalculationServiceAdInvariantTest` 로 증명 후 진행. 기존 시드의 `Cost(AD,50000)` 은 동액의 `AdSpend` 2건으로 1:1 이관. 결정 기록: `docs/DECISIONS.md` D1.
+  - **집계 API(T4)**: `GET /api/dashboard/ad-roi` — 기존 `ProfitCalculationService` 결과(이미 AD 제외한 "광고전 기여이익")를 그대로 얹고 `ad_spends` 를 SKU 로 GROUP BY 매칭만 함(로직 재구현 안 함 = 이중 유지보수 방지). 광고손실(`adSpend > contributionProfit`) SKU 를 표 최상단에 정렬, 매칭 안 되는 광고비(옵션ID 없음/현재 상품과 불일치)는 "미할당" 버킷으로 투명 집계. `AdRoiServiceTest` 로 손계산 대조.
+  - **프론트(T5)**: `AdRoi.jsx`(`/ad-roi`) — 헤드라인 카드(총광고비/재검토 대상/미할당/광고손실 SKU 수) + SKU 표(광고손실 빨강·상단, 기존 `적자` UI 관용 재사용) + 수기 입력·CSV 업로드 패널(결과: importedCount/skipped) + 미할당 경고 배너. Nav "광고 ROI" + `SpaForwardingController` 에 `/ad-roi` forward 추가.
+  - **후속 자리만(T6)**: `ads/provider/AdSpendProvider`(`listSpends(accountId, from, to): List<AdSpend>`) 인터페이스만 존재, 구현체(`CoupangAdsProvider`) 는 쿠팡 광고 API 접근·스키마 확정 전까지 만들지 않음. v1 은 CSV/수기가 소스.
+
 ## 다음 단계 (여기서 이어서)
 
 실수익이 목표라 "런칭에 필요한 순서"로 재정렬했다. 사업자등록 전에도 할 수 있는 것부터.
@@ -140,7 +148,7 @@
 3. **토스 빌링 실 키 마무리** — 토스는 **무료 테스트 키를 사업자 없이 즉시 발급** 가능(단, 실 수금=라이브 키는 사업자 후). 테스트 키로 SDK 카드등록(`Pricing.jsx` subscribe TODO) + 빌링키 발급·첫 결제·갱신 플로우를 라이브로 확정. 실 키/에러코드 정책은 사업자 후.
 4. **프론트 빌드 Gradle 통합**(선택) — `npm run build` 를 Gradle 빌드에 묶어 산출물 커밋 제거.
 5. (보강 후보) 반품 사유 표준화(쿠팡 사유 코드 매핑), 사유 추세(기간 비교).
-6. **[신규 수익기능] 광고 ROI × 순이익 옵티마이저** — `docs/ad-roi-spec.md` / `docs/ad-roi-tasks.md`. CSV/수기 광고비 → SKU 귀속 → "광고 돌릴수록 손해인 SKU" 적발. 실 키 불필요(사업자 전 가능). ⚠️ 이중차감 주의: 광고비는 이제 `ad_spends` 로만 관리하고 `ProfitCalculationService` 기타비용 배분에서 광고성 비용 제외(불변식: 전체 순이익 합계 불변). Flyway 다음 번호 V4.
+6. ~~[신규 수익기능] 광고 ROI × 순이익 옵티마이저~~ — **완료**(위 "지금까지 완료된 것" 참고). 다음 후보: 광고 ROI 조회 기간도 플랜 게이팅(dashboardLookbackDays) 대상에 포함할지 결정, `AdSpendProvider` 구현체(쿠팡 광고 API 스키마 확정 후).
 
 ### B. 사업자등록 후에만 가능한 것 (게이팅)
 
