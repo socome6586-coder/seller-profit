@@ -13,6 +13,13 @@
 - 수익 모델: 월 구독
 - 상세 기획/스코프: `docs/coupang-profit-mvp-spec.md` 참고
 
+> **⚠️ 이 프로젝트는 포트폴리오가 아니라 실제 수익을 내는 서비스가 목표다.** (2026-07 방향 확정)
+> 그래서 "런칭에 필요한 것"이 우선이다. 런칭에는 사업자등록이 사실상 강제인데, 두 군데서 막힌다:
+> 1. **쿠팡 Open API 키** — 발급에 **사업자 인증 필수**(쿠팡 공식 문서). 마켓플레이스는 개인 판매자 등급이 없어 셀러 가입 자체가 사업자등록증 + 통신판매업 신고 요구.
+> 2. **토스페이먼츠 구독료 수금** — PG 계약이 **사업자등록 + 통신판매업 신고 필수.**
+> → 개인사업자(간이과세)는 홈택스 온라인·무료·1~2일. **실 키 라이브 검증과 실 결제는 사업자등록 전까지 구조적으로 불가**(쿠팡 공개 샌드박스 없음). 그 전까지는 실 키가 필요 없는 영역(배포·기능 완성)을 진행한다.
+> 그리고 현재 앱은 **localhost 전용** → 고객이 접속하려면 **배포/호스팅(서버·도메인·HTTPS·운영 DB)** 이 실수익으로 가는 진짜 1순위 기술 과제다.
+
 ## 기술 스택
 
 - Java 21 / Spring Boot 3.4
@@ -26,8 +33,15 @@
 - `crypto/` — API 키 AES-256-GCM 암복호화 (`AesGcmEncryptor`, `EncryptedStringConverter`)
 - `domain/` — JPA 엔티티 (`User`, `MarketAccount`, `Product`, `OrderItem`, `Settlement`, `ReturnItem`, `Cost`), `domain/type/` 에 enum
 - `repository/` — Spring Data 리포지토리 + 순이익 집계 네이티브 쿼리(`ProductRepository.findProfitByPeriod`, 결과는 `ProductProfitRow`)
-- `coupang/` — 쿠팡 Open API 연동 (`CoupangHmacSigner` 완료, 이하 작업 중)
+- `coupang/` — 쿠팡 Open API 연동. HMAC 서명(`CoupangHmacSigner`) + 클라이언트(`CoupangApiClient`) + 주문/정산/반품 수집 서비스·스케줄러 + DTO(`dto/`). **연동·수집 로직 완료**, 실 키 라이브 대조만 남음.
+- `profit/` — 순이익 계산(`ProfitCalculationService`, 기타비용 매출비율 배분) + 대시보드 API(`ProfitDashboardController` /profit,/returns) + 반품 사유 통계(`ReturnStatsService`)
 - `manage/` — 셀러 직접 입력 도메인(원가·기타비용) API. `ManagementService` + `ProductManagementController`/`CostController` + `ApiExceptionHandler`, DTO 는 `manage/dto/`
+- `auth/` — 세션 인증(BCrypt, HttpSession). `AuthController`(signup/login/logout/me) + `CurrentUser`(세션 주체 헬퍼) + `MeController`(내 계정 목록/연동/해제/동기화)
+- `account/` — 쿠팡 계정 연동. `AccountConnectionService`(연동/해제, 플랜 한도 강제) + `AccountAccess`(소유권 가드=계정 열거 차단) + `ManualSyncService`(수동 동기화, 소스별 예외 격리)
+- `subscription/` — 요금제. `PlanType`(FREE/PRO 가격·한도 한 곳 고정) + `SubscriptionService` + `SubscriptionController`
+- `billing/` — 토스페이먼츠 정기결제 스캐폴딩. `TossBillingClient` + `BillingService`(구독/갱신/해지) + `BillingScheduler`(매일 03:10 KST) + `BillingController`
+- `web/` — `SpaForwardingController`(SPA 딥링크 forward)
+- 프론트: `frontend/`(React18+Vite+React Router6). 빌드 산출물이 `src/main/resources/static/` 으로 나가 같은 오리진 서빙.
 
 ## 지금까지 완료된 것
 
@@ -116,13 +130,22 @@
 
 ## 다음 단계 (여기서 이어서)
 
-1. **실 쿠팡 키 라이브 검증** — 계정 연동 입구가 생겼으니(`POST /api/me/accounts`), **당신의 실제 쿠팡 vendorId/키**로 연동→수집을 돌려 `[검증 필요]` 마커(JSON 필드명·페이징 토큰·정산/반품 라인 고유 id)를 라이브로 확정. (연동 직후 1회 수동 동기화 트리거 버튼도 이때 같이.) **정산 엔드포인트 경로 404 는 문서 기준으로 수정 완료** — 남은 건 실 키로 200 응답을 받아 필드명·REFUND 음수 부호·고유 id 유무를 대조하는 것.
-2. **조회 기간 한도(dashboardLookbackDays) 게이팅** — 계정 수 한도(maxMarketAccounts)는 적용 완료. 남은 건 대시보드 from/to 가 플랜 기간(FREE=30일)을 넘으면 자르거나 거부.
-2. **토스 빌링 마무리(#2, 보류 중)** — 실 키(`TOSS_SECRET_KEY`/클라이언트 키) 주입 + 토스 SDK 카드등록(`Pricing.jsx` subscribe TODO) + 응답/에러 코드 라이브 확정.
-3. **프론트 빌드 Gradle 통합**(선택) — `npm run build` 를 Gradle 빌드에 묶어 산출물 커밋 제거.
-4. (보강 후보) 반품 사유 표준화(쿠팡 사유 코드 매핑), 사유 추세(기간 비교).
-3. **프론트(React/Next)** — 현재는 단일 `static/index.html`(바닐라). 입력 폼·요금 페이지가 붙으면 본격 화면으로. (사용자 요청상 **가장 마지막**)
-4. (보강 후보) 반품 사유 표준화(쿠팡 사유 코드 매핑), 사유 추세(기간 비교).
+실수익이 목표라 "런칭에 필요한 순서"로 재정렬했다. 사업자등록 전에도 할 수 있는 것부터.
+
+### A. 사업자등록 전에 지금 할 수 있는 것 (실 키 불필요)
+
+1. **[실수익 1순위] 배포/호스팅** — 현재 localhost 전용이라 고객이 접속 불가. 클라우드 서버 + 도메인 + HTTPS + 운영 DB(PostgreSQL) 구성. 운영 환경변수(`APP_ENCRYPTION_KEY`, DB 접속, 추후 `TOSS_SECRET_KEY`) 주입 체계. 프론트 빌드 산출물 포함 단일 jar 배포.
+2. **조회 기간 한도(dashboardLookbackDays) 게이팅** — 계정 수 한도(maxMarketAccounts)는 적용 완료. 남은 건 대시보드 from/to 가 플랜 기간(FREE=30일)을 넘으면 자르거나 거부. 서버 강제.
+3. **토스 빌링 실 키 마무리** — 토스는 **무료 테스트 키를 사업자 없이 즉시 발급** 가능(단, 실 수금=라이브 키는 사업자 후). 테스트 키로 SDK 카드등록(`Pricing.jsx` subscribe TODO) + 빌링키 발급·첫 결제·갱신 플로우를 라이브로 확정. 실 키/에러코드 정책은 사업자 후.
+4. **프론트 빌드 Gradle 통합**(선택) — `npm run build` 를 Gradle 빌드에 묶어 산출물 커밋 제거.
+5. (보강 후보) 반품 사유 표준화(쿠팡 사유 코드 매핑), 사유 추세(기간 비교).
+
+### B. 사업자등록 후에만 가능한 것 (게이팅)
+
+1. **실 쿠팡 키 라이브 검증** — 계정 연동 입구 완성(`POST /api/me/accounts` → `/accounts` 화면). 실 vendorId/키로 연동→수동 동기화(`POST /api/me/accounts/{id}/sync`)를 돌려 `[검증 필요]` 마커(JSON 필드명·페이징 토큰·정산/반품 라인 고유 id)를 라이브로 확정.
+   - **정산 엔드포인트 경로 404 는 문서 기준으로 수정 완료.** 남은 건 실 키로 200 응답을 받아 필드명·REFUND 음수 부호·고유 id 유무를 대조하는 것.
+   - 대안: 사업자등록 전이라도 **쿠팡 셀러인 베타 테스터의 실 키**를 받아 입력하면 검증 가능(키는 AES-GCM 암호화 저장).
+2. **토스 실 수금 전환** — 사업자 PG 계약 후 라이브 키(`TOSS_SECRET_KEY`) 주입 + 응답/에러 코드(재시도/연체) 정책 확정.
 
 > 로컬에서 눈으로 확인하는 법은 아래 "빌드 / 실행 → 시드로 로컬 확인" 참고.
 
