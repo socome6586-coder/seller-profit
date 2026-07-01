@@ -92,6 +92,7 @@ public class ProfitCalculationService {
             products.add(new ProductProfit(
                     r.getProductId(),
                     r.getName(),
+                    r.getVendorItemId(),
                     money(revenue),
                     r.getUnits() == null ? 0L : r.getUnits(),
                     r.getReturnedUnits() == null ? 0L : r.getReturnedUnits(),

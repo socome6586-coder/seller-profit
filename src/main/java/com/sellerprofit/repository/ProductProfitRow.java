@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 public interface ProductProfitRow {
     Long getProductId();
     String getName();
+    String getVendorItemId();      // SKU. 광고 ROI 집계(ads)가 ad_spends 와 매칭하는 키
     BigDecimal getPayout();        // 정산 실수령 합
     Long getUnits();               // COGS 기준 수량 = 주문수량 − 반품수량 (0 미만 0)
     Long getReturnedUnits();       // 반품수량 합

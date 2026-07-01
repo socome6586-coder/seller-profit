@@ -48,6 +48,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
         )
         SELECT p.id                                                       AS productId,
                p.name                                                     AS name,
+               p.vendor_item_id                                           AS vendorItemId,
                COALESCE(s.payout, 0)                                      AS payout,
                GREATEST(COALESCE(o.units, 0) - COALESCE(r.returned, 0), 0) AS units,
                COALESCE(r.returned, 0)                                    AS returnedUnits,
