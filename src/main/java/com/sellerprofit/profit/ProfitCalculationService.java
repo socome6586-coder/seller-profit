@@ -2,6 +2,7 @@ package com.sellerprofit.profit;
 
 import com.sellerprofit.domain.Cost;
 import com.sellerprofit.domain.MarketAccount;
+import com.sellerprofit.domain.type.CostType;
 import com.sellerprofit.profit.dto.ProductProfit;
 import com.sellerprofit.profit.dto.ProfitSummary;
 import com.sellerprofit.repository.CostRepository;
@@ -55,9 +56,13 @@ public class ProfitCalculationService {
         List<ProductProfitRow> rows = productRepository.findProfitByPeriod(accountId, from, to);
 
         // 기간과 겹치는 기타비용 총액 (period_start <= to AND period_end >= from)
+        // ⚠️ 이중차감 방지(docs/ad-roi-spec.md §6): 광고성 비용(AD)은 더 이상 여기서 배분하지 않는다.
+        //    광고비는 이제 ad_spends 로만 관리되며, SKU 귀속은 광고 ROI 집계(com.sellerprofit.ads)가 담당한다.
+        //    같은 돈이 기타비용 배분 + ad_spends 양쪽에서 빠지는 걸 막기 위한 결정 — docs/DECISIONS.md 참고.
         BigDecimal totalCost = costRepository
                 .findByUserIdAndPeriodStartLessThanEqualAndPeriodEndGreaterThanEqual(userId, to, from)
                 .stream()
+                .filter(c -> c.getCostType() != CostType.AD)
                 .map(Cost::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 

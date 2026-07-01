@@ -1,5 +1,9 @@
 package com.sellerprofit.config;
 
+import com.sellerprofit.ads.AdSource;
+import com.sellerprofit.ads.AdSpendService;
+import com.sellerprofit.ads.domain.AdSpend;
+import com.sellerprofit.ads.domain.AdSpendRepository;
 import com.sellerprofit.domain.Cost;
 import com.sellerprofit.domain.MarketAccount;
 import com.sellerprofit.domain.OrderItem;
@@ -54,6 +58,7 @@ public class LocalSeedData implements CommandLineRunner {
     private final SettlementRepository settlementRepository;
     private final ReturnItemRepository returnItemRepository;
     private final CostRepository costRepository;
+    private final AdSpendRepository adSpendRepository;
     private final PasswordEncoder passwordEncoder;
 
     public LocalSeedData(UserRepository userRepository,
@@ -63,6 +68,7 @@ public class LocalSeedData implements CommandLineRunner {
                          SettlementRepository settlementRepository,
                          ReturnItemRepository returnItemRepository,
                          CostRepository costRepository,
+                         AdSpendRepository adSpendRepository,
                          PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.marketAccountRepository = marketAccountRepository;
@@ -71,6 +77,7 @@ public class LocalSeedData implements CommandLineRunner {
         this.settlementRepository = settlementRepository;
         this.returnItemRepository = returnItemRepository;
         this.costRepository = costRepository;
+        this.adSpendRepository = adSpendRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -107,9 +114,16 @@ public class LocalSeedData implements CommandLineRunner {
         seedReturn(account, a, settledAt, "배송지연", 4, 2);
         seedReturn(account, b, settledAt, "상품불량", 5, 1);
 
-        // 기타비용(광고비) — 기간 총액을 매출 비율로 배분
-        costRepository.save(Cost.create(user, CostType.AD, bd(50000),
-                today.minusDays(7), today, "샘플 광고비"));
+        // 기타비용 — 기간 총액을 매출 비율로 배분 (광고비는 여기 아님, 아래 ad_spends 참고)
+        costRepository.save(Cost.create(user, CostType.SHIPPING, bd(20000),
+                today.minusDays(7), today, "샘플 배송비"));
+
+        // 광고비 — docs/ad-roi-spec.md §6·§7 / docs/DECISIONS.md 결정에 따라 ad_spends 로만 관리한다.
+        // (예전엔 Cost(AD, 50000)로 기타비용에 섞여 전 SKU에 매출비율 배분됐다 — 이중차감 위험.
+        //  지금은 SKU 단위로 직접 귀속: A=30,000 / B=20,000. 합계는 예전과 동일(50,000)해서
+        //  "Cost→ad_spends 이전해도 전체 순이익 합계 불변" 불변식을 시드로도 눈으로 보여준다.)
+        seedAdSpend(account, a.getVendorItemId(), "시드-여름프로모션", today.minusDays(3), bd(30000));
+        seedAdSpend(account, b.getVendorItemId(), "시드-여름프로모션", today.minusDays(2), bd(20000));
 
         log.info("[seed] 완료 — accountId={} / 데모 로그인: {} / {} (대시보드: 로그인 후 계정 선택)",
                 account.getId(), DEMO_EMAIL, DEMO_PASSWORD);
@@ -132,6 +146,15 @@ public class LocalSeedData implements CommandLineRunner {
                 payout, BigDecimal.ZERO, settledAt));
 
         return product;
+    }
+
+    /** 광고비(ad_spends) 1건 시드. SKU 단위 직접 귀속(캠페인 차원만 채움, 광고그룹/키워드는 없음). */
+    private void seedAdSpend(MarketAccount account, String vendorItemId, String campaign,
+                             LocalDate spendDate, BigDecimal amount) {
+        String externalRef = AdSpendService.buildExternalRef(
+                AdSource.MANUAL, campaign, null, null, vendorItemId, spendDate);
+        adSpendRepository.save(AdSpend.create(account, vendorItemId, campaign, null, null,
+                spendDate, amount, AdSource.MANUAL, externalRef));
     }
 
     /** 반품 라인 1건 시드. ordinal 로 external_ref 를 유일하게 만든다(한 상품 복수 사유 허용). */

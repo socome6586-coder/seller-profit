@@ -288,7 +288,7 @@ function CogsPanel({ products, onSaved }) {
 }
 
 function CostPanel({ accountId, costs, onSaved }) {
-  const [costType, setCostType] = useState("AD");
+  const [costType, setCostType] = useState("SHIPPING");
   const [amount, setAmount] = useState("");
   const [periodStart, setPeriodStart] = useState("");
   const [periodEnd, setPeriodEnd] = useState("");
@@ -323,10 +323,12 @@ function CostPanel({ accountId, costs, onSaved }) {
   return (
     <div className="panel">
       <h3>기타비용 입력 (기간 총액)</h3>
+      <p className="muted" style={{ fontSize: 12, marginBottom: 10 }}>
+        광고비는 여기서 받지 않습니다. SKU별 광고 손익 분석을 위해 별도 광고비 입력 API(<code>/api/ads/spends</code>)로 옮겨졌습니다(전용 화면은 준비 중).
+      </p>
       <div className="field">
         <label>유형</label>
         <select value={costType} onChange={(e) => setCostType(e.target.value)}>
-          <option value="AD">광고비 (AD)</option>
           <option value="SHIPPING">배송비 (SHIPPING)</option>
           <option value="ETC">기타 (ETC)</option>
         </select>
