@@ -23,7 +23,8 @@ import java.util.stream.Collectors;
         "com.sellerprofit.profit",
         "com.sellerprofit.auth",
         "com.sellerprofit.subscription",
-        "com.sellerprofit.billing"})
+        "com.sellerprofit.billing",
+        "com.sellerprofit.ads"})
 public class ApiExceptionHandler {
 
     /** 잘못된 입력값/존재하지 않는 리소스 등. */
