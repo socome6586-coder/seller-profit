@@ -12,6 +12,9 @@ export default function Nav() {
       <NavLink to="/accounts" className={({ isActive }) => (isActive ? "active" : "")}>
         계정 연동
       </NavLink>
+      <NavLink to="/ad-roi" className={({ isActive }) => (isActive ? "active" : "")}>
+        광고 ROI
+      </NavLink>
       <NavLink to="/pricing" className={({ isActive }) => (isActive ? "active" : "")}>
         요금제
       </NavLink>

@@ -6,6 +6,7 @@ import Signup from "./pages/Signup.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Accounts from "./pages/Accounts.jsx";
 import Pricing from "./pages/Pricing.jsx";
+import AdRoi from "./pages/AdRoi.jsx";
 
 // 로그인 필요한 라우트의 '벽'. 확인 중이면 로딩, 비로그인이면 /login 으로.
 function Protected({ children }) {
@@ -37,6 +38,14 @@ export default function App() {
           element={
             <Protected>
               <Accounts />
+            </Protected>
+          }
+        />
+        <Route
+          path="/ad-roi"
+          element={
+            <Protected>
+              <AdRoi />
             </Protected>
           }
         />

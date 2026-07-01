@@ -29,7 +29,24 @@ export async function api(path, { method = "GET", body } = {}) {
   return text ? JSON.parse(text) : null;
 }
 
+/** 파일 업로드(multipart/form-data). Content-Type 은 브라우저가 boundary 포함해 자동 설정하므로 직접 지정하지 않는다. */
+export async function uploadFile(path, formData) {
+  const res = await fetch(path, {
+    method: "POST",
+    credentials: "same-origin",
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = new Error(await parseError(res));
+    err.status = res.status;
+    throw err;
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
 export const won = (n) => (n == null ? "–" : "₩" + Number(n).toLocaleString("ko-KR"));
 export const pct = (n) => (n == null ? "–" : Number(n).toFixed(1) + "%");
 export const num = (n) => Number(n || 0).toLocaleString("ko-KR");
 export const signClass = (n) => (Number(n) < 0 ? "neg" : "pos");
+export const roas = (n) => (n == null ? "–" : Number(n).toFixed(2) + "x");

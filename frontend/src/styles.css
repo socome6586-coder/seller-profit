@@ -63,6 +63,8 @@ tr.loss td { background: var(--loss-bg); }
 .muted { color: var(--muted); }
 .empty { text-align: center; color: var(--muted); padding: 30px; }
 .error-banner { color: var(--loss); margin: 14px 0; font-size: 14px; }
+.warn-banner { color: var(--text); background: #2a2210; border: 1px solid #4a3c15;
+  border-radius: 10px; padding: 10px 14px; margin: 14px 0; font-size: 13px; }
 
 .bar { display: inline-block; vertical-align: middle; height: 8px; border-radius: 999px;
   background: var(--accent); margin-left: 8px; min-width: 2px; }
