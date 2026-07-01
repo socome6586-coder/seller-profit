@@ -42,6 +42,7 @@
 - `billing/` — 토스페이먼츠 정기결제 스캐폴딩. `TossBillingClient` + `BillingService`(구독/갱신/해지) + `BillingScheduler`(매일 03:10 KST) + `BillingController`
 - `web/` — `SpaForwardingController`(SPA 딥링크 forward)
 - 프론트: `frontend/`(React18+Vite+React Router6). 빌드 산출물이 `src/main/resources/static/` 으로 나가 같은 오리진 서빙.
+- `ads/` — 광고비 인제스트(수기/CSV) + 광고 ROI 집계. 광고비를 SKU(vendor_item_id) 단위로 귀속해 "광고전 기여이익 vs 광고비"로 광고손실 SKU를 적발. 소스는 v1 수기/CSV, 쿠팡 광고 API 는 `ads/provider/AdSpendProvider` 뒤 후속. 상세: docs/ad-roi-spec.md
 
 ## 지금까지 완료된 것
 
@@ -139,6 +140,7 @@
 3. **토스 빌링 실 키 마무리** — 토스는 **무료 테스트 키를 사업자 없이 즉시 발급** 가능(단, 실 수금=라이브 키는 사업자 후). 테스트 키로 SDK 카드등록(`Pricing.jsx` subscribe TODO) + 빌링키 발급·첫 결제·갱신 플로우를 라이브로 확정. 실 키/에러코드 정책은 사업자 후.
 4. **프론트 빌드 Gradle 통합**(선택) — `npm run build` 를 Gradle 빌드에 묶어 산출물 커밋 제거.
 5. (보강 후보) 반품 사유 표준화(쿠팡 사유 코드 매핑), 사유 추세(기간 비교).
+6. **[신규 수익기능] 광고 ROI × 순이익 옵티마이저** — `docs/ad-roi-spec.md` / `docs/ad-roi-tasks.md`. CSV/수기 광고비 → SKU 귀속 → "광고 돌릴수록 손해인 SKU" 적발. 실 키 불필요(사업자 전 가능). ⚠️ 이중차감 주의: 광고비는 이제 `ad_spends` 로만 관리하고 `ProfitCalculationService` 기타비용 배분에서 광고성 비용 제외(불변식: 전체 순이익 합계 불변). Flyway 다음 번호 V4.
 
 ### B. 사업자등록 후에만 가능한 것 (게이팅)
 
