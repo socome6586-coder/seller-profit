@@ -87,6 +87,9 @@ class ProfitCalculationServiceAdInvariantTest {
         ProductProfitRow rowB = mockRow(2L, "상품 B", "400000", 50L, 0L, "500000", "-100000");
         when(productRepository.findProfitByPeriod(ACCOUNT_ID, FROM, TO))
                 .thenReturn(List.of(rowA, rowB));
+        // 이 테스트는 광고비(ad_spends) 반영을 다루지 않는다(T3 는 Cost(AD) 이중차감 제거만 증명) —
+        // 광고비 0 으로 고정해 기존 광고전 불변식 수치가 그대로 유지되게 한다.
+        when(productRepository.sumAdSpendByPeriod(ACCOUNT_ID, FROM, TO)).thenReturn(BigDecimal.ZERO);
 
         when(costRepository.findByUserIdAndPeriodStartLessThanEqualAndPeriodEndGreaterThanEqual(
                 anyLong(), any(LocalDate.class), any(LocalDate.class)))
@@ -111,6 +114,7 @@ class ProfitCalculationServiceAdInvariantTest {
         when(row.getReturnedUnits()).thenReturn(returnedUnits);
         when(row.getCogsTotal()).thenReturn(new BigDecimal(cogsTotal));
         when(row.getProfit()).thenReturn(new BigDecimal(profit));
+        when(row.getAdSpend()).thenReturn(BigDecimal.ZERO);
         return row;
     }
 }

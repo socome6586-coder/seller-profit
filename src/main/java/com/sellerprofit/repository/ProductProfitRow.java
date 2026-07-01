@@ -14,5 +14,6 @@ public interface ProductProfitRow {
     Long getUnits();               // COGS 기준 수량 = 주문수량 − 반품수량 (0 미만 0)
     Long getReturnedUnits();       // 반품수량 합
     BigDecimal getCogsTotal();     // 원가 합 (COGS기준수량 × COGS)
-    BigDecimal getProfit();        // 순이익 (기타비용 배분 前)
+    BigDecimal getAdSpend();       // 이 SKU(vendor_item_id)로 귀속된 광고비 합 (기간 내)
+    BigDecimal getProfit();        // 순이익 (기타비용 배분 前, 광고비 반영 前)
 }

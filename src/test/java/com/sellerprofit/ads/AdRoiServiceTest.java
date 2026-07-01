@@ -90,6 +90,7 @@ class AdRoiServiceTest {
                 productProfit(3L, "상품 C", "1003", "200000", "30000"));
         ProfitSummary profitSummary = new ProfitSummary(FROM, TO,
                 new BigDecimal("1200000.00"), BigDecimal.ZERO, BigDecimal.ZERO,
+                BigDecimal.ZERO, BigDecimal.ZERO,
                 new BigDecimal("430000.00"), null, 0L, products);
         when(profitCalculationService.calculate(ACCOUNT_ID, FROM, TO)).thenReturn(profitSummary);
 
@@ -109,10 +110,13 @@ class AdRoiServiceTest {
     }
 
     private static ProductProfit productProfit(Long productId, String name, String vendorItemId,
-                                                String revenue, String profit) {
+                                                String revenue, String preAdProfit) {
+        // AdRoiService 는 preAdProfit()만 "광고전 기여이익"으로 소비한다 — profit/adSpend/marginPct/loss
+        // (광고후 값)는 이 테스트가 검증하는 대상이 아니므로 임의값(preAdProfit 와 동일)으로 채운다.
+        BigDecimal preAd = new BigDecimal(preAdProfit);
         return new ProductProfit(productId, name, vendorItemId, new BigDecimal(revenue),
-                0L, 0L, BigDecimal.ZERO, BigDecimal.ZERO, new BigDecimal(profit), null,
-                new BigDecimal(profit).signum() < 0);
+                0L, 0L, BigDecimal.ZERO, BigDecimal.ZERO, preAd, BigDecimal.ZERO, preAd, null,
+                preAd.signum() < 0);
     }
 
     private static AdSpendVendorItemAggregate aggregate(String vendorItemId, String amount) {

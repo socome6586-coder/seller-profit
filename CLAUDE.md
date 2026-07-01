@@ -136,6 +136,13 @@
   - **집계 API(T4)**: `GET /api/dashboard/ad-roi` — 기존 `ProfitCalculationService` 결과(이미 AD 제외한 "광고전 기여이익")를 그대로 얹고 `ad_spends` 를 SKU 로 GROUP BY 매칭만 함(로직 재구현 안 함 = 이중 유지보수 방지). 광고손실(`adSpend > contributionProfit`) SKU 를 표 최상단에 정렬, 매칭 안 되는 광고비(옵션ID 없음/현재 상품과 불일치)는 "미할당" 버킷으로 투명 집계. `AdRoiServiceTest` 로 손계산 대조.
   - **프론트(T5)**: `AdRoi.jsx`(`/ad-roi`) — 헤드라인 카드(총광고비/재검토 대상/미할당/광고손실 SKU 수) + SKU 표(광고손실 빨강·상단, 기존 `적자` UI 관용 재사용) + 수기 입력·CSV 업로드 패널(결과: importedCount/skipped) + 미할당 경고 배너. Nav "광고 ROI" + `SpaForwardingController` 에 `/ad-roi` forward 추가.
   - **후속 자리만(T6)**: `ads/provider/AdSpendProvider`(`listSpends(accountId, from, to): List<AdSpend>`) 인터페이스만 존재, 구현체(`CoupangAdsProvider`) 는 쿠팡 광고 API 접근·스키마 확정 전까지 만들지 않음. v1 은 CSV/수기가 소스.
+  - **[T6 후속] 메인 대시보드에도 광고비 반영** — T1~T6 는 `/ad-roi` 전용 화면이었고, 메인 대시보드(`/`, `GET /api/dashboard/profit`)의 "진짜 순이익"은 그대로 광고비 반영 前 값이었다. 이제 메인 헤드라인·표·정렬·적자 판정도 전부 광고후 기준.
+    - `ProductRepository.findProfitByPeriod` 에 `ad_spends` CTE 추가(`vendor_item_id` 로 조인, 반품 CTE 와 동일한 fan-out 방지 패턴) + `sumAdSpendByPeriod`(products 테이블과 무관한 기간 전체 ad_spends 합, 미할당 계산용) 신설.
+    - `ProductProfit` 에 `preAdProfit`(옛 `profit`, 광고전 기여이익 — `AdRoiService` 가 그대로 소비) + `adSpend` 필드 추가, `profit`/`marginPct`/`loss` 는 광고후 의미로 재정의. `ProfitSummary` 에 `totalAdSpend`/`unallocatedAdSpend` 추가, 총순이익 = Σ(SKU 별 광고후 순이익) − 미할당광고비.
+    - `unallocatedAdSpend` 는 "vendor_item_id NULL 인 것만"이 아니라 **"기간 전체 ad_spends 합 − SKU 매칭분"** 으로 정의(오타/단종 SKU 에 걸린 광고비도 놓치지 않음 — money-conservation). `/ad-roi`(`AdRoiService.unassignedAdSpend`)와 정확히 같은 공식이라 두 화면이 항상 일치. 결정 기록: `docs/DECISIONS.md` D2.
+    - 프론트 `Dashboard.jsx`: "광고비" 카드/컬럼 추가, 부제를 "정산 실수령 − 원가 − 배분된 기타비용 − 광고비 = 진짜 순이익"으로 변경.
+    - 새 불변식 테스트 `AdRoiMainDashboardConsistencyTest`(메인 총순이익 = Σ(/ad-roi 광고후 순이익) − 미할당광고비, SKU 별 순이익 동일)로 두 화면 정합성 고정.
+    - 검증(seed): `GET /api/dashboard/profit?accountId=1` → `totalProfit=345000.00`, 적자상품 B `profit=-159736.84`(광고후 재계산), `GET /api/dashboard/ad-roi` 값과 SKU 별로 byte-for-byte 일치, 회귀 없음.
 
 ## 다음 단계 (여기서 이어서)
 

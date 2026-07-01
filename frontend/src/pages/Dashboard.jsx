@@ -88,7 +88,7 @@ export default function Dashboard() {
     <div className="wrap">
       <h1>셀러 순이익 대시보드</h1>
       <div className="sub">
-        정산 실수령 − 원가 − 배분된 기타비용 = 진짜 순이익. 적자 상품이 맨 위로 올라옵니다.
+        정산 실수령 − 원가 − 배분된 기타비용 − 광고비 = 진짜 순이익. 적자 상품이 맨 위로 올라옵니다.
       </div>
 
       {noAccounts ? (
@@ -130,9 +130,18 @@ export default function Dashboard() {
 
       <div className="cards">
         <Card k="총매출 (정산 실수령)" v={won(profit?.totalRevenue)} />
-        <Card k="총순이익" v={won(profit?.totalProfit)} cls={profit ? signClass(profit.totalProfit) : ""} />
+        <Card k="총순이익 (진짜)" v={won(profit?.totalProfit)} cls={profit ? signClass(profit.totalProfit) : ""} />
         <Card k="평균 마진율" v={pct(profit?.avgMarginPct)} />
         <Card k="배분 기타비용" v={won(profit?.totalAllocatedCost)} />
+        <Card
+          k="광고비"
+          v={won(profit?.totalAdSpend)}
+          sub={
+            profit && Number(profit.unallocatedAdSpend) > 0
+              ? "미할당 " + won(profit.unallocatedAdSpend)
+              : null
+          }
+        />
       </div>
 
       <ProfitTable products={profit?.products} />
@@ -160,11 +169,12 @@ export default function Dashboard() {
   );
 }
 
-function Card({ k, v, cls }) {
+function Card({ k, v, cls, sub }) {
   return (
     <div className="card">
       <div className="k">{k}</div>
       <div className={"v " + (cls || "")}>{v}</div>
+      {sub ? <div className="muted" style={{ fontSize: 12 }}>{sub}</div> : null}
     </div>
   );
 }
@@ -176,14 +186,14 @@ function ProfitTable({ products }) {
       <thead>
         <tr>
           <th>상품</th><th>매출</th><th>수량</th><th>반품</th><th>원가</th>
-          <th>배분비용</th><th>순이익</th><th>마진율</th>
+          <th>배분비용</th><th>광고비</th><th>순이익</th><th>마진율</th>
         </tr>
       </thead>
       <tbody>
         {products == null ? (
-          <tr><td colSpan={8} className="empty">「조회」를 눌러 데이터를 불러오세요.</td></tr>
+          <tr><td colSpan={9} className="empty">「조회」를 눌러 데이터를 불러오세요.</td></tr>
         ) : items.length === 0 ? (
-          <tr><td colSpan={8} className="empty">해당 기간 데이터가 없습니다.</td></tr>
+          <tr><td colSpan={9} className="empty">해당 기간 데이터가 없습니다.</td></tr>
         ) : (
           items.map((it, i) => (
             <tr key={i} className={it.loss ? "loss" : ""}>
@@ -196,6 +206,7 @@ function ProfitTable({ products }) {
               <td className={Number(it.returnedUnits) > 0 ? "neg" : "muted"}>{num(it.returnedUnits)}</td>
               <td>{won(it.cogsTotal)}</td>
               <td>{won(it.allocatedCost)}</td>
+              <td>{won(it.adSpend)}</td>
               <td className={signClass(it.profit)}>{won(it.profit)}</td>
               <td className={signClass(it.profit)}>{pct(it.marginPct)}</td>
             </tr>

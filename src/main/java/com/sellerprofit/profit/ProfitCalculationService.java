@@ -22,11 +22,16 @@ import java.util.List;
 /**
  * 상품별 순이익 계산 (제품의 심장).
  *
- *   순이익 = Σ(정산 실수령) − Σ(판매수량 × COGS) − 배분된 기타비용
- *   마진율 = 순이익 / 매출 × 100
+ *   진짜 순이익 = Σ(정산 실수령) − Σ(판매수량 × COGS) − 배분된 기타비용 − 광고비
+ *   마진율 = 진짜 순이익 / 매출 × 100
  *
- * 정산/원가 집계는 DB(네이티브 쿼리)에서 끝내고, 기타비용 배분만 앱에서 처리한다.
+ * 정산/원가/광고비 집계는 DB(네이티브 쿼리)에서 끝내고, 기타비용 배분만 앱에서 처리한다.
  * 기타비용은 user 단위 기간 총액 → 상품별 '매출 비율'로 배분한다(spec 4장).
+ *
+ * 광고비는 ad_spends 에서만 온다({@code CostType.AD} 는 이중차감 방지를 위해 위 기타비용
+ * 배분에서 제외됨 — docs/DECISIONS.md D1). SKU(vendor_item_id)로 귀속된 몫은
+ * {@link ProductProfitRow#getAdSpend()}, 귀속 안 된 몫(unallocatedAdSpend)은 총순이익에서
+ * 별도로 차감한다 — 두 몫을 합치면 항상 기간 전체 광고비 총액과 같다(money-conservation).
  */
 @Service
 public class ProfitCalculationService {
@@ -73,6 +78,7 @@ public class ProfitCalculationService {
 
         List<ProductProfit> products = new ArrayList<>(rows.size());
         BigDecimal totalAllocated = BigDecimal.ZERO;
+        BigDecimal totalMatchedAdSpend = BigDecimal.ZERO;
 
         for (ProductProfitRow r : rows) {
             BigDecimal revenue = nz(r.getPayout());
@@ -84,7 +90,12 @@ public class ProfitCalculationService {
                     : BigDecimal.ZERO;
             totalAllocated = totalAllocated.add(allocated);
 
-            BigDecimal profit = preProfit.subtract(allocated).setScale(MONEY_SCALE, RoundingMode.HALF_UP);
+            BigDecimal preAdProfit = preProfit.subtract(allocated).setScale(MONEY_SCALE, RoundingMode.HALF_UP);
+
+            BigDecimal adSpend = money(nz(r.getAdSpend()));
+            totalMatchedAdSpend = totalMatchedAdSpend.add(adSpend);
+
+            BigDecimal profit = preAdProfit.subtract(adSpend).setScale(MONEY_SCALE, RoundingMode.HALF_UP);
             BigDecimal marginPct = revenue.signum() != 0
                     ? profit.multiply(HUNDRED).divide(revenue, MARGIN_SCALE, RoundingMode.HALF_UP)
                     : null;
@@ -98,25 +109,34 @@ public class ProfitCalculationService {
                     r.getReturnedUnits() == null ? 0L : r.getReturnedUnits(),
                     money(nz(r.getCogsTotal())),
                     money(allocated),
+                    preAdProfit,
+                    adSpend,
                     profit,
                     marginPct,
                     profit.signum() < 0));
         }
 
-        // 적자 상품이 위로 (핵심 화면 정렬). 배분 後 순이익 기준으로 재정렬.
+        // 적자 상품이 위로 (핵심 화면 정렬). 광고후("진짜") 순이익 기준으로 재정렬.
         products.sort(Comparator.comparing(ProductProfit::profit));
+
+        // 기간 전체 광고비 중 SKU 로 귀속되지 못한 몫 (실비용이므로 총순이익에서 별도 차감).
+        BigDecimal totalAdSpend = money(nz(productRepository.sumAdSpendByPeriod(accountId, from, to)));
+        BigDecimal unallocatedAdSpend = totalAdSpend.subtract(money(totalMatchedAdSpend));
+        if (unallocatedAdSpend.signum() < 0) {
+            unallocatedAdSpend = BigDecimal.ZERO; // 방어적: 이론상 음수가 될 수 없음
+        }
 
         BigDecimal totalRevenue = money(sum(products, ProductProfit::revenue));
         BigDecimal totalCogs = money(sum(products, ProductProfit::cogsTotal));
-        BigDecimal totalProfit = money(sum(products, ProductProfit::profit));
+        BigDecimal totalProfit = money(sum(products, ProductProfit::profit).subtract(unallocatedAdSpend));
         long totalReturnedUnits = products.stream().mapToLong(ProductProfit::returnedUnits).sum();
         BigDecimal avgMargin = totalRevenue.signum() != 0
                 ? totalProfit.multiply(HUNDRED).divide(totalRevenue, MARGIN_SCALE, RoundingMode.HALF_UP)
                 : null;
 
         return new ProfitSummary(from, to,
-                totalRevenue, totalCogs, money(totalAllocated), totalProfit, avgMargin,
-                totalReturnedUnits, products);
+                totalRevenue, totalCogs, money(totalAllocated), totalAdSpend, unallocatedAdSpend,
+                totalProfit, avgMargin, totalReturnedUnits, products);
     }
 
     private static BigDecimal sum(List<ProductProfit> list,

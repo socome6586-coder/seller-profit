@@ -48,3 +48,40 @@
   (위 불변식), 이 차액은 앞으로 `GET /api/dashboard/ad-roi`(T4)에서 "광고후 순이익"으로
   다시 드러난다. 돈이 사라지거나 두 번 빠지지 않는다는 게 진짜 불변식이며, 이건 테스트로
   증명됐다.
+
+---
+
+## D2. 메인 대시보드("진짜 순이익")에 광고비 반영 — `unallocatedAdSpend` 를 문자 그대로 대신 "전체 − 매칭"으로 정의
+
+- **날짜**: 2026-07-01
+- **관련**: `ProductRepository.findProfitByPeriod`/`sumAdSpendByPeriod`, `ProfitCalculationService`,
+  `ProfitSummary`/`ProductProfit`, `AdRoiService`
+- **배경**: D1(T3)까지는 `/ad-roi` 화면만 광고비를 반영했고, 메인 대시보드(`/`,
+  `GET /api/dashboard/profit`)의 "진짜 순이익"은 여전히 광고비 반영 前 값이었다. 이번 변경으로
+  메인 대시보드 헤드라인·표·정렬·적자 판정을 모두 광고후 기준으로 바꿨다.
+- **핵심 설계 결정 두 가지**:
+  1. **`ProductProfit` 필드 분리(`preAdProfit` vs `profit`)** — 기존 `profit` 필드는
+     `AdRoiService` 가 "광고전 기여이익"으로 그대로 소비하고 있었다. 메인 대시보드가 `profit`
+     의미를 광고후로 바꾸면 `AdRoiService` 가 조용히 이중차감(광고비를 또 빼는 셈)하게 된다.
+     그래서 옛 의미를 `preAdProfit` 이라는 새 필드로 보존하고, `AdRoiService` 는
+     `p.profit()` → `p.preAdProfit()` 한 줄만 바꿔 `/ad-roi` 출력이 byte-for-byte 그대로이게
+     했다(회귀 없음은 `AdRoiMainDashboardConsistencyTest` 로 증명).
+  2. **`unallocatedAdSpend` 를 "vendor_item_id IS NULL 인 ad_spends 합"이 아니라
+     "기간 전체 ad_spends 합 − SKU 로 매칭된 합"으로 정의.** 문자 그대로의 정의는 옳지 않은
+     SKU(오타·단종 vendor_item_id 등 이 계정 어떤 상품과도 안 맞는 값)에 걸린 광고비를
+     조용히 대시보드 어디에도 안 잡히게 만든다 — money-conservation 위반. 그래서
+     `ProductRepository` 에 `products` 테이블과 무관하게 `ad_spends` 전체를 합산하는
+     `sumAdSpendByPeriod` 를 별도로 두고, `unallocatedAdSpend = totalAdSpend − Σ(SKU 매칭분)` 로
+     계산한다. 이는 `/ad-roi`(`AdRoiService.unassignedAdSpend`)가 이미 쓰던 것과 정확히 같은
+     공식이라, 두 화면의 미할당 광고비가 항상 일치한다(같은 `ad_spends` 테이블을 서로 다른
+     쿼리로 읽을 뿐).
+  3. **`profit` 코어(`profit` 패키지)가 `ads` 도메인에 Java 레벨로 의존하지 않게 유지** —
+     `ad_spends` CTE/합계는 `ProductRepository`(네이티브 SQL) 안에서만 등장한다.
+     `ads.domain.AdSpendRepository` 를 참조하지 않으므로 `ads → profit`(기존 방향, `AdRoiService`
+     가 `ProfitCalculationService` 를 씀) 하나의 의존 방향만 유지되고 순환 의존이 생기지 않는다.
+- **결과(검증)**: `AdRoiMainDashboardConsistencyTest`
+  (`src/test/java/com/sellerprofit/ads/`)가 (1) 메인 총순이익 = Σ(/ad-roi 광고후 순이익) −
+  미할당광고비, (2) 두 화면의 SKU 별 순이익·총광고비·미할당광고비가 항상 같음을 고정한다.
+  시드(seed) 라이브 검증: `GET /api/dashboard/profit?accountId=1` → `totalProfit=345000.00`,
+  적자상품 B `profit=-159736.84`; `GET /api/dashboard/ad-roi?accountId=1` 의
+  `totalAdSpend`/`unassignedAdSpend`/SKU 별 `postAdProfit` 이 메인 대시보드 값과 정확히 일치.

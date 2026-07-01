@@ -68,7 +68,7 @@ public class AdRoiService {
             BigDecimal adSpend = money(spendByVendorItem.getOrDefault(p.vendorItemId(), BigDecimal.ZERO));
             matchedAdSpend = matchedAdSpend.add(adSpend);
 
-            BigDecimal contributionProfit = p.profit(); // 이미 광고성 비용 제외 후 순이익
+            BigDecimal contributionProfit = p.preAdProfit(); // 광고전 기여이익(기타비용 배분까지만 반영)
             BigDecimal postAdProfit = money(contributionProfit.subtract(adSpend));
             boolean adLoss = adSpend.compareTo(contributionProfit) > 0;
             if (adLoss) {

@@ -125,6 +125,11 @@ public class LocalSeedData implements CommandLineRunner {
         seedAdSpend(account, a.getVendorItemId(), "시드-여름프로모션", today.minusDays(3), bd(30000));
         seedAdSpend(account, b.getVendorItemId(), "시드-여름프로모션", today.minusDays(2), bd(20000));
 
+        // 미할당 광고비 샘플: vendorItemId 없이 캠페인 단위로만 집행된 5,000원.
+        // 메인 대시보드 "진짜 순이익"은 이 미할당분도 실비용으로 총합에서 차감한다
+        // (docs/DECISIONS.md D1 의 money-conservation 원칙 — /ad-roi 의 unassignedAdSpend 와 동일).
+        seedAdSpend(account, null, "시드-브랜드검색", today.minusDays(2), bd(5000));
+
         log.info("[seed] 완료 — accountId={} / 데모 로그인: {} / {} (대시보드: 로그인 후 계정 선택)",
                 account.getId(), DEMO_EMAIL, DEMO_PASSWORD);
     }
