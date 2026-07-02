@@ -91,4 +91,28 @@ class SubscriptionServiceTest {
         when(userRepository.findById(99L)).thenReturn(Optional.empty());
         assertThrows(IllegalArgumentException.class, () -> subscriptionService.grantComp(99L, 1));
     }
+
+    @Test
+    void COMP_구독은_회수시_FREE_로_강등() {
+        User user = User.create("comp@test.local", "hash");
+        user.setSubscriptionStatus(SubscriptionStatus.ACTIVE);
+        user.setSource(SubscriptionSource.COMP);
+        when(userRepository.findById(4L)).thenReturn(Optional.of(user));
+
+        SubscriptionStatus before = subscriptionService.revokeComp(4L);
+
+        assertEquals(SubscriptionStatus.ACTIVE, before);
+        assertEquals(SubscriptionStatus.FREE, user.getSubscriptionStatus());
+    }
+
+    @Test
+    void PAID_구독은_회수_대상이_아니라_400() {
+        User user = User.create("paid@test.local", "hash");
+        user.setSubscriptionStatus(SubscriptionStatus.ACTIVE);
+        user.setSource(SubscriptionSource.PAID);
+        when(userRepository.findById(5L)).thenReturn(Optional.of(user));
+
+        assertThrows(IllegalArgumentException.class, () -> subscriptionService.revokeComp(5L));
+        assertEquals(SubscriptionStatus.ACTIVE, user.getSubscriptionStatus());
+    }
 }

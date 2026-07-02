@@ -1,5 +1,6 @@
 package com.sellerprofit.admin;
 
+import com.sellerprofit.domain.type.SubscriptionStatus;
 import com.sellerprofit.subscription.SubscriptionService;
 import com.sellerprofit.subscription.dto.CompGrantResult;
 import org.springframework.stereotype.Service;
@@ -9,8 +10,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * PRO N개월 무상 지급(T10.3) 오케스트레이션. 도메인 우회 금지 — 실제 지급 로직은
- * {@link SubscriptionService} 를 통해서만 처리하고, 여기서는 입력검증 + 감사 로그 기록만 담당한다.
+ * PRO N개월 무상 지급(T10.3) + 회수(T10.4, 선택) 오케스트레이션. 도메인 우회 금지 — 실제
+ * 지급/회수 로직은 {@link SubscriptionService} 를 통해서만 처리하고, 여기서는 입력검증 +
+ * 감사 로그 기록만 담당한다.
  */
 @Service
 public class AdminGrantService {
@@ -46,5 +48,21 @@ public class AdminGrantService {
         detail.put("before", result.before() == null ? null : result.before().toString());
         detail.put("after", result.after().toString());
         adminAuditService.record(adminUserId, "GRANT_PLAN", targetUserId, detail);
+    }
+
+    /**
+     * COMP 회수(선택). PAID 구독은 대상이 아니다(400) — {@link SubscriptionService#revokeComp} 참고.
+     *
+     * @param adminUserId  회수를 수행하는 관리자
+     * @param targetUserId 회수 대상 유저
+     */
+    @Transactional
+    public void revokePro(Long adminUserId, Long targetUserId) {
+        SubscriptionStatus before = subscriptionService.revokeComp(targetUserId);
+
+        Map<String, Object> detail = new LinkedHashMap<>();
+        detail.put("before", before.name());
+        detail.put("after", SubscriptionStatus.FREE.name());
+        adminAuditService.record(adminUserId, "REVOKE_PLAN", targetUserId, detail);
     }
 }

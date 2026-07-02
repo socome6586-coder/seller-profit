@@ -1,5 +1,6 @@
 package com.sellerprofit.admin;
 
+import com.sellerprofit.domain.type.SubscriptionStatus;
 import com.sellerprofit.subscription.SubscriptionService;
 import com.sellerprofit.subscription.dto.CompGrantResult;
 import org.junit.jupiter.api.Test;
@@ -63,5 +64,24 @@ class AdminGrantServiceTest {
         assertThrows(IllegalArgumentException.class,
                 () -> adminGrantService.grantPro(1L, 10L, 3, "FREE"));
         verify(subscriptionService, never()).grantComp(anyLong(), anyInt());
+    }
+
+    @Test
+    void 정상_회수시_SubscriptionService_경유_후_감사로그_1건() {
+        when(subscriptionService.revokeComp(10L)).thenReturn(SubscriptionStatus.ACTIVE);
+
+        adminGrantService.revokePro(1L, 10L);
+
+        verify(subscriptionService).revokeComp(10L);
+        verify(adminAuditService).record(eq(1L), eq("REVOKE_PLAN"), eq(10L), anyMap());
+    }
+
+    @Test
+    void PAID_구독_회수시도는_SubscriptionService_에서_400_그대로_전파() {
+        when(subscriptionService.revokeComp(10L))
+                .thenThrow(new IllegalArgumentException("무상(COMP) 지급 구독만 회수할 수 있습니다."));
+
+        assertThrows(IllegalArgumentException.class, () -> adminGrantService.revokePro(1L, 10L));
+        verify(adminAuditService, never()).record(anyLong(), anyString(), anyLong(), anyMap());
     }
 }

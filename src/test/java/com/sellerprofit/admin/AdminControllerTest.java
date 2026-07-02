@@ -51,6 +51,9 @@ class AdminControllerTest {
     @MockitoBean
     private AdminGrantService adminGrantService;
 
+    @MockitoBean
+    private AdminRoleService adminRoleService;
+
     @Test
     void 비관리자는_403() throws Exception {
         doThrow(new ForbiddenException("접근 권한이 없습니다."))
@@ -141,5 +144,131 @@ class AdminControllerTest {
                         .content("{\"months\":0,\"plan\":\"PRO\"}"))
                 .andExpect(status().isBadRequest());
         verify(adminGrantService, never()).grantPro(anyLong(), anyLong(), any(), any());
+    }
+
+    @Test
+    void 회수_비관리자는_403() throws Exception {
+        doThrow(new ForbiddenException("접근 권한이 없습니다."))
+                .when(adminAccess).requireAdmin(any());
+
+        mockMvc.perform(post("/api/admin/users/1/revoke"))
+                .andExpect(status().isForbidden());
+        verify(adminGrantService, never()).revokePro(anyLong(), anyLong());
+    }
+
+    @Test
+    void 회수_미로그인은_401() throws Exception {
+        doThrow(new UnauthorizedException("로그인이 필요합니다."))
+                .when(adminAccess).requireAdmin(any());
+
+        mockMvc.perform(post("/api/admin/users/1/revoke"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void 회수_관리자는_200_과_갱신된_유저정보() throws Exception {
+        User admin = User.create("admin@test.local", "hash");
+        admin.setId(1L);
+        admin.setRole(Role.ADMIN);
+        when(adminAccess.requireAdmin(any())).thenReturn(admin);
+
+        AdminUserView revoked = new AdminUserView(
+                7L, "target@test.local", OffsetDateTime.now(),
+                "USER", "FREE", "FREE", null, "COMP");
+        when(adminUserService.get(7L)).thenReturn(revoked);
+
+        mockMvc.perform(post("/api/admin/users/7/revoke"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.plan").value("FREE"));
+
+        verify(adminGrantService).revokePro(eq(admin.getId()), eq(7L));
+    }
+
+    @Test
+    void 회수_PAID_구독은_서비스에서_400_그대로_전파() throws Exception {
+        User admin = User.create("admin@test.local", "hash");
+        admin.setId(1L);
+        admin.setRole(Role.ADMIN);
+        when(adminAccess.requireAdmin(any())).thenReturn(admin);
+
+        doThrow(new IllegalArgumentException("무상(COMP) 지급 구독만 회수할 수 있습니다."))
+                .when(adminGrantService).revokePro(eq(admin.getId()), eq(7L));
+
+        mockMvc.perform(post("/api/admin/users/7/revoke"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void 역할변경_비관리자는_403() throws Exception {
+        doThrow(new ForbiddenException("접근 권한이 없습니다."))
+                .when(adminAccess).requireAdmin(any());
+
+        mockMvc.perform(post("/api/admin/users/1/role")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"role\":\"ADMIN\"}"))
+                .andExpect(status().isForbidden());
+        verify(adminRoleService, never()).changeRole(anyLong(), anyLong(), any());
+    }
+
+    @Test
+    void 역할변경_미로그인은_401() throws Exception {
+        doThrow(new UnauthorizedException("로그인이 필요합니다."))
+                .when(adminAccess).requireAdmin(any());
+
+        mockMvc.perform(post("/api/admin/users/1/role")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"role\":\"ADMIN\"}"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void 역할변경_관리자는_200_과_갱신된_유저정보() throws Exception {
+        User admin = User.create("admin@test.local", "hash");
+        admin.setId(1L);
+        admin.setRole(Role.ADMIN);
+        when(adminAccess.requireAdmin(any())).thenReturn(admin);
+
+        AdminUserView changed = new AdminUserView(
+                2L, "target@test.local", OffsetDateTime.now(),
+                "ADMIN", "FREE", "FREE", null, "PAID");
+        when(adminUserService.get(2L)).thenReturn(changed);
+
+        mockMvc.perform(post("/api/admin/users/2/role")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"role\":\"ADMIN\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("ADMIN"));
+
+        verify(adminRoleService).changeRole(eq(admin.getId()), eq(2L), eq("ADMIN"));
+    }
+
+    @Test
+    void 역할변경_role_빈값이면_400_컨트롤러_레벨_검증() throws Exception {
+        User admin = User.create("admin@test.local", "hash");
+        admin.setId(1L);
+        admin.setRole(Role.ADMIN);
+        when(adminAccess.requireAdmin(any())).thenReturn(admin);
+
+        mockMvc.perform(post("/api/admin/users/2/role")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"role\":\"\"}"))
+                .andExpect(status().isBadRequest());
+        verify(adminRoleService, never()).changeRole(anyLong(), anyLong(), any());
+    }
+
+    @Test
+    void 역할변경_마지막_관리자_강등시도는_서비스에서_400_그대로_전파() throws Exception {
+        User admin = User.create("admin@test.local", "hash");
+        admin.setId(9L);
+        admin.setRole(Role.ADMIN);
+        when(adminAccess.requireAdmin(any())).thenReturn(admin);
+
+        doThrow(new IllegalArgumentException("마지막 관리자는 권한을 해제할 수 없습니다."))
+                .when(adminRoleService).changeRole(eq(9L), eq(1L), eq("USER"));
+
+        mockMvc.perform(post("/api/admin/users/1/role")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"role\":\"USER\"}"))
+                .andExpect(status().isBadRequest());
     }
 }

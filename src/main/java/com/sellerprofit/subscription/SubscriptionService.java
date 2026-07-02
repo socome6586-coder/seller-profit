@@ -106,4 +106,24 @@ public class SubscriptionService {
 
         return new CompGrantResult(before, after);
     }
+
+    /**
+     * 관리자 무상(COMP) 지급 회수(T10.4, 선택 기능). plan 을 FREE 로 강등한다.
+     * 결제(PAID) 구독은 여기서 다루지 않는다 — 해지는 {@code BillingService.cancel}(자기 해지)
+     * 영역이라, 관리자가 남의 결제 구독을 임의로 끊지 않도록 COMP 만 대상으로 제한한다.
+     *
+     * @param userId 회수 대상
+     * @return 감사 로그 기록용 회수 전 상태
+     */
+    @Transactional
+    public SubscriptionStatus revokeComp(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User 없음: " + userId));
+        if (user.getSource() != SubscriptionSource.COMP) {
+            throw new IllegalArgumentException("무상(COMP) 지급 구독만 회수할 수 있습니다.");
+        }
+        SubscriptionStatus before = user.getSubscriptionStatus();
+        user.setSubscriptionStatus(SubscriptionStatus.FREE);
+        return before;
+    }
 }
