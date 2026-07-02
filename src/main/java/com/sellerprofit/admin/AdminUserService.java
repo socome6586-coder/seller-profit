@@ -44,4 +44,12 @@ public class AdminUserService {
 
         return users.map(AdminUserView::of);
     }
+
+    /** 단건 조회. 지급/role 변경 후 최신 상태를 응답으로 돌려줄 때 쓴다. */
+    @Transactional(readOnly = true)
+    public AdminUserView get(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User 없음: " + userId));
+        return AdminUserView.of(user);
+    }
 }

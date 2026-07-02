@@ -1,13 +1,17 @@
 package com.sellerprofit.subscription;
 
 import com.sellerprofit.domain.User;
+import com.sellerprofit.domain.type.SubscriptionSource;
+import com.sellerprofit.domain.type.SubscriptionStatus;
 import com.sellerprofit.repository.UserRepository;
+import com.sellerprofit.subscription.dto.CompGrantResult;
 import com.sellerprofit.subscription.dto.PlanView;
 import com.sellerprofit.subscription.dto.SubscriptionView;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.List;
@@ -70,5 +74,36 @@ public class SubscriptionService {
                     plan.displayName() + " 플랜은 최근 " + lookbackDays
                             + "일까지 조회할 수 있습니다. PRO 로 업그레이드하면 전체 기간을 조회할 수 있습니다.");
         }
+    }
+
+    /**
+     * 관리자 무상(COMP) 지급(T10.3). 결제(PAID)와 절대 섞이지 않도록 source=COMP 로 저장한다
+     * (docs/admin-tasks.md 절대 규칙 4 — 빌링 스케줄러가 COMP 는 결제 시도 없이 만료만 처리, {@code BillingService.renewDue} 참고).
+     *
+     * 만료일은 <b>연장</b> 방식이다: 이미 유효한 만료일이 있으면(now 이후) 그 위에 N개월을 더하고,
+     * 없거나 지났으면 지금부터 N개월로 새로 설정한다 — max(now, 기존 만료일) + N개월.
+     *
+     * @param userId 지급 대상
+     * @param months 지급 개월(1 이상)
+     * @return 감사 로그 기록용 지급 전/후 만료일
+     */
+    @Transactional
+    public CompGrantResult grantComp(Long userId, int months) {
+        if (months <= 0) {
+            throw new IllegalArgumentException("months 는 1 이상이어야 합니다.");
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User 없음: " + userId));
+
+        OffsetDateTime now = OffsetDateTime.now(KST);
+        OffsetDateTime before = user.getCurrentPeriodEnd();
+        OffsetDateTime base = (before == null || before.isBefore(now)) ? now : before;
+        OffsetDateTime after = base.plusMonths(months);
+
+        user.setSubscriptionStatus(SubscriptionStatus.ACTIVE);
+        user.setCurrentPeriodEnd(after);
+        user.setSource(SubscriptionSource.COMP);
+
+        return new CompGrantResult(before, after);
     }
 }
