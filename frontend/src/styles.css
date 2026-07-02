@@ -117,9 +117,37 @@ tr.loss td { background: var(--loss-bg); }
 .pp-chip:disabled { opacity: .45; cursor: not-allowed; }
 .pp-chip.limited { text-decoration: line-through; }
 .pp-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.pp-custom { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
 .pp-warn { color: var(--loss); font-size: 12px; }
 .pp-limit-note { color: var(--muted); font-size: 12px; }
 @media (prefers-reduced-motion: reduce) {
   .pp-chip { transition: none; }
+}
+
+/* 직접 선택 달력(react-day-picker) — 다크 테마 토큰으로 오버라이드 */
+.pp-calendar {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+  padding: 14px 16px; display: inline-flex; flex-direction: column; gap: 8px;
+}
+.pp-calendar .rdp-root {
+  --rdp-accent-color: var(--accent);
+  --rdp-accent-background-color: #1b2740;
+  --rdp-range_middle-color: var(--text);
+  --rdp-today-color: var(--accent);
+  --rdp-day-width: 38px; --rdp-day-height: 38px;
+  --rdp-day_button-width: 34px; --rdp-day_button-height: 34px;
+  color: var(--text);
+}
+.pp-calendar-readout { font-size: 13px; color: var(--text); }
+.pp-calendar-readout .muted { color: var(--muted); }
+@media (prefers-reduced-motion: reduce) {
+  .pp-calendar .rdp-weeks_before_enter,
+  .pp-calendar .rdp-weeks_before_exit,
+  .pp-calendar .rdp-weeks_after_enter,
+  .pp-calendar .rdp-weeks_after_exit,
+  .pp-calendar .rdp-caption_after_enter,
+  .pp-calendar .rdp-caption_after_exit,
+  .pp-calendar .rdp-caption_before_enter,
+  .pp-calendar .rdp-caption_before_exit {
+    animation: none;
+  }
 }

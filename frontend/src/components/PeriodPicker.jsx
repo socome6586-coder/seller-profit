@@ -1,4 +1,7 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { DayPicker } from "react-day-picker";
+import { ko } from "react-day-picker/locale";
+import "react-day-picker/style.css";
 
 // 공용 기간 선택 컴포넌트. 대시보드/광고ROI 양쪽에서 재사용(docs/period-picker-tasks.md T9).
 // 프리셋 계산은 KST(Asia/Seoul) 기준 "오늘"을 기준으로 한다. 서버 데이터가 KST 기준이므로 일관성 유지.
@@ -39,6 +42,13 @@ function addDays(date, n) {
   const d = new Date(date);
   d.setDate(d.getDate() + n);
   return d;
+}
+
+/** "yyyy-MM-dd" -> 로컬 Date. new Date(str) 은 UTC 로 파싱돼 하루가 밀릴 수 있어 쓰지 않는다. */
+function parseYmd(str) {
+  if (!str) return undefined;
+  const [y, m, d] = str.split("-").map(Number);
+  return new Date(y, m - 1, d);
 }
 
 function startOfWeekMonday(date) {
@@ -101,6 +111,13 @@ export default function PeriodPicker({ value, onChange, maxRangeDays, disabled }
   const today = useMemo(() => kstToday(), []);
   const preset = value?.preset || "thisMonth";
   const isCustom = preset === "custom";
+  // 달력에서 시작일만 클릭한 "진행 중" 선택. 완성(종료일까지 선택)되기 전엔 부모로 올리지 않는다
+  // (조회 API 를 부분 선택 상태로 두 번 부르지 않기 위함).
+  const [pendingRange, setPendingRange] = useState(null);
+
+  useEffect(() => {
+    if (!isCustom) setPendingRange(null);
+  }, [isCustom]);
 
   function selectPreset(p) {
     if (disabled) return;
@@ -114,12 +131,23 @@ export default function PeriodPicker({ value, onChange, maxRangeDays, disabled }
     onChange({ ...computeRange(p, today), preset: p });
   }
 
-  function updateCustom(field, raw) {
-    const next = { from: value?.from || "", to: value?.to || "", preset: "custom", [field]: raw };
-    onChange(next);
+  function handleCalendarSelect(range) {
+    if (disabled) return;
+    if (!range || !range.from) {
+      setPendingRange(null);
+      return;
+    }
+    if (range.to) {
+      // 시작~종료 모두 클릭 완료 → 즉시 커밋해 조회(별도 버튼 없이 바로 반영).
+      setPendingRange(null);
+      onChange({ from: fmt(range.from), to: fmt(range.to), preset: "custom" });
+    } else {
+      // 시작일만 클릭한 중간 상태 → 로컬로만 반영, 아직 조회하지 않음.
+      setPendingRange({ from: range.from, to: undefined });
+    }
   }
 
-  const customInvalid = isCustom && value?.from && value?.to && value.from > value.to;
+  const calendarSelected = pendingRange || { from: parseYmd(value?.from), to: parseYmd(value?.to) };
 
   return (
     <div className="period-picker">
@@ -144,26 +172,25 @@ export default function PeriodPicker({ value, onChange, maxRangeDays, disabled }
       </div>
 
       {isCustom ? (
-        <div className="pp-custom">
-          <div className="field">
-            <label>시작일</label>
-            <input
-              type="date"
-              value={value?.from || ""}
-              disabled={disabled}
-              onChange={(e) => updateCustom("from", e.target.value)}
-            />
+        <div className="pp-calendar">
+          <DayPicker
+            mode="range"
+            locale={ko}
+            selected={calendarSelected}
+            onSelect={handleCalendarSelect}
+            disabled={disabled}
+            defaultMonth={calendarSelected.to || calendarSelected.from || today}
+            excludeDisabled
+          />
+          <div className="pp-calendar-readout">
+            {value?.from && value?.to ? (
+              <span>
+                {value.from} ~ {value.to}
+              </span>
+            ) : (
+              <span className="muted">시작일과 종료일을 순서대로 클릭하세요.</span>
+            )}
           </div>
-          <div className="field">
-            <label>종료일</label>
-            <input
-              type="date"
-              value={value?.to || ""}
-              disabled={disabled}
-              onChange={(e) => updateCustom("to", e.target.value)}
-            />
-          </div>
-          {customInvalid ? <div className="pp-warn">시작일이 종료일보다 늦을 수 없습니다.</div> : null}
         </div>
       ) : null}
 
