@@ -1,6 +1,7 @@
 package com.sellerprofit.billing;
 
 import com.sellerprofit.domain.User;
+import com.sellerprofit.domain.type.SubscriptionSource;
 import com.sellerprofit.domain.type.SubscriptionStatus;
 import com.sellerprofit.repository.UserRepository;
 import com.sellerprofit.subscription.PlanType;
@@ -86,7 +87,10 @@ public class BillingService {
      * 정기결제 배치: 청구주기가 도래/경과한 ACTIVE 유저를 재청구한다.
      * 유저별로 예외를 격리해 한 명의 실패가 배치 전체를 멈추지 않게 한다.
      *
-     * @return 결제 성공 건수
+     * <p><b>COMP(무상 지급) 구독은 결제 대상에서 제외한다</b>(docs/admin-tasks.md 빌링 스케줄러 상호작용).
+     * 빌링키가 없으므로 결제를 시도하면 안 되고, 만료 처리(FREE 강등)만 PAID 와 동일하게 적용한다.
+     *
+     * @return 결제 성공 건수(COMP 강등은 포함하지 않는다)
      */
     @Transactional
     public int renewDue(OffsetDateTime now) {
@@ -94,6 +98,10 @@ public class BillingService {
                 SubscriptionStatus.ACTIVE, now);
         int charged = 0;
         for (User user : due) {
+            if (user.getSource() == SubscriptionSource.COMP) {
+                expireComp(user);   // 결제 시도 없이 만료만 반영
+                continue;
+            }
             try {
                 if (user.getBillingKey() == null || user.getBillingKey().isBlank()) {
                     user.setSubscriptionStatus(SubscriptionStatus.PAST_DUE);   // 빌링키 없음 → 청구 불가
@@ -109,6 +117,12 @@ public class BillingService {
             }
         }
         return charged;
+    }
+
+    /** COMP 구독 만료 처리: 결제수단(빌링키)이 없으므로 결제 없이 FREE 로 강등만 한다. */
+    private void expireComp(User user) {
+        user.setSubscriptionStatus(SubscriptionStatus.FREE);
+        log.info("COMP 구독 만료 → FREE 강등 userId={}", user.getId());
     }
 
     /** 해지: 상태만 CANCELED. 남은 기간 접근은 유지하고 다음 청구만 멈춘다. */
