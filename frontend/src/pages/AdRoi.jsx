@@ -1,15 +1,20 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, uploadFile, won, roas, num, signClass } from "../api";
+import PeriodPicker, { computeRange } from "../components/PeriodPicker.jsx";
 
 export default function AdRoi() {
   const [accounts, setAccounts] = useState(null); // null=로딩, []=계정없음
   const [accountId, setAccountId] = useState("");
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  // 기본 진입 = "이번 달"(docs/period-picker-tasks.md T9 9.4, 대시보드와 동일 컴포넌트 재사용).
+  const [period, setPeriod] = useState(() => ({ ...computeRange("thisMonth"), preset: "thisMonth" }));
   const [error, setError] = useState("");
+  // 플랜의 조회기간 한도(9.3). UI 안내일 뿐 — 실제 강제는 서버(SubscriptionService.assertWithinLookback).
+  const [maxRangeDays, setMaxRangeDays] = useState(null);
 
   const [summary, setSummary] = useState(null);
+
+  const { from, to } = period;
 
   const periodParams = useCallback(() => {
     const p = new URLSearchParams({ accountId });
@@ -30,8 +35,9 @@ export default function AdRoi() {
 
   const refreshAll = useCallback(() => {
     if (!accountId) return;
+    if (from && to && from > to) return; // 직접 선택에서 잘못된 범위(시작>종료)면 조회하지 않음
     loadSummary();
-  }, [accountId, loadSummary]);
+  }, [accountId, from, to, loadSummary]);
 
   // 내 마켓 계정 목록을 받아 첫 계정을 기본 선택.
   useEffect(() => {
@@ -46,10 +52,23 @@ export default function AdRoi() {
     })();
   }, []);
 
+  // 내 플랜의 조회기간 한도를 받아 PeriodPicker 에 안내용으로 전달(9.3).
+  useEffect(() => {
+    (async () => {
+      try {
+        const sub = await api("/api/subscription");
+        setMaxRangeDays(sub?.plan?.dashboardLookbackDays ?? null);
+      } catch {
+        setMaxRangeDays(null);
+      }
+    })();
+  }, []);
+
+  // 계정이 정해지거나 기간이 바뀌면 자동 조회(프리셋 칩 선택 시 즉시 반영).
   useEffect(() => {
     refreshAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accountId]);
+  }, [accountId, from, to]);
 
   const noAccounts = accounts != null && accounts.length === 0;
   const lossCount = (summary?.rows || []).filter((r) => r.adLoss).length;
@@ -85,16 +104,9 @@ export default function AdRoi() {
             )}
           </select>
         </div>
-        <div className="field">
-          <label>시작일 (선택)</label>
-          <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
-        </div>
-        <div className="field">
-          <label>종료일 (선택)</label>
-          <input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
-        </div>
-        <button onClick={refreshAll} disabled={!accountId}>조회</button>
       </div>
+
+      <PeriodPicker value={period} onChange={setPeriod} disabled={!accountId} maxRangeDays={maxRangeDays} />
 
       {error ? <div className="error-banner">{error}</div> : null}
 
