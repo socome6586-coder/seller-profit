@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./auth.jsx";
 import Nav from "./components/Nav.jsx";
+import Landing from "./pages/Landing.jsx";
 import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
@@ -23,10 +24,22 @@ export default function App() {
       {/* 인증된 화면에서만 상단 네비를 보인다. */}
       {user ? <Nav /> : null}
       <Routes>
-        <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
-        <Route path="/signup" element={user ? <Navigate to="/" replace /> : <Signup />} />
+        <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
+        <Route path="/signup" element={user ? <Navigate to="/dashboard" replace /> : <Signup />} />
         <Route
           path="/"
+          element={
+            user === undefined ? (
+              <div className="center-msg">불러오는 중…</div>
+            ) : user ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
+              <Landing />
+            )
+          }
+        />
+        <Route
+          path="/dashboard"
           element={
             <Protected>
               <Dashboard />
@@ -57,7 +70,7 @@ export default function App() {
             </Protected>
           }
         />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </>
   );

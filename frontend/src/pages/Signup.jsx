@@ -20,7 +20,7 @@ export default function Signup() {
     setBusy(true);
     try {
       await signup(email.trim(), password);
-      navigate("/", { replace: true });
+      navigate("/dashboard", { replace: true });
     } catch (err) {
       setError(err.message || "가입에 실패했습니다.");
     } finally {

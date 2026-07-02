@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class SpaForwardingController {
 
-    @GetMapping({"/login", "/signup", "/accounts", "/pricing", "/ad-roi"})
+    @GetMapping({"/login", "/signup", "/accounts", "/pricing", "/ad-roi", "/dashboard"})
     public String forwardToSpa() {
         return "forward:/index.html";
     }

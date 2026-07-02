@@ -1,0 +1,147 @@
+/* 랜딩 페이지 전용 스타일. 앱은 다크 테마(styles.css)라 여기 토큰이 새지 않도록
+   전부 .landing 스코프 하위로 한정한다(디자인 기준: docs/landing-mockup.html). */
+.landing {
+  --l-paper: #FBFAF6;
+  --l-paper-2: #F2EEE4;
+  --l-ink: #151E2A;
+  --l-ink-2: #26313F;
+  --l-muted: #5C6773;
+  --l-line: #E6E0D4;
+  --l-loss: #D2402C;
+  --l-profit: #1E7A4A;
+  --l-body: "Pretendard", system-ui, -apple-system, sans-serif;
+  --l-mono: "Space Mono", ui-monospace, monospace;
+
+  font-family: var(--l-body);
+  color: var(--l-ink);
+  background: var(--l-paper);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+.landing * { box-sizing: border-box; }
+.landing a { color: inherit; text-decoration: none; }
+.landing .mono { font-family: var(--l-mono); font-variant-numeric: tabular-nums; }
+.landing .l-wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+/* nav */
+.landing .l-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px; max-width: 1100px; margin: 0 auto;
+}
+.landing .l-brand { font-weight: 800; letter-spacing: -.02em; font-size: 18px; }
+.landing .l-brand b { color: var(--l-loss); }
+.landing .l-nav-cta { display: flex; gap: 10px; align-items: center; }
+.landing .btn {
+  display: inline-flex; align-items: center; justify-content: center; font-weight: 700;
+  border-radius: 10px; padding: 11px 18px; font-size: 15px; border: 1.5px solid transparent;
+  cursor: pointer; transition: transform .08s ease;
+}
+.landing .btn:active { transform: translateY(1px); }
+.landing .btn-primary { background: var(--l-ink); color: var(--l-paper); }
+.landing .btn-ghost { background: transparent; color: var(--l-ink); border-color: var(--l-line); }
+.landing .btn-lg { padding: 15px 26px; font-size: 16px; }
+.landing .btn:focus-visible { outline: 3px solid #B9C4D0; outline-offset: 2px; }
+
+/* hero */
+.landing .l-hero { padding: 44px 0 72px; }
+.landing .l-hero-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: 56px; align-items: center; }
+.landing .l-eyebrow {
+  font-size: 13px; font-weight: 700; letter-spacing: .08em; color: var(--l-loss);
+  margin-bottom: 18px; display: inline-flex; align-items: center; gap: 8px;
+}
+.landing .l-eyebrow::before { content: ""; width: 22px; height: 2px; background: var(--l-loss); }
+.landing h1 { font-size: clamp(34px, 5vw, 52px); line-height: 1.08; letter-spacing: -.03em; font-weight: 800; }
+.landing h1 .red { color: var(--l-loss); }
+.landing .l-sub { margin-top: 20px; font-size: 18px; color: var(--l-ink-2); max-width: 30em; }
+.landing .l-hero-cta { margin-top: 30px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.landing .l-note { margin-top: 16px; font-size: 13px; color: var(--l-muted); }
+
+/* signature: 정산 명세서 */
+.landing .receipt {
+  background: #fff; border: 1px solid var(--l-line); border-radius: 16px;
+  box-shadow: 0 30px 60px -34px rgba(21, 30, 42, .4); overflow: hidden;
+}
+.landing .receipt-top {
+  display: flex; align-items: center; justify-content: space-between; padding: 16px 22px;
+  border-bottom: 1px dashed var(--l-line); background: var(--l-paper-2);
+}
+.landing .r-name { font-weight: 700; font-size: 15px; }
+.landing .roas {
+  font-family: var(--l-mono); font-weight: 700; font-size: 13px; color: var(--l-profit);
+  background: #E4F1E9; padding: 4px 10px; border-radius: 999px;
+}
+.landing .r-body { padding: 20px 22px 6px; }
+.landing .r-line { display: flex; justify-content: space-between; align-items: baseline; padding: 9px 0; font-size: 15px; }
+.landing .r-line .lab { color: var(--l-muted); }
+.landing .r-line .val { font-family: var(--l-mono); font-variant-numeric: tabular-nums; }
+.landing .r-line .val.minus { color: var(--l-ink-2); }
+.landing .r-total {
+  display: flex; justify-content: space-between; align-items: baseline; padding: 14px 22px 6px;
+  border-top: 2px solid var(--l-ink);
+}
+.landing .r-total .lab { font-weight: 800; font-size: 16px; }
+.landing .r-total .val { font-family: var(--l-mono); font-weight: 700; font-size: 30px; color: var(--l-loss); letter-spacing: -.01em; }
+.landing .r-flag {
+  margin: 2px 22px 20px; display: inline-block; background: var(--l-loss); color: #fff;
+  font-size: 12px; font-weight: 800; padding: 4px 10px; border-radius: 6px;
+}
+.landing .reveal { opacity: 0; transform: translateY(6px); animation: l-rise .5s ease forwards; }
+.landing .reveal:nth-child(1) { animation-delay: .05s; }
+.landing .reveal:nth-child(2) { animation-delay: .12s; }
+.landing .reveal:nth-child(3) { animation-delay: .19s; }
+.landing .reveal:nth-child(4) { animation-delay: .26s; }
+@keyframes l-rise { to { opacity: 1; transform: none; } }
+
+/* problem strip */
+.landing .l-strip { background: var(--l-ink); color: var(--l-paper); padding: 56px 0; }
+.landing .l-strip h2 { font-size: clamp(24px, 3.4vw, 32px); letter-spacing: -.02em; max-width: 16em; }
+.landing .l-strip p { margin-top: 14px; color: #AEB8C4; font-size: 17px; max-width: 34em; }
+.landing .contrast { display: flex; gap: 14px; margin-top: 28px; flex-wrap: wrap; }
+.landing .chip { border: 1px solid #33404F; border-radius: 12px; padding: 14px 18px; min-width: 170px; }
+.landing .chip .k { font-size: 13px; color: #8C97A4; }
+.landing .chip .v { font-family: var(--l-mono); font-size: 20px; font-weight: 700; margin-top: 4px; }
+.landing .chip .v.ok { color: #5FD597; }
+.landing .chip .v.bad { color: #F1766A; }
+
+/* value */
+.landing .l-value { padding: 72px 0; }
+.landing .l-sec-eyebrow { font-size: 13px; font-weight: 700; letter-spacing: .06em; color: var(--l-muted); margin-bottom: 12px; }
+.landing .l-value h2 { font-size: clamp(26px, 3.6vw, 36px); letter-spacing: -.02em; max-width: 18em; }
+.landing .l-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 36px; }
+.landing .l-card { background: var(--l-paper-2); border: 1px solid var(--l-line); border-radius: 14px; padding: 24px; }
+.landing .l-card .n { font-family: var(--l-mono); font-size: 13px; color: var(--l-loss); font-weight: 700; }
+.landing .l-card h3 { margin: 10px 0 8px; font-size: 19px; letter-spacing: -.01em; }
+.landing .l-card p { color: var(--l-ink-2); font-size: 15px; }
+
+/* pricing */
+.landing .l-pricing { padding: 8px 0 72px; }
+.landing .l-pricing h2 { font-size: clamp(24px, 3.4vw, 32px); letter-spacing: -.02em; }
+.landing .l-plans { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 32px; max-width: 720px; }
+.landing .l-plan { border: 1px solid var(--l-line); border-radius: 16px; padding: 26px; background: #fff; }
+.landing .l-plan.pro { border-color: var(--l-ink); border-width: 2px; }
+.landing .l-plan .pname { font-weight: 800; font-size: 15px; letter-spacing: .02em; }
+.landing .l-plan .price { font-family: var(--l-mono); font-size: 32px; font-weight: 700; margin: 12px 0 4px; }
+.landing .l-plan .price small { font-size: 14px; color: var(--l-muted); font-weight: 400; }
+.landing .l-plan ul { list-style: none; margin: 16px 0 22px; display: flex; flex-direction: column; gap: 9px; }
+.landing .l-plan li { font-size: 14px; color: var(--l-ink-2); padding-left: 22px; position: relative; }
+.landing .l-plan li::before {
+  content: ""; position: absolute; left: 0; top: 7px; width: 12px; height: 7px;
+  border-left: 2px solid var(--l-profit); border-bottom: 2px solid var(--l-profit); transform: rotate(-45deg);
+}
+.landing .l-plan .btn { width: 100%; }
+.landing .l-beta { font-size: 13px; color: var(--l-muted); margin-top: 16px; }
+
+/* final cta */
+.landing .l-final { background: var(--l-paper-2); border-top: 1px solid var(--l-line); padding: 64px 0; text-align: center; }
+.landing .l-final h2 { font-size: clamp(26px, 3.6vw, 38px); letter-spacing: -.02em; }
+.landing .l-final p { color: var(--l-ink-2); margin: 14px auto 26px; max-width: 26em; }
+.landing .l-footer { padding: 30px 24px; color: var(--l-muted); font-size: 13px; text-align: center; }
+
+@media (max-width: 820px) {
+  .landing .l-hero-grid { grid-template-columns: 1fr; gap: 36px; }
+  .landing .l-cards, .landing .l-plans { grid-template-columns: 1fr; }
+  .landing .receipt { max-width: 440px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing .reveal { animation: none; opacity: 1; transform: none; }
+}

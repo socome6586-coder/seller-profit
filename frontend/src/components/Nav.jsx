@@ -6,7 +6,7 @@ export default function Nav() {
   return (
     <div className="nav">
       <span className="brand">셀러프로핏</span>
-      <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : "")}>
+      <NavLink to="/dashboard" className={({ isActive }) => (isActive ? "active" : "")}>
         대시보드
       </NavLink>
       <NavLink to="/accounts" className={({ isActive }) => (isActive ? "active" : "")}>

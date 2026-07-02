@@ -16,7 +16,7 @@ export default function Login() {
     setBusy(true);
     try {
       await login(email.trim(), password);
-      navigate("/", { replace: true });
+      navigate("/dashboard", { replace: true });
     } catch (err) {
       setError(err.message || "로그인에 실패했습니다.");
     } finally {
