@@ -103,3 +103,23 @@ tr.loss td { background: var(--loss-bg); }
 .plan .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px;
   border-radius: 999px; background: var(--accent); color: #fff; margin-left: 8px; }
 @media (max-width: 720px) { .plans { grid-template-columns: 1fr; } }
+
+/* 기간 선택(PeriodPicker) — docs/period-picker-tasks.md T9 */
+.period-picker { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.pp-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.pp-chip {
+  background: #0d1115; border: 1px solid var(--line); color: var(--text);
+  border-radius: 999px; padding: 8px 14px; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: background .12s ease, border-color .12s ease, color .12s ease;
+}
+.pp-chip:hover:not(:disabled) { border-color: var(--accent); }
+.pp-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.pp-chip:disabled { opacity: .45; cursor: not-allowed; }
+.pp-chip.limited { text-decoration: line-through; }
+.pp-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pp-custom { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+.pp-warn { color: var(--loss); font-size: 12px; }
+.pp-limit-note { color: var(--muted); font-size: 12px; }
+@media (prefers-reduced-motion: reduce) {
+  .pp-chip { transition: none; }
+}

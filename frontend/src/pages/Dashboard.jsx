@@ -1,18 +1,21 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, won, pct, num, signClass } from "../api";
+import PeriodPicker, { computeRange } from "../components/PeriodPicker.jsx";
 
 export default function Dashboard() {
   const [accounts, setAccounts] = useState(null); // null=로딩, []=계정없음
   const [accountId, setAccountId] = useState("");
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  // 기본 진입 = "이번 달"(docs/period-picker-tasks.md T9 9.1).
+  const [period, setPeriod] = useState(() => ({ ...computeRange("thisMonth"), preset: "thisMonth" }));
   const [error, setError] = useState("");
 
   const [profit, setProfit] = useState(null);
   const [returns, setReturns] = useState(null);
   const [products, setProducts] = useState([]);
   const [costs, setCosts] = useState([]);
+
+  const { from, to } = period;
 
   const periodParams = useCallback(() => {
     const p = new URLSearchParams({ accountId });
@@ -57,11 +60,12 @@ export default function Dashboard() {
 
   const refreshAll = useCallback(() => {
     if (!accountId) return;
+    if (from && to && from > to) return; // 직접 선택에서 잘못된 범위(시작>종료)면 조회하지 않음
     loadProfit();
     loadReturns();
     loadProducts();
     loadCosts();
-  }, [accountId, loadProfit, loadReturns, loadProducts, loadCosts]);
+  }, [accountId, from, to, loadProfit, loadReturns, loadProducts, loadCosts]);
 
   // 내 마켓 계정 목록을 받아 첫 계정을 기본 선택.
   useEffect(() => {
@@ -76,11 +80,11 @@ export default function Dashboard() {
     })();
   }, []);
 
-  // 계정이 정해지면(또는 바뀌면) 자동 조회.
+  // 계정이 정해지거나 기간이 바뀌면 자동 조회(프리셋 칩 선택 시 즉시 반영).
   useEffect(() => {
     refreshAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accountId]);
+  }, [accountId, from, to]);
 
   const noAccounts = accounts != null && accounts.length === 0;
 
@@ -115,16 +119,9 @@ export default function Dashboard() {
             )}
           </select>
         </div>
-        <div className="field">
-          <label>시작일 (선택)</label>
-          <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
-        </div>
-        <div className="field">
-          <label>종료일 (선택)</label>
-          <input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
-        </div>
-        <button onClick={refreshAll} disabled={!accountId}>조회</button>
       </div>
+
+      <PeriodPicker value={period} onChange={setPeriod} disabled={!accountId} />
 
       {error ? <div className="error-banner">{error}</div> : null}
 
