@@ -4,6 +4,7 @@ import com.sellerprofit.account.AccountAccess;
 import com.sellerprofit.auth.CurrentUser;
 import com.sellerprofit.profit.dto.ProfitSummary;
 import com.sellerprofit.profit.dto.ReturnReasonSummary;
+import com.sellerprofit.subscription.SubscriptionService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,15 +34,18 @@ public class ProfitDashboardController {
     private final ReturnStatsService returnStatsService;
     private final CurrentUser currentUser;
     private final AccountAccess accountAccess;
+    private final SubscriptionService subscriptionService;
 
     public ProfitDashboardController(ProfitCalculationService profitCalculationService,
                                      ReturnStatsService returnStatsService,
                                      CurrentUser currentUser,
-                                     AccountAccess accountAccess) {
+                                     AccountAccess accountAccess,
+                                     SubscriptionService subscriptionService) {
         this.profitCalculationService = profitCalculationService;
         this.returnStatsService = returnStatsService;
         this.currentUser = currentUser;
         this.accountAccess = accountAccess;
+        this.subscriptionService = subscriptionService;
     }
 
     @GetMapping("/profit")
@@ -50,9 +54,11 @@ public class ProfitDashboardController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             HttpServletRequest http) {
-        accountAccess.assertOwner(accountId, currentUser.requireUserId(http));
+        Long userId = currentUser.requireUserId(http);
+        accountAccess.assertOwner(accountId, userId);
         LocalDate end = (to != null) ? to : LocalDate.now(KST);
         LocalDate start = (from != null) ? from : end.minusDays(29);
+        subscriptionService.assertWithinLookback(userId, start, end);
         return profitCalculationService.calculate(accountId, start, end);
     }
 
@@ -62,9 +68,11 @@ public class ProfitDashboardController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             HttpServletRequest http) {
-        accountAccess.assertOwner(accountId, currentUser.requireUserId(http));
+        Long userId = currentUser.requireUserId(http);
+        accountAccess.assertOwner(accountId, userId);
         LocalDate end = (to != null) ? to : LocalDate.now(KST);
         LocalDate start = (from != null) ? from : end.minusDays(29);
+        subscriptionService.assertWithinLookback(userId, start, end);
         return returnStatsService.byReason(accountId, start, end);
     }
 }

@@ -149,6 +149,16 @@ export default function PeriodPicker({ value, onChange, maxRangeDays, disabled }
 
   const calendarSelected = pendingRange || { from: parseYmd(value?.from), to: parseYmd(value?.to) };
 
+  // 달력 자체에서도 한도 밖 날짜는 선택 불가로 막는다(칩 레벨의 exceedsLimit 과 동일 기준, 9.3).
+  const earliestAllowed = maxRangeDays != null && Number(maxRangeDays) >= 0
+    ? addDays(today, -(Number(maxRangeDays) - 1))
+    : null;
+  const calendarDisabled = disabled
+    ? true
+    : earliestAllowed
+      ? [{ before: earliestAllowed }]
+      : false;
+
   return (
     <div className="period-picker">
       <div className="pp-chips" role="group" aria-label="조회 기간 선택">
@@ -178,7 +188,7 @@ export default function PeriodPicker({ value, onChange, maxRangeDays, disabled }
             locale={ko}
             selected={calendarSelected}
             onSelect={handleCalendarSelect}
-            disabled={disabled}
+            disabled={calendarDisabled}
             defaultMonth={calendarSelected.to || calendarSelected.from || today}
             excludeDisabled
           />

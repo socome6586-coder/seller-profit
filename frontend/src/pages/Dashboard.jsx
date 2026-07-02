@@ -9,6 +9,8 @@ export default function Dashboard() {
   // 기본 진입 = "이번 달"(docs/period-picker-tasks.md T9 9.1).
   const [period, setPeriod] = useState(() => ({ ...computeRange("thisMonth"), preset: "thisMonth" }));
   const [error, setError] = useState("");
+  // 플랜의 조회기간 한도(9.3). null=아직 모름/무제한. UI 안내일 뿐 — 실제 강제는 서버(SubscriptionService.assertWithinLookback).
+  const [maxRangeDays, setMaxRangeDays] = useState(null);
 
   const [profit, setProfit] = useState(null);
   const [returns, setReturns] = useState(null);
@@ -80,6 +82,18 @@ export default function Dashboard() {
     })();
   }, []);
 
+  // 내 플랜의 조회기간 한도를 받아 PeriodPicker 에 안내용으로 전달(9.3). 실제 게이팅은 서버가 각 조회 API 에서 한다.
+  useEffect(() => {
+    (async () => {
+      try {
+        const sub = await api("/api/subscription");
+        setMaxRangeDays(sub?.plan?.dashboardLookbackDays ?? null);
+      } catch {
+        setMaxRangeDays(null);
+      }
+    })();
+  }, []);
+
   // 계정이 정해지거나 기간이 바뀌면 자동 조회(프리셋 칩 선택 시 즉시 반영).
   useEffect(() => {
     refreshAll();
@@ -121,7 +135,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <PeriodPicker value={period} onChange={setPeriod} disabled={!accountId} />
+      <PeriodPicker value={period} onChange={setPeriod} disabled={!accountId} maxRangeDays={maxRangeDays} />
 
       {error ? <div className="error-banner">{error}</div> : null}
 

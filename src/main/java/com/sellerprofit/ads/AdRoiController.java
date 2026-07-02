@@ -3,6 +3,7 @@ package com.sellerprofit.ads;
 import com.sellerprofit.account.AccountAccess;
 import com.sellerprofit.ads.dto.AdRoiSummary;
 import com.sellerprofit.auth.CurrentUser;
+import com.sellerprofit.subscription.SubscriptionService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,13 +31,16 @@ public class AdRoiController {
     private final AdRoiService adRoiService;
     private final CurrentUser currentUser;
     private final AccountAccess accountAccess;
+    private final SubscriptionService subscriptionService;
 
     public AdRoiController(AdRoiService adRoiService,
                            CurrentUser currentUser,
-                           AccountAccess accountAccess) {
+                           AccountAccess accountAccess,
+                           SubscriptionService subscriptionService) {
         this.adRoiService = adRoiService;
         this.currentUser = currentUser;
         this.accountAccess = accountAccess;
+        this.subscriptionService = subscriptionService;
     }
 
     @GetMapping("/ad-roi")
@@ -45,9 +49,11 @@ public class AdRoiController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             HttpServletRequest http) {
-        accountAccess.assertOwner(accountId, currentUser.requireUserId(http));
+        Long userId = currentUser.requireUserId(http);
+        accountAccess.assertOwner(accountId, userId);
         LocalDate end = (to != null) ? to : LocalDate.now(KST);
         LocalDate start = (from != null) ? from : end.minusDays(29);
+        subscriptionService.assertWithinLookback(userId, start, end);
         return adRoiService.calculate(accountId, start, end);
     }
 }
