@@ -8,10 +8,11 @@ import com.sellerprofit.domain.User;
 public record AuthUserView(
         Long userId,
         String email,
-        String subscriptionStatus
+        String subscriptionStatus,
+        String role
 ) {
     public static AuthUserView of(User user) {
         return new AuthUserView(user.getId(), user.getEmail(),
-                user.getSubscriptionStatus().name());
+                user.getSubscriptionStatus().name(), user.getRole().name());
     }
 }

@@ -1,6 +1,8 @@
 package com.sellerprofit.domain;
 
 import com.sellerprofit.crypto.EncryptedStringConverter;
+import com.sellerprofit.domain.type.Role;
+import com.sellerprofit.domain.type.SubscriptionSource;
 import com.sellerprofit.domain.type.SubscriptionStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -33,6 +35,15 @@ public class User {
 
     @Column(name = "current_period_end")
     private OffsetDateTime currentPeriodEnd;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false, length = 20)
+    private Role role = Role.USER;
+
+    // 구독 취득 경로. PAID=결제, COMP=관리자 무상 지급. 매출 집계는 반드시 PAID 만 포함해야 한다.
+    @Enumerated(EnumType.STRING)
+    @Column(name = "source", nullable = false, length = 20)
+    private SubscriptionSource source = SubscriptionSource.PAID;
 
     // 토스 빌링키 — 카드에 준하는 민감정보라 엔티티엔 평문, DB엔 암호화 BYTEA. 로그 노출 금지.
     @Convert(converter = EncryptedStringConverter.class)

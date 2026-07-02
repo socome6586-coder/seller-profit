@@ -28,6 +28,9 @@ app:
     # Base64 인코딩된 32 byte(AES-256) 키. 반드시 환경변수로 주입, 절대 커밋 금지.
     # 생성: openssl rand -base64 32
     key: ${APP_ENCRYPTION_KEY}
+  # 관리자 부트스트랩. 콤마로 구분된 이메일 목록(공백 무시) — 로그인 시 해당 이메일 계정을 ADMIN 으로 승격.
+  # 시크릿처럼 다룬다: 실제 값은 반드시 환경변수로만 주입하고 절대 커밋하지 않는다(기본값은 빈 문자열).
+  admin-emails: ${APP_ADMIN_EMAILS:}
 
 toss:
   billing:

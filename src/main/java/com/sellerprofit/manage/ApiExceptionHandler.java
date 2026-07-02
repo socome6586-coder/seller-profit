@@ -1,5 +1,6 @@
 package com.sellerprofit.manage;
 
+import com.sellerprofit.admin.ForbiddenException;
 import com.sellerprofit.auth.UnauthorizedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +25,8 @@ import java.util.stream.Collectors;
         "com.sellerprofit.auth",
         "com.sellerprofit.subscription",
         "com.sellerprofit.billing",
-        "com.sellerprofit.ads"})
+        "com.sellerprofit.ads",
+        "com.sellerprofit.admin"})
 public class ApiExceptionHandler {
 
     /** 잘못된 입력값/존재하지 않는 리소스 등. */
@@ -37,6 +39,12 @@ public class ApiExceptionHandler {
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<Map<String, String>> handleUnauthorized(UnauthorizedException e) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
+    }
+
+    /** 로그인은 했지만 필요한 권한(ADMIN)이 없을 때 → 403. 존재/이유는 노출하지 않는다. */
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<Map<String, String>> handleForbidden(ForbiddenException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
     }
 
     /** 기능이 아직 준비 안 됨(예: 토스 결제 키 미설정) → 503. */
