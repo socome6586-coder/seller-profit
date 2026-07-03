@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, won } from "../api";
 import { useAuth } from "../auth.jsx";
+import ReceiptCard from "../components/ReceiptCard.jsx";
 import "./Landing.css";
 
 // 공개 랜딩 페이지("/"). 비로그인 방문자에게 보여주는 첫 세일즈 자산.
@@ -105,40 +106,8 @@ export default function Landing() {
             </div>
           </div>
 
-          {/* 시그니처: 정산 명세서 */}
-          <div
-            className="receipt"
-            role="img"
-            aria-label="적자상품 예시: ROAS 13.5배지만 진짜 순이익은 마이너스 159,737원"
-          >
-            <div className="receipt-top">
-              <span className="r-name">적자상품 B · 이번 달</span>
-              <span className="roas">ROAS 13.5×</span>
-            </div>
-            <div className="r-body">
-              <div className="r-line reveal">
-                <span className="lab">매출 (정산 실수령)</span>
-                <span className="val mono">₩270,000</span>
-              </div>
-              <div className="r-line reveal">
-                <span className="lab">− 매입원가 (45개)</span>
-                <span className="val minus mono">−₩405,000</span>
-              </div>
-              <div className="r-line reveal">
-                <span className="lab">− 배분 기타비용</span>
-                <span className="val minus mono">−₩4,737</span>
-              </div>
-              <div className="r-line reveal">
-                <span className="lab">− 광고비</span>
-                <span className="val minus mono">−₩20,000</span>
-              </div>
-            </div>
-            <div className="r-total">
-              <span className="lab">진짜 순이익</span>
-              <span className="val mono">−₩159,737</span>
-            </div>
-            <span className="r-flag">적자 · 광고 켤수록 손해!</span>
-          </div>
+          {/* 시그니처: 정산 명세서 (공용 컴포넌트, docs/signup-tasks.md T11.1) */}
+          <ReceiptCard />
         </div>
       </header>
 

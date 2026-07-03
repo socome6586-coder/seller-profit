@@ -1,0 +1,55 @@
+/* 정산 명세서 카드(ReceiptCard) — Landing.jsx 히어로에서 추출한 공용 컴포넌트(docs/signup-tasks.md T11.1).
+   원래 Landing.css 의 .landing 스코프 안에 있던 규칙을 접두사 없이 그대로 옮긴 것으로, 새 색상은
+   도입하지 않고 기존 랜딩 팔레트 값을 로컬 변수로 그대로 옮겨 "흰 종이 영수증" 톤을 유지한다
+   (앱 다크 테마 화면(Signup 등)에 놓여도 실물 영수증처럼 항상 밝은 카드로 보이는 게 의도된 디자인). */
+.receipt {
+  --rc-paper-2: #F2EEE4;
+  --rc-ink: #151E2A;
+  --rc-ink-2: #26313F;
+  --rc-muted: #5C6773;
+  --rc-line: #E6E0D4;
+  --rc-loss: #D2402C;
+  --rc-profit: #1E7A4A;
+  --rc-mono: "Space Mono", ui-monospace, monospace;
+
+  background: #fff; border: 1px solid var(--rc-line); border-radius: 16px;
+  box-shadow: 0 30px 60px -34px rgba(21, 30, 42, .4); overflow: hidden;
+  color: var(--rc-ink);
+}
+.receipt .receipt-top {
+  display: flex; align-items: center; justify-content: space-between; padding: 16px 22px;
+  border-bottom: 1px dashed var(--rc-line); background: var(--rc-paper-2);
+}
+.receipt .r-name { font-weight: 700; font-size: 15px; }
+.receipt .roas {
+  font-family: var(--rc-mono); font-weight: 700; font-size: 13px; color: var(--rc-profit);
+  background: #E4F1E9; padding: 4px 10px; border-radius: 999px;
+}
+.receipt .r-body { padding: 20px 22px 6px; }
+.receipt .r-line { display: flex; justify-content: space-between; align-items: baseline; padding: 9px 0; font-size: 15px; }
+.receipt .r-line .lab { color: var(--rc-muted); }
+.receipt .r-line .val { font-family: var(--rc-mono); font-variant-numeric: tabular-nums; }
+.receipt .r-line .val.minus { color: var(--rc-ink-2); }
+.receipt .r-total {
+  display: flex; justify-content: space-between; align-items: baseline; padding: 14px 22px 6px;
+  border-top: 2px solid var(--rc-ink);
+}
+.receipt .r-total .lab { font-weight: 800; font-size: 16px; }
+.receipt .r-total .val { font-family: var(--rc-mono); font-weight: 700; font-size: 30px; color: var(--rc-loss); letter-spacing: -.01em; }
+.receipt .r-flag {
+  margin: 6px 22px 20px; display: block; text-align: right; color: var(--rc-loss);
+  font-size: 14px; font-weight: 800; transform: skewX(-8deg);
+}
+.receipt .reveal { opacity: 0; transform: translateY(6px); animation: rc-rise .5s ease forwards; }
+.receipt .reveal:nth-child(1) { animation-delay: .05s; }
+.receipt .reveal:nth-child(2) { animation-delay: .12s; }
+.receipt .reveal:nth-child(3) { animation-delay: .19s; }
+.receipt .reveal:nth-child(4) { animation-delay: .26s; }
+@keyframes rc-rise { to { opacity: 1; transform: none; } }
+
+@media (max-width: 820px) {
+  .receipt { max-width: 440px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .receipt .reveal { animation: none; opacity: 1; transform: none; }
+}

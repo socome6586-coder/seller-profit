@@ -84,41 +84,7 @@
   border: 1px solid var(--l-line); border-radius: 999px; padding: 5px 12px;
 }
 
-/* signature: 정산 명세서 */
-.landing .receipt {
-  background: #fff; border: 1px solid var(--l-line); border-radius: 16px;
-  box-shadow: 0 30px 60px -34px rgba(21, 30, 42, .4); overflow: hidden;
-}
-.landing .receipt-top {
-  display: flex; align-items: center; justify-content: space-between; padding: 16px 22px;
-  border-bottom: 1px dashed var(--l-line); background: var(--l-paper-2);
-}
-.landing .r-name { font-weight: 700; font-size: 15px; }
-.landing .roas {
-  font-family: var(--l-mono); font-weight: 700; font-size: 13px; color: var(--l-profit);
-  background: #E4F1E9; padding: 4px 10px; border-radius: 999px;
-}
-.landing .r-body { padding: 20px 22px 6px; }
-.landing .r-line { display: flex; justify-content: space-between; align-items: baseline; padding: 9px 0; font-size: 15px; }
-.landing .r-line .lab { color: var(--l-muted); }
-.landing .r-line .val { font-family: var(--l-mono); font-variant-numeric: tabular-nums; }
-.landing .r-line .val.minus { color: var(--l-ink-2); }
-.landing .r-total {
-  display: flex; justify-content: space-between; align-items: baseline; padding: 14px 22px 6px;
-  border-top: 2px solid var(--l-ink);
-}
-.landing .r-total .lab { font-weight: 800; font-size: 16px; }
-.landing .r-total .val { font-family: var(--l-mono); font-weight: 700; font-size: 30px; color: var(--l-loss); letter-spacing: -.01em; }
-.landing .r-flag {
-  margin: 6px 22px 20px; display: block; text-align: right; color: var(--l-loss);
-  font-size: 14px; font-weight: 800; transform: skewX(-8deg);
-}
-.landing .reveal { opacity: 0; transform: translateY(6px); animation: l-rise .5s ease forwards; }
-.landing .reveal:nth-child(1) { animation-delay: .05s; }
-.landing .reveal:nth-child(2) { animation-delay: .12s; }
-.landing .reveal:nth-child(3) { animation-delay: .19s; }
-.landing .reveal:nth-child(4) { animation-delay: .26s; }
-@keyframes l-rise { to { opacity: 1; transform: none; } }
+/* signature: 정산 명세서 — ReceiptCard.jsx/css 로 추출됨(docs/signup-tasks.md T11.1), 여기 중복 정의 없음 */
 
 /* problem strip */
 .landing .l-strip { background: var(--l-ink); color: var(--l-paper); padding: 56px 0; }
@@ -220,7 +186,6 @@
 @media (max-width: 820px) {
   .landing .l-hero-grid { grid-template-columns: 1fr; gap: 36px; }
   .landing .l-cards, .landing .l-plans { grid-template-columns: 1fr; }
-  .landing .receipt { max-width: 440px; }
   .landing .l-flow-steps { flex-direction: column; }
   .landing .l-flow-arrow { transform: rotate(90deg); margin: -2px 0; }
   .landing .l-footer-row { flex-direction: column; align-items: flex-start; }
@@ -230,6 +195,5 @@
   .landing .l-brand { font-size: 22px; gap: 8px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .landing .reveal { animation: none; opacity: 1; transform: none; }
   .landing .reveal-up { transition: none; opacity: 1; transform: none; }
 }
