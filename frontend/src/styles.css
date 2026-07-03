@@ -159,18 +159,60 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
    모바일(<=760px)은 1열로 접히고 DOM 순서상 폼이 먼저라 폼이 항상 위에 온다. */
 .auth-split-wrap { max-width: 940px; margin: 60px auto; padding: 0 20px; }
 .auth-split { display: grid; grid-template-columns: 380px 1fr; gap: 36px; align-items: start; }
-.auth-value { display: flex; flex-direction: column; gap: 18px; }
-.auth-value-notes {
-  display: flex; flex-direction: column;
-  background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-md);
-  padding: 4px 20px; box-shadow: var(--shadow-sm);
+.auth-value { display: flex; flex-direction: column; gap: 22px; }
+
+.auth-value-intro { display: flex; flex-direction: column; gap: 8px; }
+.auth-value-eyebrow {
+  display: inline-flex; align-items: center; gap: 6px; align-self: flex-start;
+  font-size: 12px; font-weight: 700; color: var(--accent); letter-spacing: .02em;
+  background: var(--panel-2); border-radius: var(--radius-pill); padding: 5px 12px 5px 10px;
 }
-.auth-value-note {
-  font-size: 14px; color: var(--text); line-height: 1.5; padding: 14px 0;
+.auth-value-eyebrow svg { flex-shrink: 0; }
+.auth-value-title { font-size: 22px; font-weight: 800; letter-spacing: -.01em; margin: 0; color: var(--text); }
+.auth-value-sub { font-size: 14px; color: var(--muted); line-height: 1.55; margin: 0; }
+
+/* 3단계 흐름 — 가입 → 연동 → 확인 (아이콘+숫자 배지, 커넥터로 시각 연결) */
+.auth-value-steps { display: flex; align-items: flex-start; gap: 6px; }
+.auth-step { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+.auth-step-icon-wrap {
+  position: relative; display: flex; align-items: center; justify-content: center;
+  width: 46px; height: 46px; border-radius: var(--radius-pill);
+  background: var(--panel); border: 1px solid var(--line); color: var(--accent);
+  box-shadow: var(--shadow-sm);
 }
-.auth-value-note + .auth-value-note { border-top: 1px solid var(--line); }
+.auth-step-num {
+  position: absolute; top: -4px; right: -4px; display: flex; align-items: center; justify-content: center;
+  width: 17px; height: 17px; border-radius: var(--radius-pill); background: var(--text); color: var(--bg);
+  font-size: 10px; font-weight: 800; line-height: 1;
+}
+.auth-step-label { font-size: 12.5px; color: var(--text); font-weight: 600; text-align: center; line-height: 1.35; }
+.auth-step-connector {
+  flex: 0 0 auto; width: 22px; height: 1px; background: var(--line); margin-top: 23px;
+}
+
+/* 안심 체크리스트 — 칩 3개 */
+.auth-value-checks { display: flex; flex-wrap: wrap; gap: 8px; }
+.auth-check {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text);
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-pill);
+  padding: 7px 12px; box-shadow: var(--shadow-sm);
+}
+.auth-check svg { flex-shrink: 0; color: var(--profit); }
+
+/* 우측 패널 등장 애니메이션 — 위→아래 순차 페이드업 */
+.reveal-in { opacity: 0; transform: translateY(10px); animation: auth-reveal .55s ease forwards; }
+.reveal-in-2 { animation-delay: .1s; }
+.reveal-in-3 { animation-delay: .2s; }
+.reveal-in-4 { animation-delay: .3s; }
+@keyframes auth-reveal { to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .reveal-in { animation: none; opacity: 1; transform: none; }
+}
+
 @media (max-width: 760px) {
   .auth-split { grid-template-columns: 1fr; gap: 28px; }
+  .auth-value-steps { flex-wrap: wrap; }
+  .auth-step-connector { display: none; }
 }
 
 /* 요금/구독 */
