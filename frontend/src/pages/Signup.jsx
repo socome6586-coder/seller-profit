@@ -338,17 +338,17 @@ export default function Signup() {
         <div className="av-steps av-reveal av-d5" aria-hidden="true">
           <div className="av-step">
             <span className="av-step-num">1</span>
-            <span className="av-step-icon"><LinkIcon width="18" height="18" /></span>
+            <span className="av-step-icon"><LinkIcon width="26" height="26" /></span>
             <span className="av-step-label">가입</span>
           </div>
           <div className="av-step">
             <span className="av-step-num">2</span>
-            <span className="av-step-icon"><PersonIcon width="18" height="18" /></span>
+            <span className="av-step-icon"><PersonIcon width="26" height="26" /></span>
             <span className="av-step-label">쿠팡 계정 연동</span>
           </div>
           <div className="av-step">
             <span className="av-step-num">3</span>
-            <span className="av-step-icon"><TrendingUpIcon width="18" height="18" /></span>
+            <span className="av-step-icon"><TrendingUpIcon width="26" height="26" /></span>
             <span className="av-step-label">진짜 순이익 확인</span>
           </div>
         </div>

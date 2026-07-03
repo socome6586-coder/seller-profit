@@ -19,10 +19,10 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  /* 세로 패딩 추가 축소(64→52→40) — 아래 3단계(av-steps) 블록이 새로 추가돼 늘어난 높이만큼
-     상쇄해 100vh 안에 다시 들어오도록 맞춘다(사용자: "추가하면 분명 길어져서 또 스크롤이
-     생겨... 제대로 만들어 줘"). 가로 패딩은 계속 유지. */
-  padding: 40px 64px;
+  /* 세로 패딩 추가 축소(64→52→40→36) — 아이콘 원을 키우며(36→56px) av-steps 블록이 다시
+     늘어난 높이만큼 상쇄해 100vh 안에 다시 들어오도록 맞춘다(사용자: "추가하면 분명 길어져서
+     또 스크롤이 생겨... 제대로 만들어 줘"). 가로 패딩은 계속 유지. */
+  padding: 36px 64px;
 }
 
 /* 화면이 넓을수록(1:1 분할이라 패널 자체가 넓어짐) 콘텐츠도 같이 커져서 여백만 늘어나 보이지
@@ -76,8 +76,8 @@
    ※ 아래 세로 여백(margin-top/padding)들은 스크롤 버그 수정을 위해 축소됨 — 가로 패딩(28px)은
    그대로 유지해 "꽉 차는" 느낌은 보존한다. */
 .av-receipt {
-  margin-top: 16px; background: var(--panel); border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg); padding: 18px 28px; overflow: hidden;
+  margin-top: 14px; background: var(--panel); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg); padding: 16px 28px; overflow: hidden;
 }
 .av-receipt-icon {
   display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
@@ -92,7 +92,7 @@
   color: var(--av-mint-ink); background: var(--av-mint); padding: 5px 12px; border-radius: var(--radius-pill);
 }
 .av-receipt-body { border-top: 1px dashed var(--line); }
-.av-receipt-line { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px dashed var(--line); }
+.av-receipt-line { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px dashed var(--line); }
 .av-receipt-line .lab { color: var(--text); font-size: 15px; }
 .av-receipt-line .val {
   margin-left: auto; font-family: ui-monospace, monospace; font-variant-numeric: tabular-nums;
@@ -110,36 +110,37 @@
 }
 
 /* 가입 → 쿠팡 계정 연동 → 진짜 순이익 확인, 3단계 흐름(사용자 첨부 목업 재현).
-   숫자 원(작게) / 아이콘 원(크게) / 라벨 3행을 3열로 배치하고, 숫자행·아이콘행 각각에
-   점선 커넥터를 둔다. 커넥터는 .av-steps 전체 폭을 가로지르는 절대배치 선으로 그리되
-   z-index 를 원(circle)보다 낮춰, 원이 선 위에 얹혀 선을 "끊어" 보이게 하는 표준 스테퍼
-   기법을 사용 — 컬럼 폭이 달라져도 별도 라인 요소 없이 항상 원 사이만 정확히 이어진다. */
-.av-steps { position: relative; display: flex; margin-top: 16px; }
-.av-steps::before,
+   숫자 원(작게) / 아이콘 원(크게) / 라벨 3행을 3열로 배치한다. 커넥터(점선)는 아이콘 행에만
+   둔다 — 숫자 사이에 선을 넣으면 체인처럼 보인다는 피드백으로 숫자 행의 커넥터는 제거.
+   커넥터는 .av-steps 전체 폭을 가로지르는 절대배치 선으로 그리되 z-index 를 원(circle)보다
+   낮춰, 원이 선 위에 얹혀 선을 "끊어" 보이게 하는 표준 스테퍼 기법을 사용 — 컬럼 폭이
+   달라져도 별도 라인 요소 없이 항상 원 사이만 정확히 이어진다. */
+.av-steps { position: relative; display: flex; margin-top: 14px; }
 .av-steps::after {
   content: ""; position: absolute; height: 0; border-top: 2px dotted var(--av-mint-ink); opacity: .45;
+  left: calc(16.6% + 28px); right: calc(16.6% + 28px); top: 56px;
 }
-.av-steps::before { left: calc(16.6% + 10px); right: calc(16.6% + 10px); top: 10px; }
-.av-steps::after { left: calc(16.6% + 18px); right: calc(16.6% + 18px); top: 44px; }
 .av-step {
   position: relative; z-index: 1; flex: 1; min-width: 0;
-  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
 }
 .av-step-num {
   display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px;
   border-radius: 50%; background: var(--av-mint); color: var(--av-mint-ink);
   font-size: 11px; font-weight: 800; background-clip: padding-box;
 }
+/* 아이콘 원 — 사용자 피드백으로 확대(기존 36px → 56px), 그만큼 늘어난 높이는 다른 세로
+   여백을 상쇄 축소해 100vh 예산을 맞춘다. */
 .av-step-icon {
-  display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px;
+  display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px;
   border-radius: 50%; background: var(--av-mint); color: var(--av-mint-ink);
 }
 .av-step-label { font-size: 12.5px; font-weight: 700; color: var(--text); text-align: center; white-space: nowrap; }
 
 /* 하단 3열 안내 카드 */
 .av-footer {
-  margin-top: 14px; background: var(--panel); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
-  display: flex; padding: 16px 10px;
+  margin-top: 12px; background: var(--panel); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+  display: flex; padding: 14px 10px;
 }
 .av-footer-col { flex: 1; min-width: 0; text-align: center; padding: 0 12px; }
 .av-footer-col + .av-footer-col { border-left: 1px solid var(--line); }
