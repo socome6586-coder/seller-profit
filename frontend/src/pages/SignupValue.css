@@ -1,0 +1,128 @@
+/* 회원가입 우측 가치 패널(av-*) — 사용자 첨부 목업(민트/크림 3D 일러스트 톤)을 코드로 재현.
+   페이지 전체를 좌(폼)/우(패널) 1:1로 나누고, 우측 패널이 뷰포트 전체 높이를 꽉 채운다.
+   .av-panel 로 로컬 스코프한 색상만 이 파일 안에서 새로 정의(전역 팔레트는 건드리지 않음) —
+   민트 톤 배경색(--av-mint*)과 복숭아빛 크림 배경(--av-cream)만 새 값이고,
+   글자/선/손실색/카드흰색은 전역 토큰(--text/--muted/--line/--loss/--panel)을 그대로 재사용한다. */
+.av-panel {
+  --av-cream: #FBF2E7;
+  --av-cream-2: #F7E9D8;
+  --av-mint: #D8ECE3;
+  --av-mint-ink: #2E6F5E;
+
+  position: relative;
+  overflow: hidden;
+  min-height: 100vh;
+  background: var(--av-cream);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 64px 56px;
+}
+
+.av-content { position: relative; z-index: 1; max-width: 520px; }
+
+/* 상단 장식 — 점 그리드 + 기울어진 미니 그래프 카드 + 막대그래프 아이콘 (본문과 안 겹치게 우상단 고정) */
+.av-decor { position: absolute; top: 0; right: 0; width: 320px; height: 260px; pointer-events: none; }
+.av-decor-dots {
+  position: absolute; top: 118px; right: 34px; width: 92px; height: 70px;
+  background-image: radial-gradient(var(--av-cream-2) 1.6px, transparent 1.6px);
+  background-size: 15px 15px; opacity: .9;
+}
+.av-decor-card {
+  position: absolute; top: 40px; right: 96px; width: 128px; height: 74px;
+  background: var(--panel); border-radius: var(--radius-md); box-shadow: var(--shadow-md);
+  transform: rotate(9deg); display: flex; align-items: center; justify-content: center; padding: 12px;
+}
+.av-decor-spark { width: 100%; height: auto; color: var(--av-mint-ink); }
+.av-decor-bars { position: absolute; top: 148px; right: 40px; color: var(--av-cream-2); }
+
+/* 배지 + 헤드라인 + 서브카피 */
+.av-eyebrow {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--av-mint); color: var(--av-mint-ink); font-size: 13px; font-weight: 700;
+  border-radius: var(--radius-pill); padding: 7px 16px 7px 12px;
+}
+.av-title {
+  margin: 20px 0 0; font-size: 42px; line-height: 1.22; font-weight: 800; letter-spacing: -.01em;
+  color: var(--text);
+}
+.av-title-hl { position: relative; z-index: 0; }
+.av-title-hl::after {
+  content: ""; position: absolute; left: -2px; right: -2px; bottom: 2px; height: .38em;
+  background: var(--av-mint); z-index: -1; border-radius: 2px;
+}
+.av-sub { margin: 18px 0 0; font-size: 15px; line-height: 1.6; color: var(--muted); }
+
+/* 정산 명세서 카드 — 랜딩의 ReceiptCard 와는 별개 스타일(이 목업 전용), 데이터는 동일한 진짜 카피 재사용 */
+.av-receipt {
+  margin-top: 30px; background: var(--panel); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg); padding: 22px 24px; overflow: hidden;
+}
+.av-receipt-icon {
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 34px; height: 34px; border-radius: var(--radius-pill);
+  background: var(--av-mint); color: var(--av-mint-ink);
+}
+.av-receipt-icon.sm { width: 28px; height: 28px; }
+.av-receipt-head { display: flex; align-items: center; gap: 12px; padding-bottom: 16px; }
+.av-receipt-name { font-weight: 700; font-size: 15px; color: var(--text); }
+.av-receipt-roas {
+  margin-left: auto; font-family: ui-monospace, monospace; font-weight: 700; font-size: 12.5px;
+  color: var(--av-mint-ink); background: var(--av-mint); padding: 4px 10px; border-radius: var(--radius-pill);
+}
+.av-receipt-body { border-top: 1px dashed var(--line); }
+.av-receipt-line { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px dashed var(--line); }
+.av-receipt-line .lab { color: var(--text); font-size: 14px; }
+.av-receipt-line .val {
+  margin-left: auto; font-family: ui-monospace, monospace; font-variant-numeric: tabular-nums;
+  font-size: 14px; color: var(--text);
+}
+.av-receipt-total { display: flex; align-items: baseline; padding-top: 16px; }
+.av-receipt-total .lab { font-weight: 800; font-size: 16px; color: var(--text); }
+.av-receipt-total .val {
+  margin-left: auto; font-family: ui-monospace, monospace; font-weight: 800; font-size: 30px;
+  color: var(--loss); letter-spacing: -.01em;
+}
+.av-receipt-warn {
+  margin-top: 10px; display: flex; align-items: center; justify-content: flex-end; gap: 6px;
+  color: var(--loss); font-weight: 700; font-size: 13px;
+}
+
+/* 하단 3열 안내 카드 */
+.av-footer {
+  margin-top: 26px; background: var(--panel); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+  display: flex; padding: 22px 8px;
+}
+.av-footer-col { flex: 1; min-width: 0; text-align: center; padding: 0 12px; }
+.av-footer-col + .av-footer-col { border-left: 1px solid var(--line); }
+.av-footer-icon {
+  display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px;
+  border-radius: var(--radius-pill); background: var(--av-mint); color: var(--av-mint-ink); margin-bottom: 10px;
+}
+.av-footer-title { font-weight: 700; font-size: 13.5px; line-height: 1.4; color: var(--text); }
+.av-footer-desc { margin-top: 6px; font-size: 12px; line-height: 1.5; color: var(--muted); }
+
+/* 등장 애니메이션 — 위→아래 순차 페이드업, 실제로 "글자가 나타나는" 느낌을 주는 슬라이드+페이드 */
+.av-reveal { opacity: 0; transform: translateY(14px); animation: av-rise .6s cubic-bezier(.22, .61, .36, 1) forwards; }
+.av-d1 { animation-delay: .05s; }
+.av-d2 { animation-delay: .16s; }
+.av-d3 { animation-delay: .27s; }
+.av-d4 { animation-delay: .38s; }
+.av-d5 { animation-delay: .5s; }
+.av-d6 { animation-delay: .64s; }
+@keyframes av-rise { to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .av-reveal { animation: none; opacity: 1; transform: none; }
+}
+
+@media (max-width: 980px) {
+  .av-title { font-size: 34px; }
+  .av-decor { display: none; }
+}
+
+@media (max-width: 760px) {
+  .av-panel { min-height: 0; padding: 44px 24px 56px; }
+  .av-footer { flex-direction: column; gap: 18px; padding: 22px 18px; }
+  .av-footer-col { text-align: left; padding: 0; }
+  .av-footer-col + .av-footer-col { border-left: 0; border-top: 1px solid var(--line); padding-top: 18px; }
+}

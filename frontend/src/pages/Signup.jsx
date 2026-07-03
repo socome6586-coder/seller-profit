@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth.jsx";
-import ReceiptCard from "../components/ReceiptCard.jsx";
+import "./SignupValue.css";
 
 // 가치 패널용 인라인 SVG 아이콘 — 아이콘 라이브러리 의존성 추가 없이 최소 stroke 스타일로 직접 그림.
+// 참고 목업(사용자 첨부 이미지)의 아이콘 구성(가방/카드/박스/트럭/경고/사람/자물쇠 등)을 그대로 재현.
 function Icon({ children, ...props }) {
   return (
     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
@@ -18,13 +19,6 @@ const MegaphoneIcon = (p) => (
     <path d="M14 8a4 4 0 0 1 0 8" />
   </Icon>
 );
-const UserPlusIcon = (p) => (
-  <Icon {...p}>
-    <circle cx="9" cy="8" r="3" />
-    <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" />
-    <path d="M18 8v4M16 10h4" />
-  </Icon>
-);
 const LinkIcon = (p) => (
   <Icon {...p}>
     <path d="M9 12a3 3 0 0 0 3 3h3a3 3 0 0 0 0-6h-1" />
@@ -37,23 +31,57 @@ const TrendingUpIcon = (p) => (
     <polyline points="14 6 20 6 20 12" />
   </Icon>
 );
-const CheckCircleIcon = (p) => (
+const BagIcon = (p) => (
   <Icon {...p}>
-    <circle cx="12" cy="12" r="9" />
-    <polyline points="8 12 11 15 16 9" />
+    <path d="M6 8h12l-1 12H7L6 8z" />
+    <path d="M9 8V6a3 3 0 0 1 6 0v2" />
   </Icon>
 );
-const GiftIcon = (p) => (
+const CardIcon = (p) => (
   <Icon {...p}>
-    <rect x="4" y="9" width="16" height="11" rx="1" />
-    <path d="M4 9h16M12 9v11" />
-    <path d="M12 9c-1.6 0-3-1-3-3a2 2 0 0 1 4 0c0 1 0 3-1 3zM12 9c1.6 0 3-1 3-3a2 2 0 0 0-4 0c0 1 0 3 1 3z" />
+    <rect x="3" y="6" width="18" height="12" rx="2" />
+    <path d="M3 10h18" />
   </Icon>
 );
-const ShieldCheckIcon = (p) => (
+const BoxIcon = (p) => (
   <Icon {...p}>
-    <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" />
-    <polyline points="9 12 11.5 14.5 15 10" />
+    <path d="M21 8l-9-5-9 5 9 5 9-5z" />
+    <path d="M3 8v8l9 5 9-5V8" />
+    <path d="M12 13v8" />
+  </Icon>
+);
+const TruckIcon = (p) => (
+  <Icon {...p}>
+    <path d="M3 7h11v9H3z" />
+    <path d="M14 10h4l3 3v3h-7z" />
+    <circle cx="7" cy="18" r="1.6" />
+    <circle cx="17.5" cy="18" r="1.6" />
+  </Icon>
+);
+const AlertTriangleIcon = (p) => (
+  <Icon {...p}>
+    <path d="M12 4l9 16H3L12 4z" />
+    <path d="M12 10v4" />
+    <path d="M12 17h.01" />
+  </Icon>
+);
+const PersonIcon = (p) => (
+  <Icon {...p}>
+    <circle cx="12" cy="8" r="3.5" />
+    <path d="M5 20c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5" />
+  </Icon>
+);
+const LockIcon = (p) => (
+  <Icon {...p}>
+    <rect x="5" y="11" width="14" height="9" rx="2" />
+    <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+  </Icon>
+);
+const BarsIcon = (p) => (
+  <Icon {...p}>
+    <rect x="3" y="13" width="3" height="7" rx="1" fill="currentColor" stroke="none" />
+    <rect x="9" y="9" width="3" height="11" rx="1" fill="currentColor" stroke="none" />
+    <rect x="15" y="5" width="3" height="15" rx="1" fill="currentColor" stroke="none" />
   </Icon>
 );
 
@@ -85,9 +113,10 @@ export default function Signup() {
 
   return (
     <div className="auth-split-wrap">
-      {/* 좌: 폼(기존 로직/검증 그대로) · 우: 가치 패널(ReceiptCard+안내) — docs/signup-tasks.md T11.2.
-          모바일에서는 1열로 접히고 DOM 순서상 폼이 먼저 보인다. 폼 필드는 이메일+비밀번호로 불변. */}
-      <div className="auth-split">
+      {/* 좌: 폼(기존 로직/검증 그대로) · 우: 가치 패널 — 화면을 1:1로 나누고 우측이 뷰포트 전체 높이를
+          꽉 채운다(docs/signup-tasks.md T11.2, 사용자 첨부 목업 재현). 모바일에서는 1열로 접히고
+          DOM 순서상 폼이 먼저 보인다. 폼 필드는 이메일+비밀번호로 불변. */}
+      <div className="auth-form-pane">
         <div className="auth-card">
           <h1>무료로 시작하기</h1>
           <form onSubmit={onSubmit}>
@@ -121,65 +150,118 @@ export default function Signup() {
             이미 계정이 있으신가요? <Link to="/login">로그인</Link>
           </div>
         </div>
-
-        <aside className="auth-value">
-          <div className="auth-value-intro reveal-in">
-            <span className="auth-value-eyebrow">
-              <MegaphoneIcon />
-              무료로 시작하기
-            </span>
-            <h2 className="auth-value-title">진짜 순이익, 가입하고 바로 확인하세요</h2>
-            <p className="auth-value-sub">
-              쿠팡 계정만 연동하면 광고비까지 반영한 상품별 순이익을 자동으로 보여드려요.
-            </p>
-          </div>
-
-          <div className="reveal-in reveal-in-2">
-            <ReceiptCard />
-          </div>
-
-          <div className="auth-value-steps reveal-in reveal-in-3">
-            <div className="auth-step">
-              <span className="auth-step-icon-wrap">
-                <UserPlusIcon />
-                <span className="auth-step-num">1</span>
-              </span>
-              <span className="auth-step-label">가입</span>
-            </div>
-            <span className="auth-step-connector" aria-hidden="true" />
-            <div className="auth-step">
-              <span className="auth-step-icon-wrap">
-                <LinkIcon />
-                <span className="auth-step-num">2</span>
-              </span>
-              <span className="auth-step-label">쿠팡 계정 연동</span>
-            </div>
-            <span className="auth-step-connector" aria-hidden="true" />
-            <div className="auth-step">
-              <span className="auth-step-icon-wrap">
-                <TrendingUpIcon />
-                <span className="auth-step-num">3</span>
-              </span>
-              <span className="auth-step-label">진짜 순이익 확인</span>
-            </div>
-          </div>
-
-          <div className="auth-value-checks reveal-in reveal-in-4">
-            <span className="auth-check">
-              <CheckCircleIcon />
-              쿠팡 판매자 계정만 있으면 시작
-            </span>
-            <span className="auth-check">
-              <GiftIcon />
-              무료 시작 · 카드 등록 불필요
-            </span>
-            <span className="auth-check">
-              <ShieldCheckIcon />
-              연동 시 API 키 AES-256 암호화
-            </span>
-          </div>
-        </aside>
       </div>
+
+      <aside className="av-panel">
+        <div className="av-decor" aria-hidden="true">
+          <span className="av-decor-dots" />
+          <div className="av-decor-card av-reveal av-d1">
+            <svg className="av-decor-spark" viewBox="0 0 64 34" fill="none" aria-hidden="true">
+              <polyline points="2 26 18 16 28 20 44 6 62 10" stroke="currentColor" strokeWidth="2.5"
+                strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+          <BarsIcon className="av-decor-bars av-reveal av-d2" width="34" height="34" />
+        </div>
+
+        <div className="av-content">
+        <span className="av-eyebrow av-reveal av-d1">
+          <MegaphoneIcon width="14" height="14" />
+          광고비만 쓰고 있다면
+        </span>
+
+        <h2 className="av-title">
+          <span className="av-reveal av-d2">진짜 순이익부터</span>
+          <br />
+          <span className="av-title-hl av-reveal av-d3">확인하세요</span>
+        </h2>
+
+        <p className="av-sub av-reveal av-d4">
+          상품별 손익 구조를 한눈에 보고,
+          <br />
+          광고를 더 써도 되는지 빠르게 판단해보세요.
+        </p>
+
+        <div className="av-receipt av-reveal av-d5" role="img"
+          aria-label="적자상품 예시: ROAS 13.5배지만 진짜 순이익은 마이너스 159,737원">
+          <div className="av-receipt-head">
+            <span className="av-receipt-icon"><BagIcon width="16" height="16" /></span>
+            <span className="av-receipt-name">적자상품 B · 이번 달</span>
+            <span className="av-receipt-roas">ROAS 13.5×</span>
+          </div>
+          <div className="av-receipt-body">
+            <div className="av-receipt-line">
+              <span className="av-receipt-icon sm"><CardIcon width="15" height="15" /></span>
+              <span className="lab">매출 (정산 실수령)</span>
+              <span className="val">₩270,000</span>
+            </div>
+            <div className="av-receipt-line">
+              <span className="av-receipt-icon sm"><BoxIcon width="15" height="15" /></span>
+              <span className="lab">매입원가 (45개)</span>
+              <span className="val">−₩405,000</span>
+            </div>
+            <div className="av-receipt-line">
+              <span className="av-receipt-icon sm"><TruckIcon width="15" height="15" /></span>
+              <span className="lab">배분 기타비용</span>
+              <span className="val">−₩4,737</span>
+            </div>
+            <div className="av-receipt-line">
+              <span className="av-receipt-icon sm"><MegaphoneIcon width="15" height="15" /></span>
+              <span className="lab">광고비</span>
+              <span className="val">−₩20,000</span>
+            </div>
+          </div>
+          <div className="av-receipt-total">
+            <span className="lab">진짜 순이익</span>
+            <span className="val">−₩159,737</span>
+          </div>
+          <div className="av-receipt-warn">
+            <AlertTriangleIcon width="15" height="15" />
+            적자 · 광고 켤수록 손해!
+          </div>
+        </div>
+
+        <div className="av-footer av-reveal av-d6">
+          <div className="av-footer-col">
+            <span className="av-footer-icon"><LinkIcon width="17" height="17" /></span>
+            <div className="av-footer-title">
+              가입 후
+              <br />
+              쿠팡 계정 연동
+            </div>
+            <div className="av-footer-desc">
+              몇 번의 클릭으로
+              <br />
+              간편하게 연결하세요.
+            </div>
+          </div>
+          <div className="av-footer-col">
+            <span className="av-footer-icon"><PersonIcon width="17" height="17" /></span>
+            <div className="av-footer-title">
+              쿠팡 판매자
+              <br />
+              계정만 있으면
+              <br />
+              시작 가능
+            </div>
+            <div className="av-footer-desc">
+              별도 준비 없이
+              <br />
+              바로 이용할 수 있어요.
+            </div>
+          </div>
+          <div className="av-footer-col">
+            <span className="av-footer-icon"><LockIcon width="17" height="17" /></span>
+            <div className="av-footer-title">무료로 시작</div>
+            <div className="av-footer-desc">
+              · 카드 등록 불필요
+              <br />
+              · AES-256 암호화
+            </div>
+          </div>
+        </div>
+        </div>
+      </aside>
     </div>
   );
 }
