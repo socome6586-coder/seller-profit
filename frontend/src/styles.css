@@ -155,6 +155,23 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
 .auth-switch { color: var(--muted); font-size: 13px; margin-top: 18px; text-align: center; }
 .center-msg { text-align: center; color: var(--muted); padding: 60px 20px; }
 
+/* 회원가입 2단 레이아웃(docs/signup-tasks.md T11.2) — 좌: 기존 .auth-card 폼(변경 없음), 우: 가치 패널.
+   모바일(<=760px)은 1열로 접히고 DOM 순서상 폼이 먼저라 폼이 항상 위에 온다. */
+.auth-split-wrap { max-width: 940px; margin: 60px auto; padding: 0 20px; }
+.auth-split { display: grid; grid-template-columns: 380px 1fr; gap: 36px; align-items: start; }
+.auth-value { display: flex; flex-direction: column; gap: 18px; }
+.auth-value-notes {
+  display: flex; flex-direction: column; gap: 14px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-md);
+  padding: 18px 20px; box-shadow: var(--shadow-sm);
+}
+.auth-value-note { display: flex; flex-direction: column; gap: 3px; }
+.auth-value-note .k { font-size: 12px; font-weight: 700; color: var(--muted); }
+.auth-value-note .v { font-size: 14px; color: var(--text); line-height: 1.5; }
+@media (max-width: 760px) {
+  .auth-split { grid-template-columns: 1fr; gap: 28px; }
+}
+
 /* 요금/구독 */
 .plans { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 10px; }
 .plan {
