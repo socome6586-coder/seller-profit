@@ -85,3 +85,53 @@
   시드(seed) 라이브 검증: `GET /api/dashboard/profit?accountId=1` → `totalProfit=345000.00`,
   적자상품 B `profit=-159736.84`; `GET /api/dashboard/ad-roi?accountId=1` 의
   `totalAdSpend`/`unassignedAdSpend`/SKU 별 `postAdProfit` 이 메인 대시보드 값과 정확히 일치.
+
+---
+
+## D3. 관리자(Admin) 기능(T10) — role 강제 위치, COMP/PAID 분리, 마지막 관리자 잠금
+
+- **날짜**: 2026-07-03
+- **관련**: `docs/admin-tasks.md`, `com.sellerprofit.admin.*`(`AdminAccess`, `AdminController`,
+  `AdminGrantService`, `AdminRoleService`, `AdminAuditService`), `SubscriptionService`,
+  `BillingScheduler`, `frontend/src/pages/Admin.jsx`, `App.jsx`(`AdminOnly`)
+- **배경**: 무상 체험/제휴 등으로 특정 유저에게 PRO 를 결제 없이 지급해야 하는 운영 니즈가
+  생겼다. 세션 기반 수동 인증만 있는 프로젝트라 Spring Security 의 role 계층이 없고,
+  `@PreAuthorize` 류 선언적 가드도 없다 — role 강제를 어디서/어떻게 걸지가 핵심 결정이었다.
+- **결정**:
+  1. **role 강제는 컨트롤러 메서드마다 `AdminAccess.requireAdmin(HttpServletRequest)`
+     명시 호출로.** 클래스 레벨 인터셉터나 URL 패턴 기반 필터 대신, 각 `@GetMapping`/
+     `@PostMapping` 첫 줄에서 명시적으로 호출한다. 코드가 조금 반복되지만, 새 관리자
+     엔드포인트를 추가하면서 이 한 줄을 빠뜨리는 실수가 코드 리뷰에서 바로 눈에 띄고,
+     "이 메서드는 관리자 전용이다"가 필터 설정 파일이 아니라 메서드 본문에 있어 추적이
+     쉽다. UI(Nav 조건부 렌더 + `AdminOnly` 라우트 가드)는 편의일 뿐이고, 실제 방어선은
+     이 서버 호출 하나뿐이라는 걸 각 컨트롤러 Javadoc 에 반복 명시했다.
+  2. **`User.source`(FREE/PAID/COMP) 컬럼으로 결제 구독과 무상 지급을 분리.**
+     `AdminGrantService` 가 지급하는 PRO 는 `source=COMP` 로 마킹되고, `BillingScheduler`
+     의 일일 갱신 배치는 `source=COMP` 인 유저를 건너뛴다(결제 시도 자체를 안 함 — 실패
+     후 강등이 아니라 애초에 대상에서 제외). `AdminRoleService.revoke` 는 `source=COMP`
+     인 유저만 대상으로 하고(버튼도 비활성화 + 서버 400), 결제(PAID) 구독은 관리자가
+     실수로라도 건드릴 방법이 없다.
+  3. **마지막 ADMIN 강등 방지 + 자기 자신 role 변경 금지를 `AdminRoleService` 에서
+     DB count 쿼리로 강제.** 클라이언트 조건부 숨김이 아니라 서버가
+     `UserRepository.countByRole(ADMIN)` 로 실시간 확인 후 400 을 던진다 — role 을
+     동시에 여러 관리자가 바꾸는 레이스에도(마지막 순간 count 재확인이라) 관리자가
+     0 명이 되는 상태로 빠지지 않는다.
+  4. **감사 로그(`admin_audit`) 는 모든 지급/회수/role 변경에 동기 기록**, `detail` 은
+     Hibernate 6 네이티브 JSON 매핑(`@JdbcTypeCode(SqlTypes.JSON)`)으로 저장하고,
+     조회 시(`AdminAuditService.list`) `ObjectMapper` 로 `Map<String,Object>` 로 복원해
+     프론트가 구조화된 값을 그대로 렌더링한다(문자열 JSON 을 프론트에서 다시 파싱할
+     필요 없음).
+  5. **도메인 우회 금지 유지** — `AdminGrantService`/`AdminRoleService` 는 `User` 필드를
+     직접 건드리지 않고 항상 `SubscriptionService`(플랜 변경) 또는
+     `UserRepository`+엔티티 setter(role) 를 관리자 오케스트레이션 트랜잭션 안에서 호출한다.
+  6. **프론트 `AdminOnly` 라우트 가드(`App.jsx`)는 방어가 아니라 UX** — 비관리자가 주소를
+     직접 입력해도 즉시 `/dashboard` 로 리다이렉트해 빈 화면/403 에러 페이지를 안 보여주는
+     용도이며, 실제 데이터 방어는 위 1번(서버 `AdminAccess`)이 전부 한다. 브라우저로
+     `t10-4-check@test.local`(비관리자) 로그인 → `/admin` 직접 진입 시 클라이언트 가드가
+     `/dashboard` 로 되돌리는 것을 실측 확인했다.
+- **결과(검증)**: `AdminControllerTest`(`@WebMvcTest`) 가 모든 `/api/admin/**` 엔드포인트에
+  대해 비로그인(401)·비관리자(403)·정상(200) 3 케이스를 전부 고정. `AdminRoleServiceTest`
+  가 마지막 관리자 강등 차단·자기 자신 강등 차단을 서비스 레벨에서 증명.
+  `SubscriptionServiceTest`/`BillingScheduler` 쪽 테스트가 `source=COMP` 스킵을 고정.
+  브라우저(Chrome MCP) 로 실제 로그인 → 지급(2 개월 PRO) → 유저 표 즉시 갱신 → 비관리자
+  직접 진입 차단까지 end-to-end 로 확인.
