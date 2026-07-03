@@ -29,8 +29,8 @@ export function AuthProvider({ children }) {
     return me;
   }, []);
 
-  const signup = useCallback(async (email, password) => {
-    const me = await api("/api/auth/signup", { method: "POST", body: { email, password } });
+  const signup = useCallback(async (email, password, phone) => {
+    const me = await api("/api/auth/signup", { method: "POST", body: { email, password, phone } });
     // 가입 직후 자동 로그인(세션 생성)까지 이어 붙인다.
     await api("/api/auth/login", { method: "POST", body: { email, password } });
     setUser(me);

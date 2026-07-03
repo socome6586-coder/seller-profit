@@ -14,6 +14,7 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
     boolean existsByEmail(String email);
+    boolean existsByPhone(String phone);
 
     /** 정기결제 대상: 해당 상태이면서 청구 주기가 기준 시각 이전(=만료/도래)인 유저. */
     List<User> findBySubscriptionStatusAndCurrentPeriodEndBefore(

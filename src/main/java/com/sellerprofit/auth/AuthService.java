@@ -29,16 +29,27 @@ public class AuthService {
     }
 
     @Transactional
-    public AuthUserView signup(String email, String rawPassword) {
+    public AuthUserView signup(String email, String rawPassword, String phone) {
         String normalizedEmail = normalize(email);
         if (userRepository.existsByEmail(normalizedEmail)) {
             throw new IllegalArgumentException("이미 가입된 이메일입니다.");
         }
+        String normalizedPhone = normalizePhone(phone);
+        if (userRepository.existsByPhone(normalizedPhone)) {
+            throw new IllegalArgumentException("이미 가입된 휴대전화번호입니다.");
+        }
         User user = userRepository.save(
-                User.create(normalizedEmail, passwordEncoder.encode(rawPassword)));
+                User.create(normalizedEmail, passwordEncoder.encode(rawPassword), normalizedPhone));
         // 기본값이 FREE 라 추가 결제 없이 바로 사용 가능.
         adminBootstrapService.promoteIfBootstrapAdmin(user);   // app.admin-emails 계정이면 즉시 ADMIN
         return AuthUserView.of(user);
+    }
+
+    /** 가입 폼의 "중복확인" 버튼용 — 이미 쓰이는 이메일인지 여부만 알려준다(계정 존재 자체는 노출해도
+     *  가입 단계에서는 통상적인 UX이므로 로그인 실패 메시지와 달리 문제 없음). */
+    @Transactional(readOnly = true)
+    public boolean isEmailAvailable(String email) {
+        return !userRepository.existsByEmail(normalize(email));
     }
 
     /**
@@ -67,5 +78,10 @@ public class AuthService {
 
     private static String normalize(String email) {
         return email.trim().toLowerCase();
+    }
+
+    /** 하이픈 등 구분자를 제거해 숫자만 남긴다 — 저장/중복확인 기준을 하나로 통일. */
+    private static String normalizePhone(String phone) {
+        return phone.replaceAll("[^0-9]", "");
     }
 }

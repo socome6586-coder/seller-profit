@@ -29,6 +29,11 @@ public class User {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;            // BCrypt 해시 (평문 저장 금지)
 
+    // 휴대전화번호(숫자만 정규화해 저장, 예: "01012345678"). 중복가입 방지용 UNIQUE.
+    // 마이그레이션 이전 가입자를 위해 컬럼은 NULL 허용이지만, 신규 가입은 서비스 레벨에서 필수로 강제한다.
+    @Column(name = "phone", unique = true, length = 20)
+    private String phone;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "subscription_status", nullable = false, length = 20)
     private SubscriptionStatus subscriptionStatus = SubscriptionStatus.FREE;
@@ -65,10 +70,16 @@ public class User {
     private OffsetDateTime updatedAt;
 
     /** 회원 생성용. passwordHash 는 호출측에서 BCrypt 등으로 해싱해 전달한다. */
-    public static User create(String email, String passwordHash) {
+    public static User create(String email, String passwordHash, String phone) {
         User u = new User();
         u.email = email;
         u.passwordHash = passwordHash;
+        u.phone = phone;
         return u;
+    }
+
+    /** phone 없이 생성(테스트/내부용 헬퍼 등 실제 가입 흐름이 아닌 경우). */
+    public static User create(String email, String passwordHash) {
+        return create(email, passwordHash, null);
     }
 }

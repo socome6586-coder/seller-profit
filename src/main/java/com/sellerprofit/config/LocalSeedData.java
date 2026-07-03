@@ -50,6 +50,7 @@ public class LocalSeedData implements CommandLineRunner {
     /** 데모 로그인 계정(로그인 벽 뒤에서 시드 데이터를 보려면 이 계정으로 로그인). */
     private static final String DEMO_EMAIL = "demo@demo.local";
     private static final String DEMO_PASSWORD = "demo1234";
+    private static final String DEMO_PHONE = "01000000000";
 
     private final UserRepository userRepository;
     private final MarketAccountRepository marketAccountRepository;
@@ -91,7 +92,7 @@ public class LocalSeedData implements CommandLineRunner {
 
         // 로그인 벽 뒤에서 시드 데이터를 보려면 이 계정으로 로그인해야 한다(BCrypt 해시 저장).
         User user = userRepository.save(
-                User.create(DEMO_EMAIL, passwordEncoder.encode(DEMO_PASSWORD)));
+                User.create(DEMO_EMAIL, passwordEncoder.encode(DEMO_PASSWORD), DEMO_PHONE));
         MarketAccount account = marketAccountRepository.save(
                 MarketAccount.create(user, "SEEDVENDOR", "seed-access-key", "seed-secret-key"));
 

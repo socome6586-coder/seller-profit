@@ -45,6 +45,12 @@ export async function uploadFile(path, formData) {
   return text ? JSON.parse(text) : null;
 }
 
+/** 가입 폼의 이메일 중복확인 버튼용. 서버가 { available: boolean } 을 내려준다. */
+export async function checkEmailAvailable(email) {
+  const r = await api(`/api/auth/check-email?email=${encodeURIComponent(email)}`);
+  return !!r?.available;
+}
+
 export const won = (n) => (n == null ? "–" : "₩" + Number(n).toLocaleString("ko-KR"));
 export const pct = (n) => (n == null ? "–" : Number(n).toFixed(1) + "%");
 export const num = (n) => Number(n || 0).toLocaleString("ko-KR");

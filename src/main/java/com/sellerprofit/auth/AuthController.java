@@ -11,13 +11,17 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Map;
 
 /**
  * 인증 API. 세션(쿠키) 기반이며, 별도 시큐리티 필터체인 없이 컨트롤러가 직접 세션을 다룬다.
  *
- * 예) POST /api/auth/signup  {"email":"a@b.com","password":"secret123"} → 무료 가입
+ * 예) GET  /api/auth/check-email?email=a@b.com → {"available":true|false}
+ *     POST /api/auth/signup  {"email":"a@b.com","password":"secret123","phone":"01012345678"} → 무료 가입
  *     POST /api/auth/login   {"email":"a@b.com","password":"secret123"} → 세션에 userId 저장
  *     POST /api/auth/logout  → 세션 무효화(204)
  *     GET  /api/auth/me      → 현재 로그인 유저(세션 없으면 401)
@@ -35,10 +39,16 @@ public class AuthController {
         this.authService = authService;
     }
 
+    /** 가입 폼의 이메일 "중복확인" 버튼이 호출한다. 존재 여부만 boolean 으로 응답. */
+    @GetMapping("/check-email")
+    public Map<String, Boolean> checkEmail(@RequestParam String email) {
+        return Map.of("available", authService.isEmailAvailable(email));
+    }
+
     @PostMapping("/signup")
     @ResponseStatus(HttpStatus.CREATED)
     public AuthUserView signup(@Valid @RequestBody SignupRequest request) {
-        return authService.signup(request.email(), request.password());
+        return authService.signup(request.email(), request.password(), request.phone());
     }
 
     /** 로그인 성공 시 세션에 userId 를 저장하고 유저 표현을 돌려준다. */

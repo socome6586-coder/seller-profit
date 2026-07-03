@@ -1,7 +1,22 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth.jsx";
+import { checkEmailAvailable } from "../api";
 import "./SignupValue.css";
+
+// 비밀번호: 8자 이상 + 영문 포함 + (숫자 또는 특수문자) 포함 — 요즘 방식 비밀번호 정책, 백엔드
+// SignupRequest 의 @Pattern 과 동일 기준(docs 없음, 코드가 유일한 정책 소스이므로 서버와 정규식 일치시킴).
+const PASSWORD_RE = /^(?=.*[A-Za-z])(?=.*[0-9!@#$%^&*()_\-+=[\]{};:'",.<>/?]).{8,}$/;
+// 휴대전화번호: 01x + 7~8자리(총 10~11자리), 하이픈은 표시용이라 검증 전 제거.
+const PHONE_RE = /^01[016789]\d{7,8}$/;
+
+// 입력 중 자동으로 하이픈을 붙여준다(010-1234-5678 형태). 숫자만 최대 11자리로 제한.
+function formatPhone(raw) {
+  const d = raw.replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 3) return d;
+  if (d.length <= 7) return `${d.slice(0, 3)}-${d.slice(3)}`;
+  return `${d.slice(0, 3)}-${d.slice(3, d.length - 4)}-${d.slice(d.length - 4)}`;
+}
 
 // 가치 패널용 인라인 SVG 아이콘 — 아이콘 라이브러리 의존성 추가 없이 최소 stroke 스타일로 직접 그림.
 // 참고 목업(사용자 첨부 이미지)의 아이콘 구성(가방/카드/박스/트럭/경고/사람/자물쇠 등)을 그대로 재현.
@@ -92,24 +107,72 @@ const WatermarkGraph = (p) => (
   </svg>
 );
 
+const EMAIL_IDLE = { checking: false, checkedFor: "", available: null, message: "" };
+
 export default function Signup() {
   const { signup } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [emailCheck, setEmailCheck] = useState(EMAIL_IDLE);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+
+  function onEmailChange(e) {
+    setEmail(e.target.value);
+    // 이메일을 다시 고치면 이전 확인 결과는 더 이상 유효하지 않으니 초기화.
+    setEmailCheck(EMAIL_IDLE);
+  }
+
+  async function onCheckEmail() {
+    const value = email.trim();
+    if (!value) {
+      setEmailCheck({ ...EMAIL_IDLE, message: "이메일을 먼저 입력해주세요." });
+      return;
+    }
+    setEmailCheck((s) => ({ ...s, checking: true, message: "" }));
+    try {
+      const available = await checkEmailAvailable(value);
+      setEmailCheck({
+        checking: false,
+        checkedFor: value,
+        available,
+        message: available ? "사용 가능한 이메일입니다." : "이미 가입된 이메일입니다.",
+      });
+    } catch (err) {
+      setEmailCheck({ ...EMAIL_IDLE, message: err.message || "확인에 실패했습니다." });
+    }
+  }
 
   async function onSubmit(e) {
     e.preventDefault();
     setError("");
-    if (password.length < 8) {
-      setError("비밀번호는 8자 이상이어야 합니다.");
+
+    const trimmedEmail = email.trim();
+    const phoneDigits = phone.replace(/\D/g, "");
+
+    if (!PASSWORD_RE.test(password)) {
+      setError("비밀번호는 8자 이상이며 영문과 숫자 또는 특수문자를 함께 포함해야 합니다.");
       return;
     }
+    if (password !== confirmPassword) {
+      setError("비밀번호 확인이 일치하지 않습니다.");
+      return;
+    }
+    if (!PHONE_RE.test(phoneDigits)) {
+      setError("휴대전화번호 형식이 올바르지 않습니다.");
+      return;
+    }
+    if (emailCheck.checkedFor === trimmedEmail && emailCheck.available === false) {
+      setError("이미 가입된 이메일입니다.");
+      return;
+    }
+
     setBusy(true);
     try {
-      await signup(email.trim(), password);
+      await signup(trimmedEmail, password, phoneDigits);
       navigate("/dashboard", { replace: true });
     } catch (err) {
       setError(err.message || "가입에 실패했습니다.");
@@ -140,17 +203,27 @@ export default function Signup() {
             <form onSubmit={onSubmit}>
               <div className="field">
                 <label>이메일</label>
-                <input
-                  type="email"
-                  value={email}
-                  autoComplete="username"
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  required
-                />
+                <div className="field-check-row">
+                  <input
+                    type="email"
+                    value={email}
+                    autoComplete="username"
+                    onChange={onEmailChange}
+                    placeholder="you@example.com"
+                    required
+                  />
+                  <button type="button" className="ghost" onClick={onCheckEmail} disabled={emailCheck.checking}>
+                    {emailCheck.checking ? "확인 중…" : "중복확인"}
+                  </button>
+                </div>
+                {emailCheck.message ? (
+                  <div className={"note " + (emailCheck.available === false ? "err" : emailCheck.available ? "ok" : "")}>
+                    {emailCheck.message}
+                  </div>
+                ) : null}
               </div>
               <div className="field">
-                <label>비밀번호 (8자 이상)</label>
+                <label>비밀번호</label>
                 <input
                   type="password"
                   value={password}
@@ -158,6 +231,33 @@ export default function Signup() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
+                <div className="field-hint">8자 이상, 영문 + 숫자 또는 특수문자 조합</div>
+              </div>
+              <div className="field">
+                <label>비밀번호 확인</label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  autoComplete="new-password"
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+                {confirmPassword && confirmPassword !== password ? (
+                  <div className="note err">비밀번호가 일치하지 않습니다.</div>
+                ) : null}
+              </div>
+              <div className="field">
+                <label>휴대전화번호</label>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  value={phone}
+                  autoComplete="tel"
+                  onChange={(e) => setPhone(formatPhone(e.target.value))}
+                  placeholder="010-1234-5678"
+                  required
+                />
+                <div className="field-hint">가입 확인 및 중복가입 방지에 사용돼요.</div>
               </div>
               {error ? <div className="note err">{error}</div> : null}
               <button type="submit" disabled={busy}>
