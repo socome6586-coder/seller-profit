@@ -281,24 +281,19 @@ export default function Signup() {
         </div>
 
         <div className="av-content">
-        <span className="av-eyebrow av-reveal av-d1">
-          <MegaphoneIcon width="14" height="14" />
-          광고비만 쓰고 있다면
-        </span>
-
         <h2 className="av-title">
-          <span className="av-reveal av-d2">진짜 순이익부터</span>
+          <span className="av-reveal av-d1">이젠 진짜 순이익부터</span>
           <br />
-          <span className="av-title-hl av-reveal av-d3">확인하세요</span>
+          <span className="av-title-hl av-reveal av-d2">확인하세요</span>
         </h2>
 
-        <p className="av-sub av-reveal av-d4">
+        <p className="av-sub av-reveal av-d3">
           상품별 손익 구조를 한눈에 보고,
           <br />
           광고를 더 써도 되는지 빠르게 판단해보세요.
         </p>
 
-        <div className="av-receipt av-reveal av-d5" role="img"
+        <div className="av-receipt av-reveal av-d4" role="img"
           aria-label="적자상품 예시: ROAS 13.5배지만 진짜 순이익은 마이너스 159,737원">
           <div className="av-receipt-head">
             <span className="av-receipt-icon"><BagIcon width="16" height="16" /></span>
@@ -334,6 +329,27 @@ export default function Signup() {
           <div className="av-receipt-warn">
             <AlertTriangleIcon width="15" height="15" />
             적자 · 광고 켤수록 손해!
+          </div>
+        </div>
+
+        {/* 가입→계정연동→순이익확인 3단계 흐름(사용자 첨부 목업 재현). 아래 av-footer 카드 바로 위에
+            배치 — 세로 공간이 더 늘어나는 만큼 SignupValue.css 쪽에서 다른 세로 여백을 상쇄 축소해
+            뷰포트 높이(100vh) 안에 다시 들어오도록 맞췄다(스크롤 재발 방지). */}
+        <div className="av-steps av-reveal av-d5" aria-hidden="true">
+          <div className="av-step">
+            <span className="av-step-num">1</span>
+            <span className="av-step-icon"><LinkIcon width="18" height="18" /></span>
+            <span className="av-step-label">가입</span>
+          </div>
+          <div className="av-step">
+            <span className="av-step-num">2</span>
+            <span className="av-step-icon"><PersonIcon width="18" height="18" /></span>
+            <span className="av-step-label">쿠팡 계정 연동</span>
+          </div>
+          <div className="av-step">
+            <span className="av-step-num">3</span>
+            <span className="av-step-icon"><TrendingUpIcon width="18" height="18" /></span>
+            <span className="av-step-label">진짜 순이익 확인</span>
           </div>
         </div>
 

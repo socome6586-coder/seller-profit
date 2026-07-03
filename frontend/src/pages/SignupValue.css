@@ -8,6 +8,9 @@
   --av-cream-2: #F7E9D8;
   --av-mint: #D8ECE3;
   --av-mint-ink: #2E6F5E;
+  /* "확인하세요" 강조용 빨간 형광펜 마커 색 — 기존 톤(민트/크림)과는 별개로 시선을 확 끄는
+     포인트 색이라 로컬 스코프에 새로 추가(전역 팔레트는 건드리지 않는 기존 규칙 유지). */
+  --av-marker: #FF4433;
 
   position: relative;
   overflow: hidden;
@@ -16,10 +19,10 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  /* 세로 패딩만 축소(가로 64px 은 유지) — 이전 확대(72px)가 뷰포트 높이를 넘겨 스크롤을
-     유발했다(사용자 피드백: "스크롤이 생기고 오른쪽 면이 잘려"). 가로로는 여전히 꽉 차 보이되
-     세로 합계를 100vh 안으로 되돌리는 것이 목표. */
-  padding: 52px 64px;
+  /* 세로 패딩 추가 축소(64→52→40) — 아래 3단계(av-steps) 블록이 새로 추가돼 늘어난 높이만큼
+     상쇄해 100vh 안에 다시 들어오도록 맞춘다(사용자: "추가하면 분명 길어져서 또 스크롤이
+     생겨... 제대로 만들어 줘"). 가로 패딩은 계속 유지. */
+  padding: 40px 64px;
 }
 
 /* 화면이 넓을수록(1:1 분할이라 패널 자체가 넓어짐) 콘텐츠도 같이 커져서 여백만 늘어나 보이지
@@ -51,29 +54,30 @@
   color: var(--av-mint-ink); opacity: .16;
 }
 
-/* 배지 + 헤드라인 + 서브카피 */
-.av-eyebrow {
-  display: inline-flex; align-items: center; gap: 6px;
-  background: var(--av-mint); color: var(--av-mint-ink); font-size: 14px; font-weight: 700;
-  border-radius: var(--radius-pill); padding: 8px 18px 8px 13px;
-}
+/* 헤드라인 + 서브카피 — 상단 "광고비만 쓰고 있다면" 배지는 사용자 피드백으로 제거됨
+   (헤드라인이 바로 시작하도록 단순화). margin-top 도 배지가 없어진 만큼 축소. */
 .av-title {
-  margin: 16px 0 0; font-size: 44px; line-height: 1.2; font-weight: 800; letter-spacing: -.01em;
+  margin: 0; font-size: 40px; line-height: 1.2; font-weight: 800; letter-spacing: -.01em;
   color: var(--text);
 }
 .av-title-hl { position: relative; z-index: 0; }
+/* 밑줄 느낌의 옅은 민트 하이라이트 대신, 빨간색 형광펜으로 쓱 그은 듯한 마커 강조로 교체
+   (사용자: "빨간색 형광펜으로 마커하듯이 더 강조해"). 살짝 기울이고 모서리를 비대칭으로 둥글려
+   손으로 그은 듯한 느낌을 내고, 반투명(opacity)으로 아래 글자가 비치게 해 형광펜 질감을 낸다. */
 .av-title-hl::after {
-  content: ""; position: absolute; left: -2px; right: -2px; bottom: 2px; height: .38em;
-  background: var(--av-mint); z-index: -1; border-radius: 2px;
+  content: ""; position: absolute; left: -8px; right: -8px; bottom: -3px; height: .56em;
+  background: var(--av-marker); opacity: .58; z-index: -1;
+  border-radius: 4px 9px 5px 10px / 8px 4px 9px 3px;
+  transform: rotate(-1.4deg);
 }
-.av-sub { margin: 14px 0 0; font-size: 16px; line-height: 1.55; color: var(--muted); }
+.av-sub { margin: 10px 0 0; font-size: 16px; line-height: 1.55; color: var(--muted); }
 
 /* 정산 명세서 카드 — 랜딩의 ReceiptCard 와는 별개 스타일(이 목업 전용), 데이터는 동일한 진짜 카피 재사용
    ※ 아래 세로 여백(margin-top/padding)들은 스크롤 버그 수정을 위해 축소됨 — 가로 패딩(28px)은
    그대로 유지해 "꽉 차는" 느낌은 보존한다. */
 .av-receipt {
-  margin-top: 24px; background: var(--panel); border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg); padding: 22px 28px; overflow: hidden;
+  margin-top: 16px; background: var(--panel); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg); padding: 18px 28px; overflow: hidden;
 }
 .av-receipt-icon {
   display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
@@ -88,16 +92,16 @@
   color: var(--av-mint-ink); background: var(--av-mint); padding: 5px 12px; border-radius: var(--radius-pill);
 }
 .av-receipt-body { border-top: 1px dashed var(--line); }
-.av-receipt-line { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px dashed var(--line); }
+.av-receipt-line { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px dashed var(--line); }
 .av-receipt-line .lab { color: var(--text); font-size: 15px; }
 .av-receipt-line .val {
   margin-left: auto; font-family: ui-monospace, monospace; font-variant-numeric: tabular-nums;
   font-size: 15px; color: var(--text);
 }
-.av-receipt-total { display: flex; align-items: baseline; padding-top: 14px; }
+.av-receipt-total { display: flex; align-items: baseline; padding-top: 10px; }
 .av-receipt-total .lab { font-weight: 800; font-size: 17px; color: var(--text); }
 .av-receipt-total .val {
-  margin-left: auto; font-family: ui-monospace, monospace; font-weight: 800; font-size: 32px;
+  margin-left: auto; font-family: ui-monospace, monospace; font-weight: 800; font-size: 28px;
   color: var(--loss); letter-spacing: -.01em;
 }
 .av-receipt-warn {
@@ -105,15 +109,42 @@
   color: var(--loss); font-weight: 700; font-size: 14px;
 }
 
+/* 가입 → 쿠팡 계정 연동 → 진짜 순이익 확인, 3단계 흐름(사용자 첨부 목업 재현).
+   숫자 원(작게) / 아이콘 원(크게) / 라벨 3행을 3열로 배치하고, 숫자행·아이콘행 각각에
+   점선 커넥터를 둔다. 커넥터는 .av-steps 전체 폭을 가로지르는 절대배치 선으로 그리되
+   z-index 를 원(circle)보다 낮춰, 원이 선 위에 얹혀 선을 "끊어" 보이게 하는 표준 스테퍼
+   기법을 사용 — 컬럼 폭이 달라져도 별도 라인 요소 없이 항상 원 사이만 정확히 이어진다. */
+.av-steps { position: relative; display: flex; margin-top: 16px; }
+.av-steps::before,
+.av-steps::after {
+  content: ""; position: absolute; height: 0; border-top: 2px dotted var(--av-mint-ink); opacity: .45;
+}
+.av-steps::before { left: calc(16.6% + 10px); right: calc(16.6% + 10px); top: 10px; }
+.av-steps::after { left: calc(16.6% + 18px); right: calc(16.6% + 18px); top: 44px; }
+.av-step {
+  position: relative; z-index: 1; flex: 1; min-width: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.av-step-num {
+  display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px;
+  border-radius: 50%; background: var(--av-mint); color: var(--av-mint-ink);
+  font-size: 11px; font-weight: 800; background-clip: padding-box;
+}
+.av-step-icon {
+  display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px;
+  border-radius: 50%; background: var(--av-mint); color: var(--av-mint-ink);
+}
+.av-step-label { font-size: 12.5px; font-weight: 700; color: var(--text); text-align: center; white-space: nowrap; }
+
 /* 하단 3열 안내 카드 */
 .av-footer {
-  margin-top: 20px; background: var(--panel); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
-  display: flex; padding: 20px 10px;
+  margin-top: 14px; background: var(--panel); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+  display: flex; padding: 16px 10px;
 }
 .av-footer-col { flex: 1; min-width: 0; text-align: center; padding: 0 12px; }
 .av-footer-col + .av-footer-col { border-left: 1px solid var(--line); }
 .av-footer-icon {
-  display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px;
+  display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px;
   border-radius: var(--radius-pill); background: var(--av-mint); color: var(--av-mint-ink); margin-bottom: 8px;
 }
 .av-footer-title { font-weight: 700; font-size: 14.5px; line-height: 1.35; color: var(--text); }

@@ -163,25 +163,34 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
 /* 좌측 폼 패널도 세로 공간을 상단 브랜드/중앙 카드/하단 카피 3단으로 채운다(카드가 텅 빈 화면에
    혼자 떠 보이지 않도록) — 우측 가치 패널과 시각적 무게가 비슷해지도록 맞춘 것.
    position:relative + overflow:hidden 은 아래 .auth-form-decor(배경 장식) 를 담기 위한 것. */
-/* 세로 패딩은 40px→32px 로 축소 — 이메일 중복확인/비밀번호 확인/휴대전화번호 필드가 추가되며
-   카드 자체 높이가 늘어난 만큼, 바깥 여백을 줄여 100vh 안에 다시 들어오도록 맞춘다. */
-.auth-form-pane { position: relative; overflow: hidden; display: flex; flex-direction: column; min-height: 100vh; padding: 32px 48px; }
+/* 세로 패딩 축소(48→40→32) — 카드 자체 폰트를 1.4배 키우고 살짝 더 키운 만큼(사용자 요청:
+   "왼쪽 로그인 창 세로 크기 조금만 더 키우고 폰트 크기도 1.4배 키워"), 바깥 여백을 더 줄여
+   오른쪽 3단계 블록 추가분과 함께 100vh 안에 다시 들어오도록 맞춘다(스크롤 재발 방지). */
+.auth-form-pane { position: relative; overflow: hidden; display: flex; flex-direction: column; min-height: 100vh; padding: 24px 48px; }
 .auth-form-brand, .auth-form-center, .auth-form-foot { position: relative; z-index: 1; }
 .auth-form-brand { font-weight: 800; font-size: 15px; letter-spacing: .01em; color: var(--text); }
 .auth-form-center { flex: 1; display: flex; align-items: center; justify-content: center; }
-/* 카드 자체도 우측 패널만큼 존재감 있게 키움(사용자 피드백: "로그인 창만 덩그러니") — 단,
-   필드가 2개→4개로 늘어난 만큼 내부 패딩/필드 간격은 살짝 눌러 전체 높이를 관리한다. */
-.auth-form-pane .auth-card { width: 100%; max-width: 460px; padding: 30px 34px; }
-.auth-form-pane .auth-card h1 { font-size: 22px; margin-bottom: 14px; }
-.auth-form-pane .auth-card .field { margin-bottom: 12px; }
+/* 카드 자체도 우측 패널만큼 존재감 있게 키움(사용자 피드백: "로그인 창만 덩그러니", 이번엔
+   세로 크기를 조금 더+폰트 전체 1.4배) — 폭도 큰 글자에 맞춰 460→500 로 살짝 넓혀 줄바꿈을
+   방지한다. 아래 폰트 크기들은 전역 .field/.note/button 기준값의 대략 1.4배. */
+.auth-form-pane .auth-card { width: 100%; max-width: 500px; padding: 34px 38px; }
+.auth-form-pane .auth-card h1 { font-size: 30px; margin-bottom: 16px; }
+.auth-form-pane .auth-card .field { margin-bottom: 14px; gap: 7px; }
+.auth-form-pane .auth-card .field label { font-size: 16px; }
+.auth-form-pane .auth-card .field input { font-size: 19px; padding: 12px 14px; }
+.auth-form-pane .auth-card .note { font-size: 17px; }
+.auth-form-pane .auth-card button[type="submit"] { font-size: 19px; padding: 13px 20px; }
+.auth-form-pane .auth-switch { font-size: 18px; margin-top: 20px; }
 .auth-form-foot { text-align: center; font-size: 12px; color: var(--muted); }
 
 /* 이메일 입력 + "중복확인" 버튼을 한 줄에 배치 — 가입 폼 전용(Signup.jsx). */
 .field-check-row { display: flex; gap: 8px; align-items: center; }
 .field-check-row input { flex: 1; min-width: 0; }
 .field-check-row button { width: auto; flex-shrink: 0; margin-top: 0; padding: 0 16px; height: 38px; font-size: 13px; }
+.auth-form-pane .field-check-row button { height: 48px; font-size: 17px; padding: 0 18px; }
 /* 필드 아래 보조 설명(비밀번호 규칙/휴대전화번호 용도 등) — .note 보다 옅고 항상 표시되는 안내문. */
 .field-hint { font-size: 11px; color: var(--muted); margin-top: 4px; line-height: 1.3; }
+.auth-form-pane .field-hint { font-size: 15px; }
 
 /* 좌측 배경 장식 — 우측 가치 패널의 블롭+워터마크 그래프와 대칭되는 저채도 텍스처를 깔아
    카드 하나만 화면 가운데 덩그러니 떠 있는 느낌을 없앤다. 새 색상 없이 기존 전역 토큰만 재사용. */
