@@ -126,7 +126,13 @@ export default function Signup() {
       <div className="auth-form-pane">
         {/* 좌측도 우측만큼 세로 공간을 채우도록 상단 브랜드 · 중앙 카드 · 하단 카피 3단 구성으로 변경
             (사용자 피드백: 카드 하나만 텅 빈 화면 가운데 떠 있는 느낌이 어색함). 카피는 랜딩 푸터와
-            동일한 실제 문구 재사용 — 가짜 카피 아님. */}
+            동일한 실제 문구 재사용 — 가짜 카피 아님. auth-form-decor 는 우측 패널과 대칭되는
+            저채도 배경 장식(블롭 + 워터마크 그래프, 좌우 대칭으로 뒤집음) — "로그인 창만 덩그러니"
+            피드백에 대한 보강. */}
+        <div className="auth-form-decor" aria-hidden="true">
+          <span className="auth-form-decor-blob" />
+          <WatermarkGraph className="auth-form-decor-graph" />
+        </div>
         <div className="auth-form-brand">SELLER PROFIT</div>
         <div className="auth-form-center">
           <div className="auth-card">

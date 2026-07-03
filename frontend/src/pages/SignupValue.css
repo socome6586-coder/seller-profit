@@ -16,41 +16,46 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 64px 56px;
+  padding: 72px 64px;
 }
 
-.av-content { position: relative; z-index: 1; max-width: 520px; }
+/* 화면이 넓을수록(1:1 분할이라 패널 자체가 넓어짐) 콘텐츠도 같이 커져서 여백만 늘어나 보이지
+   않도록 max-width 를 넓혔다 — 사용자 피드백: "화면에 좀 더 꽉 차는 느낌으로". */
+.av-content { position: relative; z-index: 1; max-width: 620px; }
 
 /* 배경 장식 — 떠 있는 카드 대신 패널 전체에 은은하게 녹아드는 그라디언트 블롭 + 대형 워터마크 그래프 +
    점 그리드. 사용자 피드백(우상단 카드가 어색함)에 따라 카드형 장식을 제거하고, 패널 전체를 채우는
    저채도/저투명도 텍스처로 대체해 배경이 밋밋해 보이지 않게 한다. */
 .av-decor { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
 .av-decor-blob-a {
-  position: absolute; top: -120px; right: -100px; width: 420px; height: 420px; border-radius: 50%;
+  position: absolute; top: -130px; right: -110px; width: 460px; height: 460px; border-radius: 50%;
   background: radial-gradient(closest-side, var(--av-mint), transparent 72%); opacity: .55;
 }
 .av-decor-blob-b {
-  position: absolute; bottom: -140px; left: -120px; width: 380px; height: 380px; border-radius: 50%;
+  position: absolute; bottom: -150px; left: -130px; width: 420px; height: 420px; border-radius: 50%;
   background: radial-gradient(closest-side, var(--av-cream-2), transparent 70%); opacity: .8;
 }
 .av-decor-dots {
-  position: absolute; top: 12%; right: 8%; width: 150px; height: 110px;
+  position: absolute; top: 12%; right: 8%; width: 160px; height: 120px;
   background-image: radial-gradient(var(--av-mint-ink) 1.6px, transparent 1.6px);
   background-size: 18px 18px; opacity: .16;
 }
+/* right/bottom 을 패널 경계에 딱 맞춰(0) 도형 자체의 곧은 오른쪽·아래쪽 변이 패널 테두리와
+   정확히 겹치게 한다 — 이전엔 -4%/6% 오프셋 때문에 overflow:hidden 경계에서 도형이 어중간하게
+   잘려 보였다(사용자 피드백: "오른쪽 아래에 잘리는 부분"). 이제는 딱 맞아떨어져 자연스럽다. */
 .av-decor-graph {
-  position: absolute; right: -4%; bottom: 6%; width: 62%; max-width: 460px; height: auto;
-  color: var(--av-mint-ink); opacity: .14;
+  position: absolute; right: 0; bottom: 0; width: 66%; max-width: 520px; height: auto;
+  color: var(--av-mint-ink); opacity: .16;
 }
 
 /* 배지 + 헤드라인 + 서브카피 */
 .av-eyebrow {
   display: inline-flex; align-items: center; gap: 6px;
-  background: var(--av-mint); color: var(--av-mint-ink); font-size: 13px; font-weight: 700;
-  border-radius: var(--radius-pill); padding: 7px 16px 7px 12px;
+  background: var(--av-mint); color: var(--av-mint-ink); font-size: 14px; font-weight: 700;
+  border-radius: var(--radius-pill); padding: 8px 18px 8px 13px;
 }
 .av-title {
-  margin: 20px 0 0; font-size: 42px; line-height: 1.22; font-weight: 800; letter-spacing: -.01em;
+  margin: 22px 0 0; font-size: 48px; line-height: 1.22; font-weight: 800; letter-spacing: -.01em;
   color: var(--text);
 }
 .av-title-hl { position: relative; z-index: 0; }
@@ -58,56 +63,56 @@
   content: ""; position: absolute; left: -2px; right: -2px; bottom: 2px; height: .38em;
   background: var(--av-mint); z-index: -1; border-radius: 2px;
 }
-.av-sub { margin: 18px 0 0; font-size: 15px; line-height: 1.6; color: var(--muted); }
+.av-sub { margin: 20px 0 0; font-size: 16px; line-height: 1.6; color: var(--muted); }
 
 /* 정산 명세서 카드 — 랜딩의 ReceiptCard 와는 별개 스타일(이 목업 전용), 데이터는 동일한 진짜 카피 재사용 */
 .av-receipt {
-  margin-top: 30px; background: var(--panel); border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg); padding: 22px 24px; overflow: hidden;
+  margin-top: 34px; background: var(--panel); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg); padding: 26px 28px; overflow: hidden;
 }
 .av-receipt-icon {
   display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
-  width: 34px; height: 34px; border-radius: var(--radius-pill);
+  width: 36px; height: 36px; border-radius: var(--radius-pill);
   background: var(--av-mint); color: var(--av-mint-ink);
 }
-.av-receipt-icon.sm { width: 28px; height: 28px; }
-.av-receipt-head { display: flex; align-items: center; gap: 12px; padding-bottom: 16px; }
-.av-receipt-name { font-weight: 700; font-size: 15px; color: var(--text); }
+.av-receipt-icon.sm { width: 30px; height: 30px; }
+.av-receipt-head { display: flex; align-items: center; gap: 12px; padding-bottom: 18px; }
+.av-receipt-name { font-weight: 700; font-size: 16px; color: var(--text); }
 .av-receipt-roas {
-  margin-left: auto; font-family: ui-monospace, monospace; font-weight: 700; font-size: 12.5px;
-  color: var(--av-mint-ink); background: var(--av-mint); padding: 4px 10px; border-radius: var(--radius-pill);
+  margin-left: auto; font-family: ui-monospace, monospace; font-weight: 700; font-size: 13.5px;
+  color: var(--av-mint-ink); background: var(--av-mint); padding: 5px 12px; border-radius: var(--radius-pill);
 }
 .av-receipt-body { border-top: 1px dashed var(--line); }
-.av-receipt-line { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px dashed var(--line); }
-.av-receipt-line .lab { color: var(--text); font-size: 14px; }
+.av-receipt-line { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px dashed var(--line); }
+.av-receipt-line .lab { color: var(--text); font-size: 15px; }
 .av-receipt-line .val {
   margin-left: auto; font-family: ui-monospace, monospace; font-variant-numeric: tabular-nums;
-  font-size: 14px; color: var(--text);
+  font-size: 15px; color: var(--text);
 }
-.av-receipt-total { display: flex; align-items: baseline; padding-top: 16px; }
-.av-receipt-total .lab { font-weight: 800; font-size: 16px; color: var(--text); }
+.av-receipt-total { display: flex; align-items: baseline; padding-top: 18px; }
+.av-receipt-total .lab { font-weight: 800; font-size: 17px; color: var(--text); }
 .av-receipt-total .val {
-  margin-left: auto; font-family: ui-monospace, monospace; font-weight: 800; font-size: 30px;
+  margin-left: auto; font-family: ui-monospace, monospace; font-weight: 800; font-size: 34px;
   color: var(--loss); letter-spacing: -.01em;
 }
 .av-receipt-warn {
   margin-top: 10px; display: flex; align-items: center; justify-content: flex-end; gap: 6px;
-  color: var(--loss); font-weight: 700; font-size: 13px;
+  color: var(--loss); font-weight: 700; font-size: 14px;
 }
 
 /* 하단 3열 안내 카드 */
 .av-footer {
-  margin-top: 26px; background: var(--panel); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
-  display: flex; padding: 22px 8px;
+  margin-top: 30px; background: var(--panel); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+  display: flex; padding: 26px 10px;
 }
 .av-footer-col { flex: 1; min-width: 0; text-align: center; padding: 0 12px; }
 .av-footer-col + .av-footer-col { border-left: 1px solid var(--line); }
 .av-footer-icon {
-  display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px;
+  display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px;
   border-radius: var(--radius-pill); background: var(--av-mint); color: var(--av-mint-ink); margin-bottom: 10px;
 }
-.av-footer-title { font-weight: 700; font-size: 13.5px; line-height: 1.4; color: var(--text); }
-.av-footer-desc { margin-top: 6px; font-size: 12px; line-height: 1.5; color: var(--muted); }
+.av-footer-title { font-weight: 700; font-size: 14.5px; line-height: 1.4; color: var(--text); }
+.av-footer-desc { margin-top: 6px; font-size: 13px; line-height: 1.5; color: var(--muted); }
 
 /* 등장 애니메이션 — 위→아래 순차 페이드업, 실제로 "글자가 나타나는" 느낌을 주는 슬라이드+페이드 */
 .av-reveal { opacity: 0; transform: translateY(14px); animation: av-rise .6s cubic-bezier(.22, .61, .36, 1) forwards; }
