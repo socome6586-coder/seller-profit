@@ -172,6 +172,36 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
   border-radius: var(--radius-pill); background: var(--accent); color: #fff; margin-left: 8px; letter-spacing: .02em; }
 @media (max-width: 720px) { .plans { grid-template-columns: 1fr; } }
 
+/* PeriodPicker + 요약 카드 묶음. "직접 선택" 으로 달력이 펼쳐진 동안(.is-custom)에는
+   달력을 왼쪽에, 카드들을 오른쪽에 나란히 배치한다(Dashboard.jsx/AdRoi.jsx 공용).
+   flex 로 period-picker(칩 행+달력을 함께 담은 래퍼)와 cards 를 나란히 놓으면, cards 의
+   상단이 "칩 행"의 상단과 맞춰져 버려서(달력은 그 아래) 달력과 카드 높이가 어긋나 보였다.
+   grid + period-picker 에 display:contents 를 줘서 칩 행/달력/한도 안내를 이 grid 의
+   자식으로 직접 노출시키면, 달력과 카드를 같은 grid row(2행)에 둘 수 있어 정확히 상단이
+   맞고, 카드가 달력 높이만큼 늘어나(stretch) 꽉 차 보이게 만들 수 있다. */
+.period-and-cards { margin-bottom: 20px; }
+.period-and-cards.is-custom {
+  display: grid; grid-template-columns: auto 1fr; align-items: start; gap: 16px 24px;
+}
+.period-and-cards.is-custom .period-picker { display: contents; }
+.period-and-cards.is-custom .pp-chips { grid-column: 1 / -1; }
+.period-and-cards.is-custom .pp-calendar { grid-column: 1; grid-row: 2; }
+.period-and-cards.is-custom .pp-limit-note { grid-column: 1 / -1; }
+.period-and-cards.is-custom .cards {
+  grid-column: 2; grid-row: 2; margin-bottom: 0; align-self: stretch;
+  grid-template-columns: repeat(2, 1fr); grid-auto-rows: 1fr; gap: 14px;
+}
+.period-and-cards.is-custom .cards .card {
+  display: flex; flex-direction: column; justify-content: center; padding: 22px 26px;
+}
+.period-and-cards.is-custom .cards .card .k { font-size: 13px; margin-bottom: 12px; }
+.period-and-cards.is-custom .cards .card .v { font-size: 28px; }
+@media (max-width: 900px) {
+  .period-and-cards.is-custom { grid-template-columns: 1fr; }
+  .period-and-cards.is-custom .pp-calendar { grid-column: 1; grid-row: 2; }
+  .period-and-cards.is-custom .cards { grid-column: 1; grid-row: 3; }
+}
+
 /* 기간 선택(PeriodPicker) — docs/period-picker-tasks.md T9 */
 .period-picker { display: flex; flex-direction: column; gap: 10px; margin-bottom: 22px; }
 .pp-chips { display: flex; flex-wrap: wrap; gap: 8px; }

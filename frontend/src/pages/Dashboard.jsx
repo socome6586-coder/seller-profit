@@ -135,24 +135,27 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <PeriodPicker value={period} onChange={setPeriod} disabled={!accountId} maxRangeDays={maxRangeDays} />
-
       {error ? <div className="error-banner">{error}</div> : null}
 
-      <div className="cards">
-        <Card k="총매출 (정산 실수령)" v={won(profit?.totalRevenue)} />
-        <Card k="총순이익 (진짜)" v={won(profit?.totalProfit)} cls={profit ? signClass(profit.totalProfit) : ""} />
-        <Card k="평균 마진율" v={pct(profit?.avgMarginPct)} />
-        <Card k="배분 기타비용" v={won(profit?.totalAllocatedCost)} />
-        <Card
-          k="광고비"
-          v={won(profit?.totalAdSpend)}
-          sub={
-            profit && Number(profit.unallocatedAdSpend) > 0
-              ? "미할당 " + won(profit.unallocatedAdSpend)
-              : null
-          }
-        />
+      {/* 직접 선택으로 달력이 펼쳐지면 달력을 왼쪽에, 요약 카드를 오른쪽에 나란히 배치한다(is-custom). */}
+      <div className={"period-and-cards" + (period?.preset === "custom" ? " is-custom" : "")}>
+        <PeriodPicker value={period} onChange={setPeriod} disabled={!accountId} maxRangeDays={maxRangeDays} />
+
+        <div className="cards">
+          <Card k="총매출 (정산 실수령)" v={won(profit?.totalRevenue)} />
+          <Card k="총순이익 (진짜)" v={won(profit?.totalProfit)} cls={profit ? signClass(profit.totalProfit) : ""} />
+          <Card k="평균 마진율" v={pct(profit?.avgMarginPct)} />
+          <Card k="배분 기타비용" v={won(profit?.totalAllocatedCost)} />
+          <Card
+            k="광고비"
+            v={won(profit?.totalAdSpend)}
+            sub={
+              profit && Number(profit.unallocatedAdSpend) > 0
+                ? "미할당 " + won(profit.unallocatedAdSpend)
+                : null
+            }
+          />
+        </div>
       </div>
 
       <ProfitTable products={profit?.products} />

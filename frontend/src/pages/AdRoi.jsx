@@ -106,8 +106,6 @@ export default function AdRoi() {
         </div>
       </div>
 
-      <PeriodPicker value={period} onChange={setPeriod} disabled={!accountId} maxRangeDays={maxRangeDays} />
-
       {error ? <div className="error-banner">{error}</div> : null}
 
       {summary && Number(summary.unassignedAdSpend) > 0 ? (
@@ -117,11 +115,16 @@ export default function AdRoi() {
         </div>
       ) : null}
 
-      <div className="cards">
-        <Card k="총 광고비" v={won(summary?.totalAdSpend)} />
-        <Card k="재검토 대상 광고비" v={won(summary?.reviewAdSpend)} cls={summary && Number(summary.reviewAdSpend) > 0 ? "neg" : ""} />
-        <Card k="미할당 광고비" v={won(summary?.unassignedAdSpend)} />
-        <Card k="광고손실 SKU 수" v={num(lossCount)} cls={lossCount > 0 ? "neg" : ""} />
+      {/* 직접 선택으로 달력이 펼쳐지면 달력을 왼쪽에, 요약 카드를 오른쪽에 나란히 배치한다(is-custom). */}
+      <div className={"period-and-cards" + (period?.preset === "custom" ? " is-custom" : "")}>
+        <PeriodPicker value={period} onChange={setPeriod} disabled={!accountId} maxRangeDays={maxRangeDays} />
+
+        <div className="cards">
+          <Card k="총 광고비" v={won(summary?.totalAdSpend)} />
+          <Card k="재검토 대상 광고비" v={won(summary?.reviewAdSpend)} cls={summary && Number(summary.reviewAdSpend) > 0 ? "neg" : ""} />
+          <Card k="미할당 광고비" v={won(summary?.unassignedAdSpend)} />
+          <Card k="광고손실 SKU 수" v={num(lossCount)} cls={lossCount > 0 ? "neg" : ""} />
+        </div>
       </div>
 
       <AdRoiTable rows={summary?.rows} />
