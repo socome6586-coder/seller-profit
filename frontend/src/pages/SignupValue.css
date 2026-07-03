@@ -21,20 +21,27 @@
 
 .av-content { position: relative; z-index: 1; max-width: 520px; }
 
-/* 상단 장식 — 점 그리드 + 기울어진 미니 그래프 카드 + 막대그래프 아이콘 (본문과 안 겹치게 우상단 고정) */
-.av-decor { position: absolute; top: 0; right: 0; width: 320px; height: 260px; pointer-events: none; }
+/* 배경 장식 — 떠 있는 카드 대신 패널 전체에 은은하게 녹아드는 그라디언트 블롭 + 대형 워터마크 그래프 +
+   점 그리드. 사용자 피드백(우상단 카드가 어색함)에 따라 카드형 장식을 제거하고, 패널 전체를 채우는
+   저채도/저투명도 텍스처로 대체해 배경이 밋밋해 보이지 않게 한다. */
+.av-decor { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.av-decor-blob-a {
+  position: absolute; top: -120px; right: -100px; width: 420px; height: 420px; border-radius: 50%;
+  background: radial-gradient(closest-side, var(--av-mint), transparent 72%); opacity: .55;
+}
+.av-decor-blob-b {
+  position: absolute; bottom: -140px; left: -120px; width: 380px; height: 380px; border-radius: 50%;
+  background: radial-gradient(closest-side, var(--av-cream-2), transparent 70%); opacity: .8;
+}
 .av-decor-dots {
-  position: absolute; top: 118px; right: 34px; width: 92px; height: 70px;
-  background-image: radial-gradient(var(--av-cream-2) 1.6px, transparent 1.6px);
-  background-size: 15px 15px; opacity: .9;
+  position: absolute; top: 12%; right: 8%; width: 150px; height: 110px;
+  background-image: radial-gradient(var(--av-mint-ink) 1.6px, transparent 1.6px);
+  background-size: 18px 18px; opacity: .16;
 }
-.av-decor-card {
-  position: absolute; top: 40px; right: 96px; width: 128px; height: 74px;
-  background: var(--panel); border-radius: var(--radius-md); box-shadow: var(--shadow-md);
-  transform: rotate(9deg); display: flex; align-items: center; justify-content: center; padding: 12px;
+.av-decor-graph {
+  position: absolute; right: -4%; bottom: 6%; width: 62%; max-width: 460px; height: auto;
+  color: var(--av-mint-ink); opacity: .14;
 }
-.av-decor-spark { width: 100%; height: auto; color: var(--av-mint-ink); }
-.av-decor-bars { position: absolute; top: 148px; right: 40px; color: var(--av-cream-2); }
 
 /* 배지 + 헤드라인 + 서브카피 */
 .av-eyebrow {

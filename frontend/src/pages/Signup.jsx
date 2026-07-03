@@ -77,12 +77,19 @@ const LockIcon = (p) => (
     <path d="M8 11V8a4 4 0 0 1 8 0v3" />
   </Icon>
 );
-const BarsIcon = (p) => (
-  <Icon {...p}>
-    <rect x="3" y="13" width="3" height="7" rx="1" fill="currentColor" stroke="none" />
-    <rect x="9" y="9" width="3" height="11" rx="1" fill="currentColor" stroke="none" />
-    <rect x="15" y="5" width="3" height="15" rx="1" fill="currentColor" stroke="none" />
-  </Icon>
+// 배경에 은은하게 깔리는 대형 워터마크 그래프 — 뜬금없이 떠 있던 카드형 장식 대신
+// 패널 전체의 배경 질감으로 녹아들도록 저채도/저투명도로 렌더링한다.
+const WatermarkGraph = (p) => (
+  <svg viewBox="0 0 400 220" fill="none" aria-hidden="true" {...p}>
+    <path
+      d="M0 170 L55 140 L110 158 L165 96 L220 120 L275 55 L330 78 L400 30"
+      stroke="currentColor" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"
+    />
+    <path
+      d="M0 170 L55 140 L110 158 L165 96 L220 120 L275 55 L330 78 L400 30 L400 220 L0 220 Z"
+      fill="currentColor" stroke="none"
+    />
+  </svg>
 );
 
 export default function Signup() {
@@ -117,51 +124,54 @@ export default function Signup() {
           꽉 채운다(docs/signup-tasks.md T11.2, 사용자 첨부 목업 재현). 모바일에서는 1열로 접히고
           DOM 순서상 폼이 먼저 보인다. 폼 필드는 이메일+비밀번호로 불변. */}
       <div className="auth-form-pane">
-        <div className="auth-card">
-          <h1>무료로 시작하기</h1>
-          <form onSubmit={onSubmit}>
-            <div className="field">
-              <label>이메일</label>
-              <input
-                type="email"
-                value={email}
-                autoComplete="username"
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                required
-              />
+        {/* 좌측도 우측만큼 세로 공간을 채우도록 상단 브랜드 · 중앙 카드 · 하단 카피 3단 구성으로 변경
+            (사용자 피드백: 카드 하나만 텅 빈 화면 가운데 떠 있는 느낌이 어색함). 카피는 랜딩 푸터와
+            동일한 실제 문구 재사용 — 가짜 카피 아님. */}
+        <div className="auth-form-brand">SELLER PROFIT</div>
+        <div className="auth-form-center">
+          <div className="auth-card">
+            <h1>무료로 시작하기</h1>
+            <form onSubmit={onSubmit}>
+              <div className="field">
+                <label>이메일</label>
+                <input
+                  type="email"
+                  value={email}
+                  autoComplete="username"
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  required
+                />
+              </div>
+              <div className="field">
+                <label>비밀번호 (8자 이상)</label>
+                <input
+                  type="password"
+                  value={password}
+                  autoComplete="new-password"
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              {error ? <div className="note err">{error}</div> : null}
+              <button type="submit" disabled={busy}>
+                {busy ? "가입 중…" : "무료 가입"}
+              </button>
+            </form>
+            <div className="auth-switch">
+              이미 계정이 있으신가요? <Link to="/login">로그인</Link>
             </div>
-            <div className="field">
-              <label>비밀번호 (8자 이상)</label>
-              <input
-                type="password"
-                value={password}
-                autoComplete="new-password"
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-            {error ? <div className="note err">{error}</div> : null}
-            <button type="submit" disabled={busy}>
-              {busy ? "가입 중…" : "무료 가입"}
-            </button>
-          </form>
-          <div className="auth-switch">
-            이미 계정이 있으신가요? <Link to="/login">로그인</Link>
           </div>
         </div>
+        <div className="auth-form-foot">쿠팡 셀러를 위한 진짜 순이익 분석 · 얼리액세스 단계</div>
       </div>
 
       <aside className="av-panel">
         <div className="av-decor" aria-hidden="true">
+          <span className="av-decor-blob-a" />
+          <span className="av-decor-blob-b" />
           <span className="av-decor-dots" />
-          <div className="av-decor-card av-reveal av-d1">
-            <svg className="av-decor-spark" viewBox="0 0 64 34" fill="none" aria-hidden="true">
-              <polyline points="2 26 18 16 28 20 44 6 62 10" stroke="currentColor" strokeWidth="2.5"
-                strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-          <BarsIcon className="av-decor-bars av-reveal av-d2" width="34" height="34" />
+          <WatermarkGraph className="av-decor-graph" />
         </div>
 
         <div className="av-content">
