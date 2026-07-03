@@ -1,5 +1,5 @@
-/* 랜딩 페이지 전용 스타일. 앱은 다크 테마(styles.css)라 여기 토큰이 새지 않도록
-   전부 .landing 스코프 하위로 한정한다(디자인 기준: docs/landing-mockup.html). */
+/* 랜딩 페이지 전용 스타일. 앱(styles.css)도 같은 라이트 에디토리얼 팔레트를 쓰지만
+   토큰 이름이 겹치지 않도록 전부 .landing 스코프 하위로 한정한다(디자인 기준: docs/landing-mockup.html). */
 .landing {
   --l-paper: #FBFAF6;
   --l-paper-2: #F2EEE4;
@@ -23,38 +23,66 @@
 .landing .mono { font-family: var(--l-mono); font-variant-numeric: tabular-nums; }
 .landing .l-wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
 
-/* nav */
-.landing .l-nav {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 20px 24px; max-width: 1100px; margin: 0 auto;
+/* 스크롤 리빌: 뷰포트에 들어오면 JS(useScrollReveal)가 .is-in 을 붙인다. 사방넷 참고 — 짧고 빠르게 톡톡 나타나는 느낌 */
+.landing .reveal-up {
+  opacity: 0; transform: translateY(14px);
+  transition: opacity .34s ease-out, transform .34s ease-out;
 }
-.landing .l-brand { font-weight: 800; letter-spacing: -.02em; font-size: 18px; }
+.landing .reveal-up.is-in { opacity: 1; transform: none; }
+
+/* nav — 배경/스티키는 전체 너비, 콘텐츠만 안쪽에서 1100px 로 중앙 정렬(잘려 보이는 문제 방지) */
+.landing .l-nav {
+  position: sticky; top: 0; z-index: 20;
+  background: rgba(251, 250, 246, .82); backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--l-line);
+}
+.landing .l-nav-inner {
+  display: flex; align-items: center; justify-content: space-between;
+  max-width: 1100px; margin: 0 auto; padding: 18px 24px;
+}
+.landing .l-brand { display: inline-flex; align-items: center; gap: 12px; font-weight: 800; letter-spacing: -.01em; font-size: 36px; }
 .landing .l-brand b { color: var(--l-loss); }
+.landing .l-badge {
+  font-size: 11px; font-weight: 700; letter-spacing: .02em; color: var(--l-ink-2);
+  background: var(--l-paper-2); border: 1px solid var(--l-line); border-radius: 999px;
+  padding: 3px 10px; margin-left: 2px;
+}
 .landing .l-nav-cta { display: flex; gap: 10px; align-items: center; }
 .landing .btn {
   display: inline-flex; align-items: center; justify-content: center; font-weight: 700;
-  border-radius: 10px; padding: 11px 18px; font-size: 15px; border: 1.5px solid transparent;
-  cursor: pointer; transition: transform .08s ease;
+  border-radius: 999px; padding: 11px 20px; font-size: 15px; border: 1.5px solid transparent;
+  cursor: pointer; transition: transform .08s ease, box-shadow .15s ease;
 }
 .landing .btn:active { transform: translateY(1px); }
 .landing .btn-primary { background: var(--l-ink); color: var(--l-paper); }
+.landing .btn-primary:hover { box-shadow: 0 10px 22px -10px rgba(21, 30, 42, .55); }
 .landing .btn-ghost { background: transparent; color: var(--l-ink); border-color: var(--l-line); }
-.landing .btn-lg { padding: 15px 26px; font-size: 16px; }
+.landing .btn-ghost:hover { border-color: var(--l-ink); }
+.landing .btn-lg { padding: 15px 28px; font-size: 16px; }
 .landing .btn:focus-visible { outline: 3px solid #B9C4D0; outline-offset: 2px; }
 
 /* hero */
-.landing .l-hero { padding: 44px 0 72px; }
-.landing .l-hero-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: 56px; align-items: center; }
-.landing .l-eyebrow {
-  font-size: 13px; font-weight: 700; letter-spacing: .08em; color: var(--l-loss);
-  margin-bottom: 18px; display: inline-flex; align-items: center; gap: 8px;
+.landing .l-hero { position: relative; padding: 56px 0 76px; overflow: hidden; }
+.landing .l-hero-bg {
+  position: absolute; inset: -20% -10% auto -10%; height: 640px; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(420px 320px at 82% 10%, rgba(30, 122, 74, .10), transparent 70%),
+    radial-gradient(460px 360px at 8% 30%, rgba(210, 64, 44, .08), transparent 70%);
 }
-.landing .l-eyebrow::before { content: ""; width: 22px; height: 2px; background: var(--l-loss); }
+.landing .l-hero-grid { position: relative; z-index: 1; display: grid; grid-template-columns: 1.05fr .95fr; gap: 56px; align-items: center; }
+.landing .l-eyebrow {
+  font-size: 18px; font-weight: 700; letter-spacing: .02em; color: var(--l-loss);
+  margin-bottom: 18px; display: block;
+}
 .landing h1 { font-size: clamp(34px, 5vw, 52px); line-height: 1.08; letter-spacing: -.03em; font-weight: 800; }
 .landing h1 .red { color: var(--l-loss); }
 .landing .l-sub { margin-top: 20px; font-size: 18px; color: var(--l-ink-2); max-width: 30em; }
 .landing .l-hero-cta { margin-top: 30px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-.landing .l-note { margin-top: 16px; font-size: 13px; color: var(--l-muted); }
+.landing .l-tags { margin-top: 18px; display: flex; gap: 8px; flex-wrap: wrap; }
+.landing .l-tags .tag {
+  font-size: 12.5px; font-weight: 600; color: var(--l-muted); background: var(--l-paper-2);
+  border: 1px solid var(--l-line); border-radius: 999px; padding: 5px 12px;
+}
 
 /* signature: 정산 명세서 */
 .landing .receipt {
@@ -82,8 +110,8 @@
 .landing .r-total .lab { font-weight: 800; font-size: 16px; }
 .landing .r-total .val { font-family: var(--l-mono); font-weight: 700; font-size: 30px; color: var(--l-loss); letter-spacing: -.01em; }
 .landing .r-flag {
-  margin: 2px 22px 20px; display: inline-block; background: var(--l-loss); color: #fff;
-  font-size: 12px; font-weight: 800; padding: 4px 10px; border-radius: 6px;
+  margin: 6px 22px 20px; display: block; text-align: right; color: var(--l-loss);
+  font-size: 14px; font-weight: 800; transform: skewX(-8deg);
 }
 .landing .reveal { opacity: 0; transform: translateY(6px); animation: l-rise .5s ease forwards; }
 .landing .reveal:nth-child(1) { animation-delay: .05s; }
@@ -102,23 +130,63 @@
 .landing .chip .v { font-family: var(--l-mono); font-size: 20px; font-weight: 700; margin-top: 4px; }
 .landing .chip .v.ok { color: #5FD597; }
 .landing .chip .v.bad { color: #F1766A; }
+.landing .chip:nth-child(1) { transition-delay: .03s; }
+.landing .chip:nth-child(2) { transition-delay: .07s; }
+.landing .chip:nth-child(3) { transition-delay: .11s; }
+
+/* flow — 어떻게 계산하나요(실제 동작 단계) */
+.landing .l-flow { padding: 72px 0 12px; }
+.landing .l-flow h2 { font-size: clamp(26px, 3.6vw, 36px); letter-spacing: -.02em; max-width: 20em; }
+.landing .l-flow-steps {
+  margin-top: 36px; display: flex; align-items: stretch; gap: 10px; flex-wrap: wrap;
+}
+.landing .l-flow-step {
+  flex: 1 1 150px; min-width: 150px; background: #fff; border: 1px solid var(--l-line);
+  border-radius: 14px; padding: 20px 18px; text-align: left;
+}
+.landing .l-flow-num {
+  display: block; font-family: var(--l-mono); font-size: 13px; font-weight: 700;
+  color: var(--l-loss); letter-spacing: .04em; margin-bottom: 14px;
+}
+.landing .l-flow-step h3 { font-size: 15.5px; letter-spacing: -.01em; margin-bottom: 6px; }
+.landing .l-flow-step p { font-size: 13px; color: var(--l-muted); line-height: 1.45; }
+.landing .l-flow-arrow {
+  display: flex; align-items: center; justify-content: center; color: var(--l-muted);
+  font-size: 18px; flex: 0 0 auto;
+}
+.landing .l-flow-step:nth-of-type(1) { transition-delay: .03s; }
+.landing .l-flow-step:nth-of-type(2) { transition-delay: .06s; }
+.landing .l-flow-step:nth-of-type(3) { transition-delay: .09s; }
+.landing .l-flow-step:nth-of-type(4) { transition-delay: .12s; }
+.landing .l-flow-step:nth-of-type(5) { transition-delay: .15s; }
 
 /* value */
 .landing .l-value { padding: 72px 0; }
-.landing .l-sec-eyebrow { font-size: 13px; font-weight: 700; letter-spacing: .06em; color: var(--l-muted); margin-bottom: 12px; }
+.landing .l-sec-eyebrow { font-size: 22px; font-weight: 800; letter-spacing: -.01em; color: var(--l-loss); margin-bottom: 14px; }
 .landing .l-value h2 { font-size: clamp(26px, 3.6vw, 36px); letter-spacing: -.02em; max-width: 18em; }
 .landing .l-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 36px; }
 .landing .l-card { background: var(--l-paper-2); border: 1px solid var(--l-line); border-radius: 14px; padding: 24px; }
-.landing .l-card .n { font-family: var(--l-mono); font-size: 13px; color: var(--l-loss); font-weight: 700; }
-.landing .l-card h3 { margin: 10px 0 8px; font-size: 19px; letter-spacing: -.01em; }
+.landing .l-card-num {
+  display: block; font-family: var(--l-mono); font-size: 13px; font-weight: 700;
+  color: var(--l-loss); letter-spacing: .04em;
+}
+.landing .l-card h3 { margin: 14px 0 8px; font-size: 19px; letter-spacing: -.01em; }
 .landing .l-card p { color: var(--l-ink-2); font-size: 15px; }
+.landing .l-card:nth-child(1) { transition-delay: .03s; }
+.landing .l-card:nth-child(2) { transition-delay: .07s; }
+.landing .l-card:nth-child(3) { transition-delay: .11s; }
+.landing .l-card:nth-child(4) { transition-delay: .15s; }
 
 /* pricing */
 .landing .l-pricing { padding: 8px 0 72px; }
 .landing .l-pricing h2 { font-size: clamp(24px, 3.4vw, 32px); letter-spacing: -.02em; }
 .landing .l-plans { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 32px; max-width: 720px; }
-.landing .l-plan { border: 1px solid var(--l-line); border-radius: 16px; padding: 26px; background: #fff; }
-.landing .l-plan.pro { border-color: var(--l-ink); border-width: 2px; }
+.landing .l-plan { position: relative; border: 1px solid var(--l-line); border-radius: 16px; padding: 26px; background: #fff; }
+.landing .l-plan.pro { border-color: var(--l-ink); border-width: 2px; box-shadow: 0 24px 46px -30px rgba(21, 30, 42, .45); }
+.landing .l-plan-ribbon {
+  position: absolute; top: -12px; right: 22px; background: var(--l-ink); color: var(--l-paper);
+  font-size: 11.5px; font-weight: 800; letter-spacing: .02em; padding: 5px 12px; border-radius: 999px;
+}
 .landing .l-plan .pname { font-weight: 800; font-size: 15px; letter-spacing: .02em; }
 .landing .l-plan .price { font-family: var(--l-mono); font-size: 32px; font-weight: 700; margin: 12px 0 4px; }
 .landing .l-plan .price small { font-size: 14px; color: var(--l-muted); font-weight: 400; }
@@ -130,18 +198,38 @@
 }
 .landing .l-plan .btn { width: 100%; }
 .landing .l-beta { font-size: 13px; color: var(--l-muted); margin-top: 16px; }
+.landing .l-plan:nth-child(1) { transition-delay: .03s; }
+.landing .l-plan:nth-child(2) { transition-delay: .07s; }
+.landing .l-plan:nth-child(3) { transition-delay: .11s; }
 
 /* final cta */
-.landing .l-final { background: var(--l-paper-2); border-top: 1px solid var(--l-line); padding: 64px 0; text-align: center; }
+.landing .l-final { padding: 64px 0 72px; }
+.landing .l-final-card {
+  text-align: center; padding: 56px 24px; border-radius: 24px;
+  background: linear-gradient(155deg, var(--l-paper-2), var(--l-paper));
+  border: 1px solid var(--l-line);
+}
 .landing .l-final h2 { font-size: clamp(26px, 3.6vw, 38px); letter-spacing: -.02em; }
 .landing .l-final p { color: var(--l-ink-2); margin: 14px auto 26px; max-width: 26em; }
-.landing .l-footer { padding: 30px 24px; color: var(--l-muted); font-size: 13px; text-align: center; }
+
+.landing .l-footer { padding: 26px 24px; border-top: 1px solid var(--l-line); }
+.landing .l-footer-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.landing .l-footer-brand { font-size: 15px; }
+.landing .l-footer-copy { color: var(--l-muted); font-size: 13px; }
 
 @media (max-width: 820px) {
   .landing .l-hero-grid { grid-template-columns: 1fr; gap: 36px; }
   .landing .l-cards, .landing .l-plans { grid-template-columns: 1fr; }
   .landing .receipt { max-width: 440px; }
+  .landing .l-flow-steps { flex-direction: column; }
+  .landing .l-flow-arrow { transform: rotate(90deg); margin: -2px 0; }
+  .landing .l-footer-row { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 480px) {
+  .landing .l-nav-inner { padding: 14px 18px; }
+  .landing .l-brand { font-size: 22px; gap: 8px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .landing .reveal { animation: none; opacity: 1; transform: none; }
+  .landing .reveal-up { transition: none; opacity: 1; transform: none; }
 }

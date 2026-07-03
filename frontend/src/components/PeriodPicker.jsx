@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DayPicker } from "react-day-picker";
 import { ko } from "react-day-picker/locale";
 import "react-day-picker/style.css";
@@ -114,10 +114,53 @@ export default function PeriodPicker({ value, onChange, maxRangeDays, disabled }
   // 달력에서 시작일만 클릭한 "진행 중" 선택. 완성(종료일까지 선택)되기 전엔 부모로 올리지 않는다
   // (조회 API 를 부분 선택 상태로 두 번 부르지 않기 위함).
   const [pendingRange, setPendingRange] = useState(null);
+  // 드래그(마우스 누른 채 날짜 위로 끌기) 진행 상태. react-day-picker 는 클릭(같은 날짜에서
+  // mousedown+mouseup) 기반 선택만 기본 지원해서, 드래그는 mousedown/mouseenter/mouseup 을
+  // 직접 조합해 별도로 구현한다 — DayPicker 의 onSelect(클릭 경로)와는 독립적으로 동작.
+  const dragRef = useRef(null); // { start: Date } | null
 
   useEffect(() => {
     if (!isCustom) setPendingRange(null);
   }, [isCustom]);
+
+  useEffect(() => {
+    function onWindowMouseUp() {
+      if (!dragRef.current) return;
+      dragRef.current = null;
+      setPendingRange((pr) => {
+        if (pr && pr.from && pr.to) {
+          const [from, to] = pr.from <= pr.to ? [pr.from, pr.to] : [pr.to, pr.from];
+          onChange({ from: fmt(from), to: fmt(to), preset: "custom" });
+          return null;
+        }
+        return pr;
+      });
+    }
+    window.addEventListener("mouseup", onWindowMouseUp);
+    return () => window.removeEventListener("mouseup", onWindowMouseUp);
+  }, [onChange]);
+
+  // 달력 카드 전체에서 mousedown 을 위임 처리 — react-day-picker 가 각 날짜 <td> 에 심어주는
+  // data-day="yyyy-MM-dd" 속성을 읽어 어떤 날짜에서 드래그가 시작됐는지 알아낸다.
+  // 여기서는 시작점만 기록하고 pendingRange 는 아직 건드리지 않는다 — 실제로 마우스가 다른 날짜로
+  // 넘어가기 전까지(= 진짜 드래그가 아니라 그냥 클릭인 경우) DayPicker 의 기존 클릭 기반 선택 로직
+  // (addToRange, "두 번 클릭해야 시작일 변경") 을 그대로 살려두기 위함. 여기서 바로 setPendingRange
+  // 를 호출하면 클릭 한 번마다 선택이 항상 단일 날짜로 리셋돼버리는 회귀가 생긴다.
+  function handleCalendarMouseDown(e) {
+    if (disabled) return;
+    const cell = e.target.closest?.("[data-day]");
+    if (!cell || cell.dataset.disabled === "true") return;
+    const start = parseYmd(cell.dataset.day);
+    if (!start) return;
+    dragRef.current = { start };
+  }
+
+  // 마우스가 시작 날짜와 다른 날짜 위로 넘어온 시점에야 비로소 "드래그 중"으로 확정하고
+  // pendingRange 를 세팅한다(진짜 클릭과 드래그를 가르는 지점).
+  function handleDayMouseEnter(date) {
+    if (!dragRef.current) return;
+    setPendingRange({ from: dragRef.current.start, to: date });
+  }
 
   function selectPreset(p) {
     if (disabled) return;
@@ -138,6 +181,7 @@ export default function PeriodPicker({ value, onChange, maxRangeDays, disabled }
       return;
     }
     if (range.to) {
+      if (dragRef.current) return; // 드래그 중이면 mouseup 핸들러가 커밋을 전담한다.
       // 시작~종료 모두 클릭 완료 → 즉시 커밋해 조회(별도 버튼 없이 바로 반영).
       setPendingRange(null);
       onChange({ from: fmt(range.from), to: fmt(range.to), preset: "custom" });
@@ -182,12 +226,13 @@ export default function PeriodPicker({ value, onChange, maxRangeDays, disabled }
       </div>
 
       {isCustom ? (
-        <div className="pp-calendar">
+        <div className="pp-calendar" onMouseDown={handleCalendarMouseDown}>
           <DayPicker
             mode="range"
             locale={ko}
             selected={calendarSelected}
             onSelect={handleCalendarSelect}
+            onDayMouseEnter={(date) => handleDayMouseEnter(date)}
             disabled={calendarDisabled}
             defaultMonth={calendarSelected.to || calendarSelected.from || today}
             excludeDisabled
@@ -200,6 +245,10 @@ export default function PeriodPicker({ value, onChange, maxRangeDays, disabled }
             ) : (
               <span className="muted">시작일과 종료일을 순서대로 클릭하세요.</span>
             )}
+          </div>
+          <div className="pp-calendar-hint">
+            날짜를 누른 채 끌어 기간을 한 번에 선택할 수 있어요. 이미 선택된 기간의 시작일을
+            바꾸려면 새 시작일을 두 번 클릭(또는 드래그)해야 반영돼요.
           </div>
         </div>
       ) : null}
