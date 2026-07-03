@@ -18,6 +18,11 @@ export default function Nav() {
       <NavLink to="/pricing" className={({ isActive }) => (isActive ? "active" : "")}>
         요금제
       </NavLink>
+      {user?.role === "ADMIN" ? (
+        <NavLink to="/admin" className={({ isActive }) => (isActive ? "active" : "")}>
+          관리자
+        </NavLink>
+      ) : null}
       <span className="spacer" />
       <span className="who">{user?.email}</span>
       <button className="ghost" onClick={logout}>

@@ -1,5 +1,6 @@
 package com.sellerprofit.admin;
 
+import com.sellerprofit.admin.dto.AdminAuditView;
 import com.sellerprofit.admin.dto.AdminUserView;
 import com.sellerprofit.auth.UnauthorizedException;
 import com.sellerprofit.domain.User;
@@ -17,6 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -53,6 +55,9 @@ class AdminControllerTest {
 
     @MockitoBean
     private AdminRoleService adminRoleService;
+
+    @MockitoBean
+    private AdminAuditService adminAuditService;
 
     @Test
     void 비관리자는_403() throws Exception {
@@ -270,5 +275,40 @@ class AdminControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"role\":\"USER\"}"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void 감사로그_비관리자는_403() throws Exception {
+        doThrow(new ForbiddenException("접근 권한이 없습니다."))
+                .when(adminAccess).requireAdmin(any());
+
+        mockMvc.perform(get("/api/admin/audit"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void 감사로그_미로그인은_401() throws Exception {
+        doThrow(new UnauthorizedException("로그인이 필요합니다."))
+                .when(adminAccess).requireAdmin(any());
+
+        mockMvc.perform(get("/api/admin/audit"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void 감사로그_관리자는_200_과_목록() throws Exception {
+        User admin = User.create("admin@test.local", "hash");
+        admin.setId(1L);
+        admin.setRole(Role.ADMIN);
+        when(adminAccess.requireAdmin(any())).thenReturn(admin);
+
+        AdminAuditView view = new AdminAuditView(
+                1L, 1L, "GRANT_PLAN", 7L, Map.of("months", 3, "plan", "PRO"), OffsetDateTime.now());
+        when(adminAuditService.list(any(), any())).thenReturn(new PageImpl<>(List.of(view)));
+
+        mockMvc.perform(get("/api/admin/audit"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].action").value("GRANT_PLAN"))
+                .andExpect(jsonPath("$.content[0].targetUserId").value(7));
     }
 }

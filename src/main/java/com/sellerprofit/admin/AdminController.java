@@ -1,5 +1,6 @@
 package com.sellerprofit.admin;
 
+import com.sellerprofit.admin.dto.AdminAuditView;
 import com.sellerprofit.admin.dto.AdminUserView;
 import com.sellerprofit.admin.dto.GrantPlanRequest;
 import com.sellerprofit.admin.dto.RoleChangeRequest;
@@ -27,13 +28,16 @@ public class AdminController {
     private final AdminUserService adminUserService;
     private final AdminGrantService adminGrantService;
     private final AdminRoleService adminRoleService;
+    private final AdminAuditService adminAuditService;
 
     public AdminController(AdminAccess adminAccess, AdminUserService adminUserService,
-                            AdminGrantService adminGrantService, AdminRoleService adminRoleService) {
+                            AdminGrantService adminGrantService, AdminRoleService adminRoleService,
+                            AdminAuditService adminAuditService) {
         this.adminAccess = adminAccess;
         this.adminUserService = adminUserService;
         this.adminGrantService = adminGrantService;
         this.adminRoleService = adminRoleService;
+        this.adminAuditService = adminAuditService;
     }
 
     /** 유저 목록. email 로 부분검색(선택), page/size 로 페이지네이션(선택, 기본 0/20). */
@@ -44,6 +48,15 @@ public class AdminController {
                                       @RequestParam(required = false) Integer size) {
         adminAccess.requireAdmin(http);
         return adminUserService.list(email, page, size);
+    }
+
+    /** 감사 로그(T10.5). 최신순, page/size 페이지네이션(선택, 기본 0/20). */
+    @GetMapping("/audit")
+    public Page<AdminAuditView> audit(HttpServletRequest http,
+                                       @RequestParam(required = false) Integer page,
+                                       @RequestParam(required = false) Integer size) {
+        adminAccess.requireAdmin(http);
+        return adminAuditService.list(page, size);
     }
 
     /**
