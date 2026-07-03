@@ -161,13 +161,14 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
 .auth-split { display: grid; grid-template-columns: 380px 1fr; gap: 36px; align-items: start; }
 .auth-value { display: flex; flex-direction: column; gap: 18px; }
 .auth-value-notes {
-  display: flex; flex-direction: column; gap: 14px;
+  display: flex; flex-direction: column;
   background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-md);
-  padding: 18px 20px; box-shadow: var(--shadow-sm);
+  padding: 4px 20px; box-shadow: var(--shadow-sm);
 }
-.auth-value-note { display: flex; flex-direction: column; gap: 3px; }
-.auth-value-note .k { font-size: 12px; font-weight: 700; color: var(--muted); }
-.auth-value-note .v { font-size: 14px; color: var(--text); line-height: 1.5; }
+.auth-value-note {
+  font-size: 14px; color: var(--text); line-height: 1.5; padding: 14px 0;
+}
+.auth-value-note + .auth-value-note { border-top: 1px solid var(--line); }
 @media (max-width: 760px) {
   .auth-split { grid-template-columns: 1fr; gap: 28px; }
 }

@@ -70,19 +70,12 @@ export default function Signup() {
 
         <aside className="auth-value">
           <ReceiptCard />
+          {/* 라벨("다음 단계"/"필요한 것"/"안심 문구")은 doc 작성자 편의상 분류명일 뿐 화면 노출용이 아님
+              — 내용 텍스트만 아이콘 없이 구분선으로 시각적으로 나눠 보여준다. */}
           <div className="auth-value-notes">
-            <div className="auth-value-note">
-              <span className="k">다음 단계</span>
-              <span className="v">가입 → 쿠팡 계정 연동 → 진짜 순이익 확인</span>
-            </div>
-            <div className="auth-value-note">
-              <span className="k">필요한 것</span>
-              <span className="v">쿠팡 판매자 계정만 있으면 시작할 수 있어요.</span>
-            </div>
-            <div className="auth-value-note">
-              <span className="k">안심 문구</span>
-              <span className="v">무료로 시작 · 카드 등록 불필요 · 연동 시 API 키 AES-256 암호화</span>
-            </div>
+            <div className="auth-value-note">가입 → 쿠팡 계정 연동 → 진짜 순이익 확인</div>
+            <div className="auth-value-note">쿠팡 판매자 계정만 있으면 시작할 수 있어요.</div>
+            <div className="auth-value-note">무료로 시작 · 카드 등록 불필요 · 연동 시 API 키 AES-256 암호화</div>
           </div>
         </aside>
       </div>
