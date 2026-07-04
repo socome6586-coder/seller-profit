@@ -1,0 +1,6 @@
+# gradlew 는 셸 스크립트(#!/bin/sh) — Windows 에서 core.autocrlf=true 인 채로
+# `git archive`(배포 시 tar 생성에 사용)를 실행하면 CRLF 로 바뀌어 리눅스 서버에서
+# "/bin/sh^M: bad interpreter" 로 실행이 깨진다(2026-07-04 T12.4 배포 중 실제 발생 확인,
+# docs/DECISIONS.md D5 참고). eol=lf 로 강제해 어떤 clone/archive 환경에서도 LF 를 유지한다.
+gradlew text eol=lf
+*.sh text eol=lf
