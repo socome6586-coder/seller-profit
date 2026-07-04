@@ -16,7 +16,10 @@
 > **⚠️ 이 프로젝트는 포트폴리오가 아니라 실제 수익을 내는 서비스가 목표다.** (2026-07 방향 확정)
 > 런칭에는 사업자등록이 사실상 강제다: **쿠팡 Open API 키**(사업자 인증 필수) 와 **토스페이먼츠 구독료 수금**(PG 계약에 사업자등록+통신판매업 신고 필수) 둘 다 막혀 있다.
 > 개인사업자(간이과세)는 홈택스 온라인·무료·1~2일. 실 키 라이브 검증과 실 결제는 사업자등록 전까지 구조적으로 불가(쿠팡 공개 샌드박스 없음).
-> 그 전까지는 실 키가 필요 없는 영역(배포·기능 완성)을 진행한다. 현재 앱은 **localhost 전용** → **배포/호스팅**이 실수익으로 가는 1순위 기술 과제다.
+> 그 전까지는 실 키가 필요 없는 영역(배포·기능 완성)을 진행한다.
+>
+> **✅ 배포 완료(2026-07-04)** — **https://sellerprofit.co.kr** 에서 실제로 운영 중(iwinv KR1-Lite).
+> 더 이상 localhost 전용이 아니다. 재배포 방법은 아래 "운영 배포" 참고.
 
 ## 기술 스택
 
@@ -62,10 +65,12 @@
 
 ### A. 사업자등록 전에 지금 할 수 있는 것 (실 키 불필요)
 
-1. **[실수익 1순위] 배포/호스팅** — 현재 localhost 전용이라 고객이 접속 불가. 클라우드 서버 + 도메인 + HTTPS + 운영 DB(PostgreSQL) 구성. 운영 환경변수(`APP_ENCRYPTION_KEY`, DB 접속, 추후 `TOSS_SECRET_KEY`) 주입 체계. 프론트 빌드 산출물 포함 단일 jar 배포.
+1. ~~**[실수익 1순위] 배포/호스팅**~~ **완료(2026-07-04)** — `https://sellerprofit.co.kr` 라이브.
+   상세는 `docs/DECISIONS.md` D4·D5, 재배포 절차는 아래 "운영 배포" 참고.
 2. **토스 빌링 실 키 마무리** — 토스는 **무료 테스트 키를 사업자 없이 즉시 발급** 가능(단, 실 수금=라이브 키는 사업자 후). 테스트 키로 SDK 카드등록(`Pricing.jsx` subscribe TODO) + 빌링키 발급·첫 결제·갱신 플로우를 라이브로 확정.
 3. **프론트 빌드 Gradle 통합**(선택) — `npm run build` 를 Gradle 빌드에 묶어 산출물 커밋 제거.
 4. (보강 후보) 반품 사유 표준화(쿠팡 사유 코드 매핑), 사유 추세(기간 비교), `AdSpendProvider` 구현체(쿠팡 광고 API 스키마 확정 후).
+5. 베타 셀러 5~10명 모집 + 도그푸딩(조민석 님 본인 쿠팡 데이터로 실사용) — `docs/HANDOFF.md` §5 로드맵 7번.
 
 ### B. 사업자등록 후에만 가능한 것 (게이팅)
 
@@ -129,3 +134,44 @@ export APP_ENCRYPTION_KEY=$(openssl rand -base64 32)
 > (Gradle `processResources` 가 `src/main/resources` → `build/resources/main` 복사를 앱 기동 시 1회만 하므로, 이미 떠 있는 프로세스는 새 빌드를 자동으로 못 읽는다 — 재시작 안 하면 이전 화면이 계속 보임).
 > **프론트 개발(핫리로드)**: `cd frontend && npm run dev` → `http://localhost:5173`(/api 는 :8088 로 프록시, 재시작 불필요).
 > 시드를 다시 깔고 싶으면 `docker compose down -v` 로 볼륨까지 지우고 1번부터.
+
+## 운영 배포 (재배포 절차)
+
+운영 서버: iwinv KR1-Lite(`49.247.139.234`, Ubuntu 22.04, RAM 1GB+스왑 2GB), SSH 는
+`~/.ssh/id_ed25519` 키로 `root@49.247.139.234` 접속(비밀번호 없음). 저장소가 **private** 이라
+서버가 GitHub 자격증명 없이 clone 못 하므로, `git archive` 로 커밋을 내보내 `scp` 로 옮기는
+방식을 쓴다(서버는 GitHub 접근 권한을 아예 가질 필요가 없다는 이점도 있음).
+
+**코드를 바꾸고 배포하려면(로컬 개발 PC 에서):**
+
+```bash
+git add -A && git commit -m "..."   # 배포는 반드시 커밋된 것만 나간다(워킹트리 변경 무시)
+./deploy.sh                          # 기본값 HEAD. 특정 커밋/태그: ./deploy.sh <ref>
+```
+
+`deploy.sh` 가 하는 일: ① `git archive` 로 tarball 생성 → ② `scp` 로 서버 전송 → ③ 서버에서
+압축 해제 → ④ `rsync` 로 코드만 갱신(운영 데이터·시크릿은 절대 건드리지 않음, 아래 참고) →
+⑤ `docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build` 로
+재빌드·재기동.
+
+**서버 쪽에서 코드 갱신과 분리되어 절대 지워지지 않는 것들** (`deploy.sh` 의 rsync exclude):
+- `.env.production` — 실 시크릿(DB 비번, `APP_ENCRYPTION_KEY` 등)
+- `pgdata/` — 운영 Postgres 데이터 디렉터리(바인드 마운트)
+- `backups/`, `backup.log`, `backup.sh` — T12.6 일일 백업(cron, 매일 04:30 KST, 14일 보관)
+
+**DB 직접 확인/수정:**
+```bash
+ssh root@49.247.139.234
+docker exec -it seller-profit-postgres psql -U seller_profit_app -d seller_profit
+```
+(로컬 유닉스 소켓이라 비밀번호 없이 바로 접속됨. `UPDATE`/`DELETE` 는 반드시 `WHERE` 확인,
+`password_hash`/`billing_key_encrypted` 같은 해시·암호화 컬럼은 직접 값을 넣지 않는다.)
+
+**관리자 계정 추가**: 새 이메일을 관리자로 만들려면 서버의 `.env.production` 의
+`APP_ADMIN_EMAILS` 에 콤마로 추가한 뒤 `docker compose --env-file .env.production -f
+docker-compose.prod.yml up -d app` 로 app 컨테이너만 재기동(그 이메일로 회원가입/로그인하면
+즉시 ADMIN 승격 — `AdminBootstrapService` 참고).
+
+**주의**: `docker-compose.prod.yml`/`Caddyfile`/`Dockerfile` 자체를 바꾼 배포는 위 절차로
+충분하지만, Postgres 메이저 버전 업그레이드처럼 데이터 마이그레이션이 필요한 변경은
+`deploy.sh` 범위 밖 — 별도로 신중하게 다뤄야 한다.
