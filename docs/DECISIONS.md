@@ -199,3 +199,48 @@
 - **범위 밖으로 남긴 것**: T12.4(실서버 배포)·T12.5(스모크 테스트)·T12.6(백업 cron)은 도메인
   DNS 연결 전이라 이번에 진행하지 않았다. `CLAUDE.md` "다음 단계 A-1"도 아직 완료로 갱신하지
   않았다 — 실제 `https://sellerprofit.co.kr` 접속 확인 전까지는 미완료로 두는 게 맞다고 판단.
+
+---
+
+## D5. T12.4 실서버 배포 완료 — `git archive` + Windows `core.autocrlf` 로 `gradlew` 깨지는 문제 발견·수정
+
+- **날짜**: 2026-07-04
+- **관련**: `docs/deploy-tasks.md` T12.4, `.gitattributes`(신규), 서버(iwinv KR1-Lite, `49.247.139.234`)
+- **배포 방식**: 저장소가 private 이라 서버에서 직접 `git clone` 이 안 됨(비인증 GitHub API 확인:
+  404) → deploy-tasks.md 가 허용한 대안인 "rsync" 대신, 커밋된 파일만 정확히 옮기기 위해
+  `git archive HEAD` 로 tarball 을 만들어 로컬(Windows)에서 `scp` 로 전송 → 서버에서 `tar -xzf`.
+  이 방식은 운영 서버가 GitHub 자격증명(PAT 등)을 전혀 가질 필요가 없다는 부수적 이점도 있다.
+- **버그 발견**: 첫 배포 시도에서 `RUN ./gradlew bootJar` 가 `/bin/sh: 1: ./gradlew: not found`
+  로 실패(exit 127). 컨테이너에 직접 들어가 확인한 결과 실제 에러는
+  `bad interpreter: /bin/sh^M: No such file or directory` — `git archive` 가 Windows 의
+  `core.autocrlf=true` 설정을 그대로 적용해 `gradlew`(셸 스크립트)의 개행을 LF→CRLF 로 바꿔
+  버린 것이 원인이었다(`git show HEAD:gradlew` 로 본 blob 자체는 LF 였지만, `git archive` 산출물은
+  CRLF — 즉 문제는 저장소가 아니라 **Windows 에서의 export 시점**에 있었다).
+- **즉시 조치**: `git -c core.autocrlf=false archive ...` 로 재생성해 배포를 통과시켰다(1회성 우회).
+- **근본 수정**: `.gitattributes` 신설, `gradlew text eol=lf` / `*.sh text eol=lf` 선언.
+  커밋 후 `git archive HEAD gradlew`(옵션 없이, autocrlf 오버라이드 없이)가 LF 를 유지하는 것을
+  실측 확인했다 — 이제부터는 어떤 로컬 git 설정에서 archive/clone 하든 이 문제가 재발하지 않는다.
+  (이 저장소는 원래 Java/Gradle 프로젝트라 실행 가능한 셸 스크립트가 `gradlew` 뿐이라 범위를
+  `gradlew`+`*.sh` 로 좁혔다 — 과도한 일반화 없이 실제 겪은 문제만 고쳤다.)
+- **배포 결과(자기 검수, 실제 재현)**:
+  - 서버: iwinv KR1-Lite(RAM 957Mi, 스왑 2GB), Ubuntu 22.04.5, Docker 29.6.1/Compose v5.3.0 —
+    문서에 적힌 사양과 SSH 로 직접 접속해 실측 일치 확인.
+  - `docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build` 로
+    3개 컨테이너(postgres/app/caddy) 전부 기동. `SPRING_PROFILES_ACTIVE` 는 비워둬 기본
+    프로파일로 뜸(`seed` 아님) — 로그에 "No active profile set, falling back to 1 default
+    profile" 확인.
+  - Flyway 가 빈 DB 에 `v1~v6` 마이그레이션 자동 적용, `Started SellerProfitApplication`
+    확인(부팅 22초).
+  - Caddy 가 `sellerprofit.co.kr`/`www.sellerprofit.co.kr` 양쪽 다 Let's Encrypt 인증서
+    발급 성공(로그: "certificate obtained successfully").
+  - 로컬 머신에서 `curl` 로 3가지 실측: `https://sellerprofit.co.kr/` → `200`(랜딩 페이지
+    HTML 정상 응답), `http://sellerprofit.co.kr/` → `308`(HTTPS 로 자동 리다이렉트),
+    `https://www.sellerprofit.co.kr/` → `301`(비 `www` 로 리다이렉트, Caddyfile D4-4 설계대로
+    동작).
+  - `.env.production` 의 `DB_PASSWORD`/`APP_ENCRYPTION_KEY` 는 서버에서 `openssl rand` 로
+    직접 생성해 파일에만 저장(`chmod 600`), 채팅/커밋 어디에도 값 자체를 남기지 않았다.
+    `APP_ADMIN_EMAILS` 는 조민석 님 실제 이메일(`socome6586@gmail.com`)로 설정.
+- **범위 밖으로 남긴 것(이번 요청은 T12.4 까지)**: T12.5(회원가입→로그인→계정연동→로그아웃
+  스모크 테스트, `/admin` 접근 확인, 스케줄러 로그 확인, 재부팅 후 컨테이너 자동 복구 확인)와
+  T12.6(일 1회 DB 백업 cron)은 아직 진행하지 않았다. `CLAUDE.md` "다음 단계 A-1"도 T12.5/T12.6
+  의 공통 AC(스케줄러 지속 동작, 백업 동작 등)가 남아 있어 아직 완료로 갱신하지 않았다.
