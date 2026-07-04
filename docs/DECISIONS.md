@@ -135,3 +135,67 @@
   `SubscriptionServiceTest`/`BillingScheduler` 쪽 테스트가 `source=COMP` 스킵을 고정.
   브라우저(Chrome MCP) 로 실제 로그인 → 지급(2 개월 PRO) → 유저 표 즉시 갱신 → 비관리자
   직접 진입 차단까지 end-to-end 로 확인.
+
+---
+
+## D4. T12.2 도메인 확정(`sellerprofit.co.kr`) + T12.3 운영 배포 설정 작성
+
+- **날짜**: 2026-07-04
+- **관련**: `docs/deploy-tasks.md` T12.2·T12.3, `Dockerfile`, `docker-compose.prod.yml`, `Caddyfile`,
+  `.env.production.example`, `.gitignore`
+- **T12.2 확정**: 도메인 `sellerprofit.co.kr` 로 최종 확정(조민석 님 직접 구매·DNS 연결 예정,
+  이 저장소 작업 범위 밖). 서버는 **iwinv KR1-Lite**(Ubuntu, Docker 29.6.1 / Compose v5.3.0),
+  `ufw`로 22/80/443 허용, 스왑 2GB 적용 완료 상태에서 T12.3 을 진행함. 도메인 DNS 전파 전이라
+  실서버 배포(T12.4)는 이번 범위에 포함하지 않았다 — 그 전에 준비 가능한 T12.3 산출물만 작성.
+- **T12.3 설계 결정**:
+  1. **`app` 서비스는 자체 `Dockerfile`(멀티스테이지)로 빌드.** deploy-tasks.md 는
+     "`./gradlew bootJar` 산출물로 만든 이미지 또는 서버에서 직접 빌드" 둘 다 허용했는데,
+     서버에 Node/Gradle을 별도 설치하지 않고 Docker 만으로 재현 가능하게 하기 위해 이미지
+     빌드 쪽을 택했다. 1단계(node:20-alpine)에서 프론트(Vite) 빌드 → 2단계
+     (eclipse-temurin:21-jdk)에서 그 산출물을 `src/main/resources/static` 에 넣고 Gradle
+     `bootJar`(`-x test`, 테스트 제외 — 배포 이미지 빌드가 테스트 DB 가용성에 좌우되지 않게)
+     → 3단계(eclipse-temurin:21-jre)는 jar 만 복사해 이미지 크기를 최소화했다.
+  2. **JVM 힙 상한을 `docker-compose.prod.yml` 의 `JAVA_TOOL_OPTIONS: -Xmx384m` 로 명시.**
+     KR1-Lite 는 RAM 이 넉넉하지 않아(스왑 2GB 를 적용해야 했던 이유와 동일) Postgres+JVM+Caddy
+     세 프로세스가 동시에 뜬다. 힙을 무제한으로 두면 JVM 이 컨테이너 메모리를 다 차지해 다른
+     두 프로세스가 OOM Kill 될 위험이 있어, 기본값을 보수적으로 잡고 `.env.production` 의
+     `APP_JAVA_OPTS` 로 서버 RAM 에 맞춰 조정 가능하게 열어뒀다.
+  3. **`.gitignore` 의 시크릿 차단 규칙에 구멍 발견 및 수정.** 기존 규칙(`.env`, `*.env`)은
+     정확히 `.env` 로 끝나는 파일만 걸러 `.env.production`(중간에 `.production` 이 붙어
+     `.env` 로 끝나지 않음)은 커밋 방지 대상이 아니었다 — deploy-tasks.md AC("시크릿이
+     저장소에 없음, `.env.production` 은 .gitignore 등록")를 그대로 따르려면 반드시
+     고쳐야 하는 부분이라 `.gitignore` 에 `.env.production` 을 명시적으로 추가했다.
+     `.env.production.example`(값 없는 템플릿)은 파일명이 달라 이 규칙에 걸리지 않으므로
+     그대로 커밋 대상이다. 같은 이유로 운영 Postgres 바인드 마운트 디렉터리 `pgdata/` 도
+     추가했다(서버에서 저장소 안에 생성될 경우 DB 파일이 git 추적되는 것을 막기 위해).
+  4. **Caddyfile 에 `www.sellerprofit.co.kr` → `sellerprofit.co.kr` 리다이렉트 블록 추가.**
+     deploy-tasks.md T12.2 는 "`@` 와 `www` 둘 다, 또는 서브도메인 하나만" 연결 가능하다고
+     명시했다 — `www` 를 연결하고도 Caddyfile 에 해당 블록이 없으면 그 호스트로 오는 요청은
+     어떤 site block 에도 안 걸려 인증서도 못 받고 실패한다. 연결 안 해도 이 블록은 트래픽을
+     받지 않으므로 무해해서 미리 넣어뒀다.
+  5. **프로젝트명 고정(`name: seller-profit-prod`).** 로컬 검증 중 실제로 발견 — 지정하지
+     않으면 디렉터리명이 기본 프로젝트명이 되어, 같은 디렉터리의 로컬 개발용
+     `docker-compose.yml`(프로젝트명도 기본 `seller-profit`)과 default 네트워크를 공유하는
+     것을 확인했다(운영 서버엔 로컬 compose 파일이 없어 실제 배포엔 영향 없지만, 명시적으로
+     분리해두는 게 더 안전하다고 판단).
+  6. **AC 재현(자기 검수) — "될 것 같다"가 아니라 실제로 돌려봄:**
+     - `docker compose -f docker-compose.prod.yml config` 문법 검증 통과(값 없이도,
+       `.env.production.example` 로 치환해도 둘 다 exit 0).
+     - `caddy validate` 로 `Caddyfile` 문법 검증 통과 — "enabling automatic HTTP->HTTPS
+       redirects" 로그로 HTTPS 강제가 Caddy 기본 동작으로 충족됨을 확인.
+     - `docker build .` 로 3단계 전체(프론트 빌드→`bootJar`→런타임) 이미지 빌드 성공(53초,
+       BUILD SUCCESSFUL) 확인.
+     - **`docker compose --env-file <임시 시크릿> -f docker-compose.prod.yml up -d` 로
+       postgres+app+caddy 3개 컨테이너를 실제로 함께 기동.** 앱 로그에서 Flyway 가
+       `v1~v6` 마이그레이션을 빈 DB 에 자동 적용하고 `Started SellerProfitApplication` 까지
+       확인, `SELECT count(*) FROM users` = `0`으로 시드/데모 데이터 없이 깨끗하게 시작함을
+       실측 확인(AC "시드 없이 운영 DB 가 깨끗하게 시작"의 사전 증거 — 실제 운영 DB 검증은
+       T12.5 몫이지만 compose/이미지 설정 자체가 이 조건을 만족하는지는 지금 확인 가능해 확인함).
+       Caddy 는 예상대로 `sellerprofit.co.kr`/`www.sellerprofit.co.kr` 인증서 발급에 실패했다
+       (`no valid A records found` — DNS 가 아직 이 로컬 머신을 가리키지 않으므로 당연한
+       실패이자 오히려 Caddyfile 이 실제 도메인으로 정상 동작을 "시도"한다는 증거). 이후
+       Let's Encrypt 재시도 요청이 쌓이는 것을 막기 위해 검증 즉시
+       `docker compose down -v` 로 컨테이너·볼륨·임시 이미지·임시 env 파일을 모두 정리했다.
+- **범위 밖으로 남긴 것**: T12.4(실서버 배포)·T12.5(스모크 테스트)·T12.6(백업 cron)은 도메인
+  DNS 연결 전이라 이번에 진행하지 않았다. `CLAUDE.md` "다음 단계 A-1"도 아직 완료로 갱신하지
+  않았다 — 실제 `https://sellerprofit.co.kr` 접속 확인 전까지는 미완료로 두는 게 맞다고 판단.

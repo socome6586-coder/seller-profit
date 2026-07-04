@@ -26,7 +26,13 @@ Thumbs.db
 # 환경변수 / 시크릿 (절대 커밋 금지)
 .env
 *.env
+# `.env.production`은 `*.env` 패턴에 안 걸림(파일명이 ".env"로 끝나지 않음) — 별도 명시.
+# `.env.production.example`(값 없는 템플릿)은 이름이 달라 이 규칙에 안 걸리므로 계속 커밋됨.
+.env.production
 application-local.yml
 application-secret.yml
+
+# 운영 Postgres 데이터 (docker-compose.prod.yml 의 바인드 마운트)
+pgdata/
 
 # ※ gradle/wrapper/ 와 gradlew 는 커밋해야 하므로 제외하지 않음

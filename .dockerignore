@@ -1,0 +1,11 @@
+# 빌드 컨텍스트를 줄여 저사양 서버(KR1-Lite)에서의 이미지 빌드를 가볍게 한다.
+.git
+.gradle
+build
+frontend/node_modules
+frontend/dist
+docs
+*.md
+.env
+*.env
+.env.production
