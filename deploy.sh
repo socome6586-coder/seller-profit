@@ -44,7 +44,7 @@ rsync -a --delete \
 rm -rf "${REMOTE_TMP}"
 cd "${REMOTE_DIR}"
 docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
-docker compose -f docker-compose.prod.yml ps
+docker compose --env-file .env.production -f docker-compose.prod.yml ps
 REMOTE
 
 echo "==> 배포 완료. https://sellerprofit.co.kr/ 확인하세요."
