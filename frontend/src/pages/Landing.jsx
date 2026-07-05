@@ -3,6 +3,23 @@ import { Link } from "react-router-dom";
 import { api, won } from "../api";
 import { useAuth } from "../auth.jsx";
 import ReceiptCard from "../components/ReceiptCard.jsx";
+import {
+  IconTrendUp,
+  IconPieChart,
+  IconWallet,
+  IconLinkApi,
+  IconDatabase,
+  IconCalcWon,
+  IconCsvUpload,
+  IconMonitorWarning,
+  IconDocCheck,
+  IconChartSearch,
+  IconCalcBalance,
+  IconTarget,
+  IconSparkle,
+  IllustrationBarChart,
+  IllustrationBrowserMock,
+} from "../components/LandingIcons.jsx";
 import "./Landing.css";
 
 // 공개 랜딩 페이지("/"). 비로그인 방문자에게 보여주는 첫 세일즈 자산.
@@ -77,6 +94,9 @@ export default function Landing() {
       {/* HERO */}
       <header className="l-hero">
         <div className="l-hero-bg" aria-hidden="true" />
+        <div className="l-hero-dots" aria-hidden="true" />
+        <div className="l-hero-blob l-hero-blob-a" aria-hidden="true" />
+        <div className="l-hero-blob l-hero-blob-b" aria-hidden="true" />
         <div className="l-wrap l-hero-grid">
           <div>
             <div className="l-eyebrow">쿠팡 셀러 순이익 분석 · 무료가입 카드 등록 불필요!</div>
@@ -117,7 +137,7 @@ export default function Landing() {
           <h2 className="reveal-up">
             매출과 ROAS는 잘 보여요.
             <br />
-            그런데 통장은 왜 다를까요?
+            그런데 <span className="l-underline">통장</span>은 왜 다를까요?
           </h2>
           <p className="reveal-up">
             쿠팡 대시보드는 매출을 보여주지, 수수료·원가·반품·광고비를 다 뺀 뒤 실제로 남은 돈은
@@ -125,14 +145,17 @@ export default function Landing() {
           </p>
           <div className="contrast">
             <div className="chip reveal-up">
+              <IconTrendUp bg="rgba(255,255,255,.08)" />
               <div className="k">쿠팡이 보여주는 것</div>
               <div className="v ok">매출 ₩270,000</div>
             </div>
             <div className="chip reveal-up">
+              <IconPieChart bg="rgba(255,255,255,.08)" />
               <div className="k">광고 대시보드</div>
               <div className="v ok">ROAS 13.5×</div>
             </div>
             <div className="chip reveal-up">
+              <IconWallet bg="rgba(255,255,255,.08)" />
               <div className="k">실제 통장에 남는 것</div>
               <div className="v bad">−₩159,737</div>
             </div>
@@ -142,36 +165,48 @@ export default function Landing() {
 
       {/* FLOW — 실제 동작 과정(완료된 기능 그대로, 가짜 지표 아님) */}
       <section className="l-flow">
+        <div className="l-flow-dots" aria-hidden="true" />
+        <IconSparkle className="l-flow-star l-flow-star-a" />
+        <IconSparkle className="l-flow-star l-flow-star-b" />
         <div className="l-wrap">
-          <div className="l-sec-eyebrow reveal-up">어떻게 계산하나요?</div>
-          <h2 className="reveal-up">쿠팡 계정만 연동하면, 나머지는 자동입니다.</h2>
+          <div className="l-pill reveal-up">
+            어떻게 계산하나요?
+          </div>
+          <h2 className="reveal-up">
+            쿠팡 계정만 연동하면, <span className="l-accent-text">나머지는 자동입니다.</span>
+          </h2>
           <div className="l-flow-steps">
             <div className="l-flow-step reveal-up">
-              <span className="l-flow-num">01</span>
+              <span className="l-flow-num l-flow-num-1">01</span>
+              <IconLinkApi />
               <h3>계정 연동</h3>
               <p>쿠팡 Open API 키를 등록해 연동</p>
             </div>
             <span className="l-flow-arrow" aria-hidden="true">→</span>
             <div className="l-flow-step reveal-up">
-              <span className="l-flow-num">02</span>
+              <span className="l-flow-num l-flow-num-2">02</span>
+              <IconDatabase />
               <h3>자동 수집</h3>
               <p>정산·주문·반품을 주기적으로 수집</p>
             </div>
             <span className="l-flow-arrow" aria-hidden="true">→</span>
             <div className="l-flow-step reveal-up">
-              <span className="l-flow-num">03</span>
+              <span className="l-flow-num l-flow-num-3">03</span>
+              <IconCalcWon />
               <h3>원가 입력</h3>
               <p>매입원가·기타비용을 상품에 직접 입력</p>
             </div>
             <span className="l-flow-arrow" aria-hidden="true">→</span>
             <div className="l-flow-step reveal-up">
-              <span className="l-flow-num">04</span>
+              <span className="l-flow-num l-flow-num-4">04</span>
+              <IconCsvUpload />
               <h3>광고비 반영</h3>
               <p>CSV 업로드 또는 수기 입력으로 SKU에 귀속</p>
             </div>
             <span className="l-flow-arrow" aria-hidden="true">→</span>
             <div className="l-flow-step reveal-up">
-              <span className="l-flow-num">05</span>
+              <span className="l-flow-num l-flow-num-5">05</span>
+              <IconMonitorWarning />
               <h3>적자 상품 적발</h3>
               <p>광고후 순이익이 마이너스인 SKU를 자동으로 표시</p>
             </div>
@@ -181,11 +216,24 @@ export default function Landing() {
 
       {/* VALUE */}
       <section className="l-value">
+        <div className="l-wrap l-value-grid">
+          <div>
+            <div className="l-pill l-pill-accent reveal-up">
+              <IconTrendUp bg="transparent" />
+              SELLER PROFIT이 보여주는 것!
+            </div>
+            <h2 className="reveal-up">
+              매출이 아니라,
+              <br />
+              <span className="l-accent-text l-underline-thick">실제로 남은 돈을 봅니다.</span>
+            </h2>
+          </div>
+          <IllustrationBarChart />
+        </div>
         <div className="l-wrap">
-          <div className="l-sec-eyebrow reveal-up">SELLER PROFIT이 보여주는 것!</div>
-          <h2 className="reveal-up">매출이 아니라, 실제로 남은 돈을 봅니다.</h2>
           <div className="l-cards">
             <div className="l-card reveal-up">
+              <IconDocCheck />
               <span className="l-card-num">01</span>
               <h3>정산 실수령 기준 진짜 순이익</h3>
               <p>
@@ -194,6 +242,7 @@ export default function Landing() {
               </p>
             </div>
             <div className="l-card reveal-up">
+              <IconChartSearch />
               <span className="l-card-num">02</span>
               <h3>SKU별 광고 손익</h3>
               <p>
@@ -202,6 +251,7 @@ export default function Landing() {
               </p>
             </div>
             <div className="l-card reveal-up">
+              <IconCalcBalance />
               <span className="l-card-num">03</span>
               <h3>정직한 계산</h3>
               <p>
@@ -210,6 +260,7 @@ export default function Landing() {
               </p>
             </div>
             <div className="l-card reveal-up">
+              <IconTarget />
               <span className="l-card-num">04</span>
               <h3>쿠팡에 맞춰 정밀하게</h3>
               <p>쿠팡의 정산·수수료·반품 구조에 맞춰 설계했습니다. 넓게 얕은 대신, 한 채널을 제대로.</p>
@@ -252,14 +303,21 @@ export default function Landing() {
 
       {/* FINAL CTA */}
       <section className="l-final">
-        <div className="l-wrap">
-          <div className="l-final-card reveal-up">
-            <h2>당신의 적자 상품, 지금 확인하세요.</h2>
+        <div className="l-final-blob l-final-blob-a" aria-hidden="true" />
+        <div className="l-final-blob l-final-blob-b" aria-hidden="true" />
+        <div className="l-wrap l-final-grid reveal-up">
+          <div>
+            <h2>
+              당신의 적자 상품,
+              <br />
+              <span className="l-underline-thick">지금 확인하세요.</span>
+            </h2>
             <p>쿠팡 계정만 연동하면, 광고비까지 반영한 진짜 순이익을 상품별로 바로 보여드립니다.</p>
             <Link className="btn btn-primary btn-lg" to="/signup">
-              무료로 내 순이익 보기
+              무료로 내 손익 보기 <span aria-hidden="true">→</span>
             </Link>
           </div>
+          <IllustrationBrowserMock />
         </div>
       </section>
 
