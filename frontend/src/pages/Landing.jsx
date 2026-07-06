@@ -5,8 +5,6 @@ import { useAuth } from "../auth.jsx";
 import ReceiptCard from "../components/ReceiptCard.jsx";
 import {
   IconTrendUp,
-  IconPieChart,
-  IconWallet,
   IconLinkApi,
   IconDatabase,
   IconCalcWon,
@@ -147,17 +145,14 @@ export default function Landing() {
           </p>
           <div className="contrast">
             <div className="chip reveal-up">
-              <IconTrendUp bg="rgba(255,255,255,.08)" />
               <div className="k">쿠팡이 보여주는 것</div>
               <div className="v ok">매출 ₩270,000</div>
             </div>
             <div className="chip reveal-up">
-              <IconPieChart bg="rgba(255,255,255,.08)" />
               <div className="k">광고 대시보드</div>
               <div className="v ok">ROAS 13.5×</div>
             </div>
             <div className="chip reveal-up">
-              <IconWallet bg="rgba(255,255,255,.08)" />
               <div className="k">실제 통장에 남는 것</div>
               <div className="v bad">−₩159,737</div>
             </div>
