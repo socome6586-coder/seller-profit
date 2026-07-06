@@ -110,75 +110,92 @@ export default function Dashboard() {
       </div>
 
       {noAccounts ? (
-        <div className="error-banner">
-          연결된 마켓 계정이 없습니다. <Link to="/accounts">쿠팡 계정을 연동</Link>하면
-          여기에서 순이익을 볼 수 있어요.
-        </div>
-      ) : null}
+        <OnboardingCard />
+      ) : (
+        <>
+          <div className="controls">
+            <div className="field">
+              <label>마켓 계정</label>
+              <select value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+                {accounts == null ? (
+                  <option value="">불러오는 중…</option>
+                ) : accounts.length === 0 ? (
+                  <option value="">계정 없음</option>
+                ) : (
+                  accounts.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.channel} · {a.vendorId} (#{a.id})
+                    </option>
+                  ))
+                )}
+              </select>
+            </div>
+          </div>
 
-      <div className="controls">
-        <div className="field">
-          <label>마켓 계정</label>
-          <select value={accountId} onChange={(e) => setAccountId(e.target.value)}>
-            {accounts == null ? (
-              <option value="">불러오는 중…</option>
-            ) : accounts.length === 0 ? (
-              <option value="">계정 없음</option>
-            ) : (
-              accounts.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.channel} · {a.vendorId} (#{a.id})
-                </option>
-              ))
-            )}
-          </select>
-        </div>
-      </div>
+          {error ? <div className="error-banner">{error}</div> : null}
 
-      {error ? <div className="error-banner">{error}</div> : null}
+          {/* 직접 선택으로 달력이 펼쳐지면 달력을 왼쪽에, 요약 카드를 오른쪽에 나란히 배치한다(is-custom). */}
+          <div className={"period-and-cards" + (period?.preset === "custom" ? " is-custom" : "")}>
+            <PeriodPicker value={period} onChange={setPeriod} disabled={!accountId} maxRangeDays={maxRangeDays} />
 
-      {/* 직접 선택으로 달력이 펼쳐지면 달력을 왼쪽에, 요약 카드를 오른쪽에 나란히 배치한다(is-custom). */}
-      <div className={"period-and-cards" + (period?.preset === "custom" ? " is-custom" : "")}>
-        <PeriodPicker value={period} onChange={setPeriod} disabled={!accountId} maxRangeDays={maxRangeDays} />
+            <div className="cards">
+              <Card k="총매출 (정산 실수령)" v={won(profit?.totalRevenue)} />
+              <Card k="총순이익 (진짜)" v={won(profit?.totalProfit)} cls={profit ? signClass(profit.totalProfit) : ""} />
+              <Card k="평균 마진율" v={pct(profit?.avgMarginPct)} />
+              <Card k="배분 기타비용" v={won(profit?.totalAllocatedCost)} />
+              <Card
+                k="광고비"
+                v={won(profit?.totalAdSpend)}
+                sub={
+                  profit && Number(profit.unallocatedAdSpend) > 0
+                    ? "미할당 " + won(profit.unallocatedAdSpend)
+                    : null
+                }
+              />
+            </div>
+          </div>
 
-        <div className="cards">
-          <Card k="총매출 (정산 실수령)" v={won(profit?.totalRevenue)} />
-          <Card k="총순이익 (진짜)" v={won(profit?.totalProfit)} cls={profit ? signClass(profit.totalProfit) : ""} />
-          <Card k="평균 마진율" v={pct(profit?.avgMarginPct)} />
-          <Card k="배분 기타비용" v={won(profit?.totalAllocatedCost)} />
-          <Card
-            k="광고비"
-            v={won(profit?.totalAdSpend)}
-            sub={
-              profit && Number(profit.unallocatedAdSpend) > 0
-                ? "미할당 " + won(profit.unallocatedAdSpend)
-                : null
-            }
-          />
-        </div>
-      </div>
+          <ProfitTable products={profit?.products} />
 
-      <ProfitTable products={profit?.products} />
+          <h2>
+            반품 사유 분석{" "}
+            {returns && !returns.failed ? (
+              <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
+                총 반품 {num(returns.totalQuantity)}개
+              </span>
+            ) : null}
+          </h2>
+          <ReturnsTable returns={returns} />
 
-      <h2>
-        반품 사유 분석{" "}
-        {returns && !returns.failed ? (
-          <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
-            총 반품 {num(returns.totalQuantity)}개
-          </span>
-        ) : null}
-      </h2>
-      <ReturnsTable returns={returns} />
+          <h2>입력 / 관리</h2>
+          <div className="manage">
+            <CogsPanel products={products} onSaved={() => { loadProducts(); loadProfit(); }} />
+            <CostPanel
+              accountId={accountId}
+              costs={costs}
+              onSaved={() => { loadCosts(); loadProfit(); }}
+            />
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
-      <h2>입력 / 관리</h2>
-      <div className="manage">
-        <CogsPanel products={products} onSaved={() => { loadProducts(); loadProfit(); }} />
-        <CostPanel
-          accountId={accountId}
-          costs={costs}
-          onSaved={() => { loadCosts(); loadProfit(); }}
-        />
-      </div>
+// 계정 미연동 온보딩 유도 카드(docs/onboarding-tasks.md T13.2). 매출/순이익 카드가 전부 "-"로
+// 뜨는 "고장난 화면"처럼 보이는 대신, 연동 전에는 이 카드 하나만 보여주고 대시보드 본문
+// (카드·표·입력 패널)은 아예 렌더링하지 않는다 — 연동 후에는 이 분기 자체를 타지 않으므로
+// 기존 대시보드 동작에 영향이 없다.
+function OnboardingCard() {
+  return (
+    <div className="onboarding-card">
+      <div className="onboarding-icon" aria-hidden="true">🔗</div>
+      <h2 className="onboarding-title">계정을 연동하면 여기서 적자 상품을 바로 확인할 수 있어요</h2>
+      <p className="onboarding-desc">
+        쿠팡 셀러 계정을 연동하면 주문·정산·반품을 자동으로 모아 상품별 진짜 순이익(수수료·원가·
+        광고비까지 뺀 실수령)을 계산해 보여드립니다. 아직 연동된 계정이 없어 대시보드가 비어 있어요.
+      </p>
+      <Link to="/accounts" className="onboarding-cta">계정 연동하러 가기 →</Link>
     </div>
   );
 }
