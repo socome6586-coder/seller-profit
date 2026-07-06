@@ -138,6 +138,50 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
 .cost-list div { padding: 8px 0; border-top: 1px solid var(--line); }
 @media (max-width: 720px) { .manage { grid-template-columns: 1fr; } .cards { grid-template-columns: repeat(2, 1fr); } }
 
+/* 계정 연동 발급 가이드(docs/onboarding-tasks.md T13.1) — 네이티브 <details>/<summary> 로
+   접이식 구현(별도 JS 상태 없이 키보드/스크린리더 접근성 확보), 기본값은 펼쳐짐(open). */
+.guide {
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-lg);
+  padding: 18px 22px; box-shadow: var(--shadow-sm); margin-bottom: 20px;
+}
+.guide-summary {
+  cursor: pointer; font-weight: 800; font-size: 15px; letter-spacing: -.01em;
+  list-style: none; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.guide-summary::-webkit-details-marker { display: none; }
+.guide-summary::before {
+  content: "▸"; color: var(--muted); font-size: 12px; transition: transform .15s ease;
+}
+.guide[open] .guide-summary::before { transform: rotate(90deg); }
+.guide-summary-hint { font-weight: 400; font-size: 12px; color: var(--muted); }
+.guide-steps {
+  margin: 16px 0 0; padding-left: 22px; display: flex; flex-direction: column;
+  gap: 10px; font-size: 14px; line-height: 1.6;
+}
+.guide-steps li::marker { font-weight: 800; color: var(--accent); }
+.guide-substeps {
+  margin: 8px 0 0; padding-left: 18px; display: flex; flex-direction: column;
+  gap: 8px; font-size: 13.5px; color: var(--muted);
+}
+/* 4번 단계의 IP 주소 안내 — 기존 loss 색상 톤(.error-banner 계열)을 재사용해 눈에 띄게 강조. */
+.guide-ip-warn {
+  list-style: none; margin-left: -18px; color: var(--text);
+  background: var(--loss-bg); border: 1px solid #F2C9C0;
+  border-radius: var(--radius-sm); padding: 10px 12px;
+}
+.guide-ip-box { margin-top: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.guide-ip-box code {
+  font-family: ui-monospace, monospace; font-size: 14px; font-weight: 700; color: var(--loss);
+  background: #fff; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 6px 10px;
+}
+.guide-ip-box button { padding: 6px 14px; font-size: 12.5px; }
+.guide-wing-link { display: inline-block; margin-top: 16px; font-weight: 700; font-size: 13.5px; }
+.guide-note { margin-top: 10px; font-size: 12px; line-height: 1.5; }
+@media (max-width: 720px) {
+  .guide { padding: 14px 16px; }
+  .guide-steps, .guide-substeps { padding-left: 18px; }
+}
+
 /* 인증 화면(로그인/가입) */
 .auth-wrap { max-width: 400px; margin: 72px auto; padding: 0 20px; }
 .auth-card {

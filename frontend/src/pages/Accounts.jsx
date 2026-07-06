@@ -13,6 +13,11 @@ export default function Accounts() {
   const [note, setNote] = useState(null);
   const [busy, setBusy] = useState(false);
   const [syncingId, setSyncingId] = useState(null);
+  // 계정 연동 가이드용 서버 공인 IP. undefined=조회 중, null=조회 실패, string=정상값.
+  // 단일 소스(app.public-server-ip, application.yml)를 GET /api/config 로 받아온다 —
+  // 이 값을 프론트 코드에 직접 하드코딩하지 않는다(docs/onboarding-tasks.md §2).
+  const [serverIp, setServerIp] = useState(undefined);
+  const [ipCopied, setIpCopied] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -31,6 +36,23 @@ export default function Accounts() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    api("/api/config")
+      .then((c) => setServerIp(c?.publicServerIp || null))
+      .catch(() => setServerIp(null));
+  }, []);
+
+  async function copyServerIp() {
+    if (!serverIp) return;
+    try {
+      await navigator.clipboard.writeText(serverIp);
+    } catch {
+      return; // 클립보드 권한 거부 등 — 값은 화면에 그대로 보이므로 조용히 무시
+    }
+    setIpCopied(true);
+    setTimeout(() => setIpCopied(false), 1500);
+  }
 
   const max = plan?.maxMarketAccounts ?? -1; // -1 무제한
   const count = accounts?.length ?? 0;
@@ -139,6 +161,53 @@ export default function Accounts() {
       </table>
 
       <h2>새 쿠팡 계정 연동</h2>
+
+      <details className="guide" open>
+        <summary className="guide-summary">
+          Access Key·Secret Key는 어디서 받나요?
+          <span className="guide-summary-hint">(쿠팡 WING에서 발급 — 클릭해 접기/펼치기)</span>
+        </summary>
+        <ol className="guide-steps">
+          <li>
+            쿠팡 <b>WING</b>(
+            <a href="https://wing.coupang.com" target="_blank" rel="noopener noreferrer">wing.coupang.com</a>
+            )에 로그인
+          </li>
+          <li>우측 상단 아이디 클릭 → <b>"판매자정보"</b>(또는 <b>"추가판매정보"</b>) 클릭</li>
+          <li>페이지 하단 <b>"OPEN API 키 발급받기"</b> 버튼 클릭</li>
+          <li>
+            팝업에서 <b>"OPEN API"</b> 선택 → 약관 동의 → <b>"연동업체 선택"</b> 화면에서{" "}
+            <b>"자체개발(직접입력)"</b> 선택(seller-profit이 목록에 없어요) → 아래 정보 입력:
+            <ul className="guide-substeps">
+              <li>업체명: 아무 값 (예: 개인 상호명)</li>
+              <li>URL: 없으면 <code>wing.coupang.com</code> 입력해도 무방</li>
+              <li className="guide-ip-warn">
+                <span className="badge">⚠️ 필수</span>
+                <b> IP 주소: 반드시 seller-profit 운영 서버의 공인 IP를 입력하세요.</b>{" "}
+                본인 PC의 IP가 아닙니다 — 실제 API 호출은 seller-profit 서버에서 나갑니다.
+                <div className="guide-ip-box">
+                  <code>
+                    {serverIp === undefined ? "불러오는 중…" : serverIp || "조회 실패 — 새로고침 해주세요"}
+                  </code>
+                  <button type="button" className="ghost" onClick={copyServerIp} disabled={!serverIp}>
+                    {ipCopied ? "복사됨!" : "복사"}
+                  </button>
+                </div>
+              </li>
+            </ul>
+          </li>
+          <li>발급 완료 화면에서 <b>업체코드 / Access Key / Secret Key</b> 확인 후 복사</li>
+          <li>아래 폼에 그대로 붙여넣기</li>
+        </ol>
+        <a className="guide-wing-link" href="https://wing.coupang.com" target="_blank" rel="noopener noreferrer">
+          쿠팡 WING 바로가기 ↗
+        </a>
+        <div className="guide-note muted">
+          참고: 사업자 인증이 안 된 일반회원은 API 키 발급이 되지 않아요(이미 활성 쿠팡 셀러라면
+          보통 문제 없습니다). 재발급·정보수정은 월 10회 제한, 유효기간 180일입니다.
+        </div>
+      </details>
+
       {atLimit ? (
         <div className="error-banner">
           현재 플랜({plan?.name})의 연동 한도({max}개)에 도달했습니다.{" "}

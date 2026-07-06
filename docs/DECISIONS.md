@@ -291,3 +291,48 @@
 - **AC 전체 재확인(공통, deploy-tasks.md)**: HTTPS 접속 가능/HTTP 리다이렉트 ✅, 시크릿
   저장소·이미지에 없음 ✅, 시드 없이 깨끗한 시작 ✅, 관리자 부트스트랩 ✅, 스케줄러 지속
   동작 ✅, 재시작 후 자동 복구 ✅(실측), 일 1회 백업 ✅, CLAUDE.md 갱신 ✅ — **전부 충족**.
+
+---
+
+## D7. T13.1 계정 연동 발급 가이드 — 서버 공인 IP 단일 소스는 "백엔드 설정값 + 공개 API" 방식 채택
+
+- **날짜**: 2026-07-06
+- **관련**: `docs/onboarding-tasks.md` §2·T13.1, `application.yml`(`app.public-server-ip`),
+  `com.sellerprofit.web.PublicConfigController`(신규), `frontend/src/pages/Accounts.jsx`
+- **배경**: 계정 연동 화면에 쿠팡 OPEN API 키 발급 가이드를 추가하면서, 4번 단계("IP 주소"
+  등록)에 운영 서버 공인 IP(`49.247.139.234`)를 노출해야 했다. 절대 규칙(§2)은 이 값이
+  코드 여러 곳에 하드코딩되지 않고 한 곳에서 관리되길 요구했고, 문서 자체가 두 가지 방식을
+  예시로 제안했다: (1) 백엔드 설정값을 API 로 내려 프론트가 받아 표시, (2) 최소한 프론트
+  단일 상수.
+- **결정**: **(1) 백엔드 설정값 + 공개 API** 방식을 택했다.
+  1. `application.yml` 에 `app.public-server-ip: ${APP_PUBLIC_SERVER_IP:49.247.139.234}` 추가
+     — 기본값은 현재 운영 IP, 배포 환경변수로 오버라이드 가능(다른 `app.*` 설정과 동일한
+     패턴, `admin-emails`/`encryption.key` 옆에 나란히 둠).
+  2. 인증 불필요한 `GET /api/config` 신설(`PublicConfigController`, `web` 패키지 — 기존
+     `SpaForwardingController` 와 같은 위치, 도메인 로직이 아닌 "웹 계층 잡무"라 이 패키지가
+     맞다고 판단). `{"publicServerIp": "..."}` 하나만 응답.
+  3. 프론트(`Accounts.jsx`)는 마운트 시 `/api/config` 를 호출해 값을 받고, 실패 시
+     "조회 실패 — 새로고침 해주세요" 로 표시(값을 프론트에 직접 적지 않으므로 API 실패를
+     조용히 숨기지 않고 사용자에게 알림).
+  - **(2)안(프론트 상수) 대신 이걸 택한 이유**: 프론트 상수는 빌드 시점에 값이 고정되므로
+    서버 이전 시 프론트 재빌드+재배포가 반드시 필요하다. 백엔드 설정값은 서버 쪽
+    환경변수(`APP_PUBLIC_SERVER_IP`)만 바꾸고 앱을 재기동하면 끝나, "한 곳만 고치면 된다"는
+    원칙에 더 가깝다. API 엔드포인트 하나 늘리는 비용은 이미 `check-email` 같은 공개
+    엔드포인트 선례가 있어 크지 않다고 판단.
+  - **검증(AC "코드에서 IP 문자열이 2곳 이상 중복되지 않는다")**: `grep -rn "49.247.139.234"
+    --include=*.java --include=*.jsx --include=*.js --include=*.yml --include=*.yaml` 결과
+    `application.yml` 단 1곳만 매치(`CLAUDE.md` 는 검색 대상 확장자에서 제외되는 문서 파일이라
+    별개 — 문서 프로즈는 이 AC 의 "코드"가 아니라고 해석했다).
+- **가이드 UI 설계**: 기존 `.landing`/전역 토큰(`--loss`, `--loss-bg`, `.badge`)만 재사용해
+  IP 강조 박스를 만들었고, 새 색상은 도입하지 않았다. 아코디언은 별도 JS 상태 없이 네이티브
+  `<details open>`/`<summary>` 로 구현(접근성 기본 제공, 기본값 펼침 요구사항 자연스럽게 충족).
+- **자기 검수(HANDOFF.md §3)**: Chrome MCP 로 로그인 후 `/accounts` 실측 — 6단계 가이드 노출,
+  IP 강조 박스(배지+색상+복사 버튼)와 실제 값(`49.247.139.234`) 표시, WING 바로가기 링크
+  `target="_blank" rel="noopener noreferrer"` 확인. 복사 버튼의 `navigator.clipboard.writeText`
+  자체는 표준 패턴(문서 전역에서 흔한 구현)이나, 이 원격 자동화 브라우저 환경 특유의 클립보드
+  권한 프롬프트가 CDP 평가를 블로킹해 자동화로 "복사됨!" 문구까지 시각 확인은 못 했다(코드
+  로직·권한 상태(`navigator.permissions.query` → `granted`)·포커스(`document.hasFocus()` →
+  `true`)는 모두 정상 확인). 모바일 폭은 실제 창 리사이즈가 이 환경에서 반영되지 않아, 같은
+  오리진 iframe(375px 폭)으로 대체 검증 — 가이드 박스가 줄바꿈되며 가로 스크롤 없이 정상
+  렌더링됨을 확인했다(내비게이션 바 줄바꿈 등 기존 전역 반응형 이슈는 이번 변경 범위 밖).
+  기존 "새 쿠팡 계정 연동" 폼(제출/검증/에러 처리) 코드 자체는 손대지 않았음을 diff 로 확인.
