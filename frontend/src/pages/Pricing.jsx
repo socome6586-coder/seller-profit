@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { api, won } from "../api";
 import { useAuth } from "../auth.jsx";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 // 요금제 + 현재 구독 상태 + 구독/해지.
 //
@@ -8,6 +9,7 @@ import { useAuth } from "../auth.jsx";
 // 미설정이면 '구독' 버튼을 비활성화하고 안내만 한다. 실제 토스 SDK 카드 등록(authKey 발급)
 // 연동은 키 확보 후 마무리하는 단계(README/CLAUDE 의 'Phase 3 마무리' 참고).
 export default function Pricing() {
+  usePageTitle("요금제");
   const { user } = useAuth();
   const [plans, setPlans] = useState([]);
   const [sub, setSub] = useState(null);

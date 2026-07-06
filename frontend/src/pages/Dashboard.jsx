@@ -2,8 +2,11 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, won, pct, num, signClass } from "../api";
 import PeriodPicker, { computeRange } from "../components/PeriodPicker.jsx";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 export default function Dashboard() {
+  // 대시보드는 기존 <title>(index.html 기본값)을 그대로 유지(docs/trust-legal-tasks.md T15.3).
+  usePageTitle();
   const [accounts, setAccounts] = useState(null); // null=로딩, []=계정없음
   const [accountId, setAccountId] = useState("");
   // 기본 진입 = "이번 달"(docs/period-picker-tasks.md T9 9.1).

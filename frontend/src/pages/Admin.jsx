@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { api } from "../api";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 // 관리자 전용 화면(T10.5). 서버가 모든 /api/admin/** 를 role 로 강제하므로(AdminAccess),
 // 이 화면의 조건부 노출은 방어가 아니라 편의다 — 실제 방어는 App.jsx 의 라우트 가드 + 서버.
@@ -8,6 +9,7 @@ import { api } from "../api";
 //  - COMP 회수(PAID 는 대상 아님 → 버튼 비활성화 + 서버도 400)
 //  - 감사 로그(누가/언제/누구에게/무엇을)
 export default function Admin() {
+  usePageTitle("관리자");
   const [users, setUsers] = useState(null);
   const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(0);

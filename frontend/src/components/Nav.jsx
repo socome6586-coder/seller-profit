@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../auth.jsx";
+import { mailto } from "../contact";
 
 export default function Nav() {
   const { user, logout } = useAuth();
@@ -25,6 +26,10 @@ export default function Nav() {
           </NavLink>
         ) : null}
         <span className="spacer" />
+        {/* 문의 채널(docs/trust-legal-tasks.md T15.1) — 베타 단계라 mailto 로 충분, 전 화면 공통 nav 에 상시 노출. */}
+        <a className="nav-contact" href={mailto("seller-profit 문의")}>
+          문의하기
+        </a>
         <span className="who">{user?.email}</span>
         <button className="ghost" onClick={logout}>
           로그아웃

@@ -2,8 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, uploadFile, won, roas, num, signClass } from "../api";
 import PeriodPicker, { computeRange } from "../components/PeriodPicker.jsx";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 export default function AdRoi() {
+  usePageTitle("광고 ROI");
   const [accounts, setAccounts] = useState(null); // null=로딩, []=계정없음
   const [accountId, setAccountId] = useState("");
   // 기본 진입 = "이번 달"(docs/period-picker-tasks.md T9 9.4, 대시보드와 동일 컴포넌트 재사용).

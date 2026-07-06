@@ -21,6 +21,7 @@ import {
   IllustrationBrowserMock,
 } from "../components/LandingIcons.jsx";
 import "./Landing.css";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 // 공개 랜딩 페이지("/"). 비로그인 방문자에게 보여주는 첫 세일즈 자산.
 // 디자인 기준: docs/landing-mockup.html (섹션 순서·카피·색/타이포 그대로 구현, 스타일은 Landing.css 로 격리).
@@ -55,6 +56,7 @@ function useScrollReveal(dep) {
 }
 
 export default function Landing() {
+  usePageTitle("셀러프로핏 — 쿠팡 셀러 진짜 순이익 계산");
   const { user } = useAuth();
   const [plans, setPlans] = useState([]);
 

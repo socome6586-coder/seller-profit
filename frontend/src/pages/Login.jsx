@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth.jsx";
+import { usePageTitle } from "../hooks/usePageTitle";
+import { mailto } from "../contact";
 
 export default function Login() {
+  usePageTitle("로그인");
   const { login } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -49,6 +52,11 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
+          </div>
+          {/* 비밀번호 재설정 기능은 아직 없다(이메일 발송 인프라 미구축, docs/trust-legal-tasks.md
+              T15.2). 정식 기능 전까지 문의 채널로 임시 안내. */}
+          <div className="auth-forgot">
+            <a href={mailto("비밀번호 재설정 문의")}>비밀번호를 잊으셨나요? 문의하기</a>
           </div>
           {error ? <div className="note err">{error}</div> : null}
           <button type="submit" disabled={busy}>

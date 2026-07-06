@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
+import { mailto } from "../contact";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 // 쿠팡 계정 연동/해제. 키는 서버에서 암호화 저장되며 응답엔 절대 노출되지 않는다.
 // 플랜 한도(FREE=1개)는 서버가 강제하고, 화면은 한도 도달 시 폼을 잠근다.
 export default function Accounts() {
+  usePageTitle("계정 연동");
   const [accounts, setAccounts] = useState(null);
   const [plan, setPlan] = useState(null); // /api/subscription 의 plan (maxMarketAccounts 포함)
   const [vendorId, setVendorId] = useState("");
@@ -205,6 +208,10 @@ export default function Accounts() {
         <div className="guide-note muted">
           참고: 사업자 인증이 안 된 일반회원은 API 키 발급이 되지 않아요(이미 활성 쿠팡 셀러라면
           보통 문제 없습니다). 재발급·정보수정은 월 10회 제한, 유효기간 180일입니다.
+        </div>
+        {/* 문의 채널(docs/trust-legal-tasks.md T15.1) — 연동 실패가 가장 많이 발생하는 지점 바로 옆에 배치. */}
+        <div className="guide-note muted">
+          연동이 잘 안 되시나요? <a href={mailto("쿠팡 계정 연동 문의")}>문의하기</a>
         </div>
       </details>
 

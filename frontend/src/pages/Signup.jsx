@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth.jsx";
 import { checkEmailAvailable } from "../api";
+import { usePageTitle } from "../hooks/usePageTitle";
 import "./SignupValue.css";
 
 // 비밀번호: 8자 이상 + 영문 포함 + (숫자 또는 특수문자) 포함 — 요즘 방식 비밀번호 정책, 백엔드
@@ -119,6 +120,7 @@ const WatermarkGraph = (p) => (
 const EMAIL_IDLE = { checking: false, checkedFor: "", available: null, message: "" };
 
 export default function Signup() {
+  usePageTitle("무료로 시작하기");
   const { signup } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");

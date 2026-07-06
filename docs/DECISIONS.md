@@ -385,3 +385,60 @@
   정규식/이메일 중복확인)은 `agreed` 가드가 그 뒤에 순서대로 추가된 것만 diff 로 확인해
   회귀 없음을 검증했다. 모바일 폭(390px, 같은 오리진 iframe 대체 검증 — D7 과 동일 사유)에서
   `/privacy`·`/signup` 모두 가로 스크롤 없이 정상 줄바꿈됨을 확인했다.
+
+---
+
+## D9. 사용자 제보 버그 3건 수정(계정연동 자동완성/로그인 폰트/가입 이메일) + T15 신뢰·지원 보강
+
+- **날짜**: 2026-07-06
+- **관련**: `frontend/src/pages/Accounts.jsx`, `Login.jsx`, `Signup.jsx`, `styles.css`,
+  `frontend/src/contact.js`(신규), `frontend/src/hooks/usePageTitle.js`(신규),
+  `frontend/src/components/Nav.jsx`, `Legal.jsx`, `docs/trust-legal-tasks.md` T15
+- **배경**: 조민석 님이 스크린샷과 함께 3가지 버그를 제보했다 — (1) `/accounts` 의 쿠팡 계정
+  연동 폼(Access Key/Secret Key)에 브라우저가 로그인 이메일/비밀번호를 자동으로 채워 넣는
+  문제, (2) 로그인 화면 전체 글씨가 작다는 피드백 + 데모 계정 안내 문구 제거 요청, (3) 회원가입
+  이메일 필드에 한글이 그대로 입력·통과되는 문제. 같은 요청에서 T15(신뢰·지원 빠른 보강)를
+  이어서 진행하고 전체를 커밋+푸시하라는 지시도 포함됐다.
+- **결정**:
+  1. **자동완성 문제는 필드 타입/순서를 바꾸지 않고 표준 브라우저 신호만으로 억제.**
+     Chrome 비밀번호 관리자는 "이메일 필드 1개 + password 타입 필드 1개"가 있는 폼을 로그인
+     폼으로 오인하는 경향이 있다. 폼 자체 필드 구성(vendorId/accessKey/secretKey, 서버 요구
+     스펙)은 바꿀 이유가 없으므로, `<form autoComplete="off">` + 각 입력에 고유 `name` +
+     Secret Key(`type="password"`)에는 `autoComplete="new-password"`(브라우저가 "저장된
+     비밀번호 자동완성 금지"로 인식하는 표준값 — 단순 `off`는 Chrome 이 password 타입 필드에서
+     종종 무시함)를 적용했다. 서버 검증 로직·API 스펙은 전혀 손대지 않았다.
+  2. **로그인 화면 폰트 확대는 새 CSS 클래스를 만들지 않고 기존 공유 선택자(`.auth-wrap`,
+     `.auth-card`, `.auth-switch`) 값만 키웠다.** `.auth-wrap` 은 `Login.jsx` 전용(grep 으로
+     다른 사용처 없음을 확인)이고, `Signup.jsx` 는 항상 더 구체적인 `.auth-form-pane .auth-card
+     ...` 선택자로 이 값을 재정의하므로(CSS 우선순위상 항상 이긴다) Signup 화면 타이포에는
+     영향이 없다 — 실제로 edit 후 Signup 쪽 override 블록이 그대로 남아있음을 재확인했다.
+     데모 계정 안내(`데모 체험: demo@demo.local...`)는 요청대로 완전히 제거했다(seed 데모
+     계정 자체는 유지 — 로그인 기능에는 영향 없음, 화면 문구만 삭제).
+  3. **가입 이메일의 한글 입력 차단은 2중 방어로 구현.** `type="email"` 의 네이티브 브라우저
+     검증만으로는 한글 등 비ASCII 문자가 통과되는 사례가 실제로 재현됐다. 기존 `PASSWORD_RE`/
+     `PHONE_RE` 패턴과 동일한 스타일로 `EMAIL_RE`(ASCII local-part@domain.tld) 를 추가하고,
+     (a) 타이핑 즉시 비ASCII 문자를 제거하는 `stripNonEmailChars`(기존 `formatPhone` 과 같은
+     "입력 중 정제" 패턴)와 (b) 제출 시 `EMAIL_RE.test()` 가드를 함께 둬 우회 경로를 없앴다.
+  4. **T15.1 문의 채널은 이메일 주소를 한 곳(`contact.js`)에만 두고 여러 화면에서 재사용.**
+     Nav(전 화면 공통) + Accounts(연동 실패가 실제로 가장 많이 발생하는 지점, IP 가이드
+     바로 아래)에 배치했다 — task 문서가 권장한 배치와 일치.
+  5. **T15.2 비밀번호 재설정은 정식 기능을 새로 만들지 않았다.** `AuthController` 를 확인한
+     결과 재설정 엔드포인트도 이메일 발송 인프라도 없다(신규 인프라 구축은 이번 요청 범위를
+     크게 벗어난다). task 문서가 명시적으로 허용한 축소 범위대로, 로그인 화면 비밀번호 필드
+     아래에 "비밀번호를 잊으셨나요? 문의하기"(mailto) 링크만 추가해 최소 안전판을 뒀다.
+  6. **T15.3 페이지 제목은 공용 훅(`usePageTitle`)으로 통일.** `index.html` 의 정적
+     `<title>`이 모든 라우트에 고정돼 있던 문제라, 각 페이지 컴포넌트 최상단에서 훅을 호출해
+     라우트 전환마다 갱신되게 했다. 대시보드는 기존 문구를 그대로 유지(`usePageTitle()` 인자
+     없이 호출 → 훅 내부 기본값). `/privacy`·`/terms` 는 각자 반복하지 않고 공용 래퍼
+     `LegalPage` 한 곳에서만 `title` prop 을 그대로 넘겨 설정했다. 파비콘은 기존에 이미
+     `frontend/public/`에 정상 존재함을 재확인(추가 작업 불필요).
+- **검증 관련 특이사항(방법론 기록)**: 이번 세션에서 `npm run build` + 백엔드 재시작 후
+  Chrome MCP 로 라이브 검증을 시도했으나, 같은 `localhost:8088` 요청인데도 Bash/PowerShell
+  도구(`curl`, `netstat`)가 보는 서버 응답(최신 빌드 해시)과 실제 Chrome 브라우저가 받는
+  응답(하루 전 시각의 `Last-Modified`, 존재하지 않는 에셋 해시)이 서로 달랐다 —
+  `performance.getEntriesByType('navigation')` 의 `transferSize`(>0, 캐시 아님)와
+  `document.lastModified` 로 대조해 확인. 즉 이 자동화 환경에서 셸 도구와 브라우저 도구가
+  같은 머신의 같은 포트를 가리키지 않는(또는 브라우저 쪽이 별도 프로세스를 보는) 네트워크
+  불일치가 있어, **이 세션에서는 Chrome 을 통한 라이브 화면 검증이 신뢰할 수 없다고 판단**하고
+  코드 diff 재검토 + 빌드 성공 확인으로 갈음했다. 조민석 님 본인 브라우저에서 새로고침(또는
+  개발 서버 재시작 후)으로 최종 확인을 권장한다.

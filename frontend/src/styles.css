@@ -233,6 +233,10 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
 .auth-card .field input { width: 100%; font-size: 21px; padding: 13px 16px; }
 .auth-card .note { font-size: 19px; }
 .auth-card button { width: 100%; margin-top: 8px; padding: 15px 20px; font-size: 21px; }
+/* 비밀번호 재설정 임시 안내(docs/trust-legal-tasks.md T15.2) — 비밀번호 필드 바로 아래,
+   에러 메시지보다 위에 작게 배치. 정식 재설정 기능이 아니라 문의 채널 mailto 링크다. */
+.auth-forgot { text-align: right; margin: -10px 0 14px; font-size: 15px; }
+.auth-forgot a { color: var(--muted); }
 .auth-switch { color: var(--muted); font-size: 20px; margin-top: 22px; text-align: center; }
 .center-msg { text-align: center; color: var(--muted); padding: 60px 20px; }
 
