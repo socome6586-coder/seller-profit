@@ -214,18 +214,39 @@ export default function Accounts() {
           <Link to="/pricing">PRO 로 업그레이드</Link>하면 무제한으로 연동할 수 있어요.
         </div>
       ) : (
-        <form className="panel" onSubmit={connect}>
+        // 브라우저(특히 Chrome) 비밀번호 관리자가 이 폼을 로그인 폼으로 오인해 저장된 로그인
+        // 이메일/비밀번호를 Access Key/Secret Key 칸에 자동완성하는 문제가 있었다. autoComplete="off"
+        // 는 Chrome이 종종 무시하므로, 폼 전체에 autoComplete="off"를 걸고 Secret Key는
+        // "new-password"(저장된 비밀번호를 채우지 말라는 표준 신호)로 지정해 억제한다.
+        <form className="panel" onSubmit={connect} autoComplete="off">
           <div className="field">
             <label>업체코드 (vendorId)</label>
-            <input value={vendorId} onChange={(e) => setVendorId(e.target.value)} placeholder="예: A00012345" />
+            <input
+              value={vendorId}
+              onChange={(e) => setVendorId(e.target.value)}
+              placeholder="예: A00012345"
+              autoComplete="off"
+              name="coupang-vendor-id"
+            />
           </div>
           <div className="field">
             <label>Access Key</label>
-            <input value={accessKey} onChange={(e) => setAccessKey(e.target.value)} autoComplete="off" />
+            <input
+              value={accessKey}
+              onChange={(e) => setAccessKey(e.target.value)}
+              autoComplete="off"
+              name="coupang-access-key"
+            />
           </div>
           <div className="field">
             <label>Secret Key</label>
-            <input type="password" value={secretKey} onChange={(e) => setSecretKey(e.target.value)} autoComplete="off" />
+            <input
+              type="password"
+              value={secretKey}
+              onChange={(e) => setSecretKey(e.target.value)}
+              autoComplete="new-password"
+              name="coupang-secret-key"
+            />
           </div>
           <button type="submit" disabled={busy}>{busy ? "연동 중…" : "계정 연동"}</button>
         </form>

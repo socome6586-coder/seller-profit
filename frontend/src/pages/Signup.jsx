@@ -9,6 +9,15 @@ import "./SignupValue.css";
 const PASSWORD_RE = /^(?=.*[A-Za-z])(?=.*[0-9!@#$%^&*()_\-+=[\]{};:'",.<>/?]).{8,}$/;
 // 휴대전화번호: 01x + 7~8자리(총 10~11자리), 하이픈은 표시용이라 검증 전 제거.
 const PHONE_RE = /^01[016789]\d{7,8}$/;
+// 이메일: 브라우저의 type="email" 기본 검증은 느슨해 한글 등 비ASCII 문자가 섞여도 통과되는
+// 경우가 있어(실제로 가입 화면에서 한글 입력이 그대로 통과되는 문제 발견), 서버가 실제로 쓸 수
+// 있는 형태(ASCII local-part@domain.tld)로 직접 제한한다.
+const EMAIL_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+
+// 이메일 입력 중 한글 등 비ASCII 문자를 즉시 걸러낸다(타이핑 시점에 막아 제출 전에 이미 못 들어가게).
+function stripNonEmailChars(raw) {
+  return raw.replace(/[^\x21-\x7E]/g, "");
+}
 
 // 입력 중 자동으로 하이픈을 붙여준다(010-1234-5678 형태). 숫자만 최대 11자리로 제한.
 function formatPhone(raw) {
@@ -122,7 +131,7 @@ export default function Signup() {
   const [busy, setBusy] = useState(false);
 
   function onEmailChange(e) {
-    setEmail(e.target.value);
+    setEmail(stripNonEmailChars(e.target.value));
     // 이메일을 다시 고치면 이전 확인 결과는 더 이상 유효하지 않으니 초기화.
     setEmailCheck(EMAIL_IDLE);
   }
@@ -154,6 +163,10 @@ export default function Signup() {
     const trimmedEmail = email.trim();
     const phoneDigits = phone.replace(/\D/g, "");
 
+    if (!EMAIL_RE.test(trimmedEmail)) {
+      setError("이메일 형식이 올바르지 않습니다. (한글 등 특수 문자는 사용할 수 없어요)");
+      return;
+    }
     if (!PASSWORD_RE.test(password)) {
       setError("비밀번호는 8자 이상이며 영문과 숫자 또는 특수문자를 함께 포함해야 합니다.");
       return;

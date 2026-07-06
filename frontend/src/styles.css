@@ -213,21 +213,27 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
   .onboarding-card { padding: 34px 20px; }
 }
 
-/* 인증 화면(로그인/가입) */
-.auth-wrap { max-width: 400px; margin: 72px auto; padding: 0 20px; }
+/* 인증 화면(로그인/가입) — .auth-card/.auth-switch 는 Login.jsx(.auth-wrap)와 Signup.jsx(.auth-form-pane)
+   둘 다 쓰지만, Signup 쪽은 아래(233번 줄~)에서 .auth-form-pane .auth-card ... 로 항상 더 구체적인
+   선택자로 재정의하므로, 여기 기본값을 키워도 실제로는 Login 화면에만 적용된다(사용자 요청:
+   로그인 화면 전체 폰트 1.5배 확대).
+*/
+.auth-wrap { max-width: 460px; margin: 72px auto; padding: 0 20px; }
 .auth-card {
   background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-lg);
-  padding: 30px 28px; box-shadow: var(--shadow-lg); position: relative; overflow: hidden;
+  padding: 36px 32px; box-shadow: var(--shadow-lg); position: relative; overflow: hidden;
 }
 .auth-card::before {
   content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px;
   background: linear-gradient(90deg, var(--text), var(--accent));
 }
-.auth-card h1 { font-size: 21px; margin: 0 0 20px; }
-.auth-card .field { margin-bottom: 15px; }
-.auth-card .field input { width: 100%; }
-.auth-card button { width: 100%; margin-top: 8px; padding: 11px 20px; }
-.auth-switch { color: var(--muted); font-size: 13px; margin-top: 18px; text-align: center; }
+.auth-card h1 { font-size: 31px; margin: 0 0 24px; }
+.auth-card .field { margin-bottom: 20px; }
+.auth-card .field label { font-size: 17px; }
+.auth-card .field input { width: 100%; font-size: 21px; padding: 13px 16px; }
+.auth-card .note { font-size: 19px; }
+.auth-card button { width: 100%; margin-top: 8px; padding: 15px 20px; font-size: 21px; }
+.auth-switch { color: var(--muted); font-size: 20px; margin-top: 22px; text-align: center; }
 .center-msg { text-align: center; color: var(--muted); padding: 60px 20px; }
 
 /* 회원가입 풀블리드 1:1 2단 레이아웃(docs/signup-tasks.md T11.2) — 좌: 기존 .auth-card 폼(변경 없음),
