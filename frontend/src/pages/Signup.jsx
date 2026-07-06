@@ -117,6 +117,7 @@ export default function Signup() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [emailCheck, setEmailCheck] = useState(EMAIL_IDLE);
+  const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -167,6 +168,10 @@ export default function Signup() {
     }
     if (emailCheck.checkedFor === trimmedEmail && emailCheck.available === false) {
       setError("이미 가입된 이메일입니다.");
+      return;
+    }
+    if (!agreed) {
+      setError("이용약관 및 개인정보 수집·이용에 동의해주세요.");
       return;
     }
 
@@ -259,8 +264,25 @@ export default function Signup() {
                 />
                 <div className="field-hint">가입 확인 및 중복가입 방지에 사용돼요.</div>
               </div>
+              {/* 법적 필수: 동의 없이는 가입 버튼 자체를 잠근다(docs/trust-legal-tasks.md T14.2).
+                  초기 베타는 이용약관+개인정보 동의를 체크박스 하나로 묶었다(docs/DECISIONS.md 참고). */}
+              <div className="field checkbox-field">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={agreed}
+                    onChange={(e) => setAgreed(e.target.checked)}
+                    required
+                  />
+                  <span>
+                    [필수] <Link to="/terms" target="_blank" rel="noopener noreferrer">이용약관</Link> 및{" "}
+                    <Link to="/privacy" target="_blank" rel="noopener noreferrer">개인정보 수집·이용</Link>에
+                    동의합니다.
+                  </span>
+                </label>
+              </div>
               {error ? <div className="note err">{error}</div> : null}
-              <button type="submit" disabled={busy}>
+              <button type="submit" disabled={busy || !agreed}>
                 {busy ? "가입 중…" : "무료 가입"}
               </button>
             </form>

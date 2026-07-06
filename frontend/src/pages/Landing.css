@@ -254,6 +254,9 @@
 .landing .l-footer-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .landing .l-footer-brand { font-size: 15px; }
 .landing .l-footer-copy { color: var(--l-muted); font-size: 13px; }
+.landing .l-footer-legal { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--l-muted); }
+.landing .l-footer-legal a { color: var(--l-muted); text-decoration: underline; }
+.landing .l-footer-legal a:hover { color: var(--l-ink); }
 
 @media (max-width: 820px) {
   .landing .l-hero-grid { grid-template-columns: 1fr; gap: 36px; }

@@ -267,6 +267,21 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
 .field-hint { font-size: 11px; color: var(--muted); margin-top: 4px; line-height: 1.3; }
 .auth-form-pane .field-hint { font-size: 15px; }
 
+/* 회원가입 필수 동의 체크박스(docs/trust-legal-tasks.md T14.2) — 전역 input 규칙(배경/테두리/
+   min-width 등)이 체크박스에도 적용돼 모양이 깨지므로 크기·여백만 명시적으로 되돌린다. */
+.checkbox-field { margin: 2px 0 8px; }
+.checkbox-label {
+  display: flex; align-items: flex-start; gap: 8px; font-size: 13px;
+  color: var(--muted); cursor: pointer; line-height: 1.5;
+}
+.checkbox-label input[type="checkbox"] {
+  width: 16px; height: 16px; min-width: 16px; margin: 3px 0 0; padding: 0;
+  border-radius: 4px; accent-color: var(--accent);
+}
+.checkbox-label a { color: var(--text); font-weight: 600; text-decoration: underline; }
+.auth-form-pane .checkbox-label { font-size: 15px; }
+.auth-form-pane .checkbox-label input[type="checkbox"] { width: 18px; height: 18px; min-width: 18px; }
+
 /* 좌측 배경 장식 — 우측 가치 패널의 블롭+워터마크 그래프와 대칭되는 저채도 텍스처를 깔아
    카드 하나만 화면 가운데 덩그러니 떠 있는 느낌을 없앤다. 새 색상 없이 기존 전역 토큰만 재사용. */
 .auth-form-decor { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
@@ -419,4 +434,20 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+/* 법적 문서 페이지(/privacy, /terms — docs/trust-legal-tasks.md T14.1). 비로그인 방문자가
+   랜딩 푸터·회원가입 화면에서 바로 들어올 수 있어 전역 Nav 가 없을 수 있다 — 자체 상단 여백과
+   "← 홈으로" 링크를 둔다. .legal-todo 는 조민석 님이 직접 채워야 하는 [작성 필요] 항목을
+   loss 톤(기존 토큰)으로 눈에 띄게 강조한다. */
+.legal-page { padding-top: 32px; max-width: 760px; }
+.legal-back { margin-bottom: 18px; font-size: 13px; }
+.legal-page h2 { font-size: 16px; margin: 30px 0 10px; }
+.legal-page h2:first-of-type { margin-top: 20px; }
+.legal-page p, .legal-page li { font-size: 14px; line-height: 1.7; color: var(--text); }
+.legal-page ul, .legal-page ol { padding-left: 20px; margin: 8px 0; }
+.legal-updated { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+.legal-todo {
+  background: var(--loss-bg); color: var(--loss); font-weight: 700;
+  padding: 1px 7px; border-radius: 6px; font-size: 13px;
 }

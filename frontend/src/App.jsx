@@ -9,6 +9,8 @@ import Accounts from "./pages/Accounts.jsx";
 import Pricing from "./pages/Pricing.jsx";
 import AdRoi from "./pages/AdRoi.jsx";
 import Admin from "./pages/Admin.jsx";
+import Privacy from "./pages/Privacy.jsx";
+import Terms from "./pages/Terms.jsx";
 
 // 로그인 필요한 라우트의 '벽'. 확인 중이면 로딩, 비로그인이면 /login 으로.
 function Protected({ children }) {
@@ -89,6 +91,9 @@ export default function App() {
             </AdminOnly>
           }
         />
+        {/* 법적 필수 페이지(docs/trust-legal-tasks.md T14) — 로그인 여부와 무관하게 항상 공개 접근 가능. */}
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </>

@@ -327,6 +327,12 @@ export default function Landing() {
             SELLER PROFIT
           </div>
           <div className="l-footer-copy">쿠팡 셀러를 위한 진짜 순이익 분석 · 얼리액세스 단계</div>
+          {/* 법적 필수 페이지 링크(docs/trust-legal-tasks.md T14.1) — 랜딩 푸터에서 항상 도달 가능해야 함 */}
+          <div className="l-footer-legal">
+            <Link to="/terms">이용약관</Link>
+            <span aria-hidden="true">·</span>
+            <Link to="/privacy">개인정보처리방침</Link>
+          </div>
         </div>
       </footer>
     </div>
