@@ -117,6 +117,13 @@ public class SubscriptionService {
      * 유저 본인의 구독 화면({@code /api/subscription})에 혼란스러운 값이 계속 노출된다(플랜
      * 게이팅 자체는 {@link PlanType#fromStatus} 가 상태만 보므로 영향 없었지만, 표시값은 버그였음).
      *
+     * <p>이미 FREE(= 회수 대상이 없음)인 COMP 유저를 다시 회수하려 하면 400 으로 막는다.
+     * source=COMP 인 유저는 항상 ACTIVE(지급중) 아니면 FREE(회수됨/만료됨) 둘 중 하나뿐이라
+     * ({@link com.sellerprofit.billing.BillingService} 의 지급/만료 경로 참고), 이 검사 하나로
+     * "지금 실제로 회수할 지급이 있는가"를 정확히 가른다. 관리자 화면에서 이미 회수된 계정의
+     * 회수 버튼이 계속 눌리는 상태로 남아있던 문제(before=FREE/after=FREE 인 의미없는 감사
+     * 로그만 계속 쌓임)의 근본 원인이라, 프론트(회수 버튼 disabled 조건)와 함께 여기서도 막는다.
+     *
      * @param userId 회수 대상
      * @return 감사 로그 기록용 회수 전 상태
      */
@@ -126,6 +133,9 @@ public class SubscriptionService {
                 .orElseThrow(() -> new IllegalArgumentException("User 없음: " + userId));
         if (user.getSource() != SubscriptionSource.COMP) {
             throw new IllegalArgumentException("무상(COMP) 지급 구독만 회수할 수 있습니다.");
+        }
+        if (user.getSubscriptionStatus() != SubscriptionStatus.ACTIVE) {
+            throw new IllegalArgumentException("이미 회수되었거나 활성 상태가 아니어서 회수할 지급이 없습니다.");
         }
         SubscriptionStatus before = user.getSubscriptionStatus();
         user.setSubscriptionStatus(SubscriptionStatus.FREE);

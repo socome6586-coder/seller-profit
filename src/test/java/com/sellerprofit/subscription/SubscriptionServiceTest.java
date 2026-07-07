@@ -118,4 +118,18 @@ class SubscriptionServiceTest {
         assertThrows(IllegalArgumentException.class, () -> subscriptionService.revokeComp(5L));
         assertEquals(SubscriptionStatus.ACTIVE, user.getSubscriptionStatus());
     }
+
+    @Test
+    void 이미_FREE인_COMP_구독은_다시_회수할_수_없다_400() {
+        // 관리자 화면 버그: 이미 회수된(= 회수할 지급이 없는) COMP 유저의 회수 버튼이 계속
+        // 활성 상태로 남아 다시 눌리던 문제의 서버측 방어. before=FREE/after=FREE 인 의미없는
+        // 감사 로그가 쌓이지 않도록 여기서 400 으로 막는다.
+        User user = User.create("alreadyrevoked@test.local", "hash");
+        user.setSubscriptionStatus(SubscriptionStatus.FREE);
+        user.setSource(SubscriptionSource.COMP);
+        when(userRepository.findById(6L)).thenReturn(Optional.of(user));
+
+        assertThrows(IllegalArgumentException.class, () -> subscriptionService.revokeComp(6L));
+        assertEquals(SubscriptionStatus.FREE, user.getSubscriptionStatus());
+    }
 }

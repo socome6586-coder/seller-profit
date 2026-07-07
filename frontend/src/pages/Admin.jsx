@@ -6,7 +6,7 @@ import { usePageTitle } from "../hooks/usePageTitle";
 // 이 화면의 조건부 노출은 방어가 아니라 편의다 — 실제 방어는 App.jsx 의 라우트 가드 + 서버.
 //  - 유저 표: role/plan/source/만료일 + PRO N개월 무상 지급(source=COMP, 결제와 분리)
 //  - role 토글(마지막 ADMIN 잠금/자기 자신 해제는 서버가 400 으로 막고 메시지를 그대로 보여준다)
-//  - COMP 회수(PAID 는 대상 아님 → 버튼 비활성화 + 서버도 400)
+//  - COMP 회수(PAID 는 대상 아님, 이미 회수돼 FREE 인 COMP 도 대상 아님 → 버튼 비활성화 + 서버도 400)
 //  - 감사 로그(누가/언제/누구에게/무엇을)
 export default function Admin() {
   usePageTitle("관리자");
@@ -181,8 +181,16 @@ export default function Admin() {
                     <button
                       className="ghost"
                       onClick={() => revoke(u)}
-                      disabled={busyId === u.userId || u.source !== "COMP"}
-                      title={u.source !== "COMP" ? "무상(COMP) 지급만 회수할 수 있습니다." : undefined}
+                      disabled={
+                        busyId === u.userId || u.source !== "COMP" || u.subscriptionStatus !== "ACTIVE"
+                      }
+                      title={
+                        u.source !== "COMP"
+                          ? "무상(COMP) 지급만 회수할 수 있습니다."
+                          : u.subscriptionStatus !== "ACTIVE"
+                          ? "이미 회수되어 회수할 지급이 없습니다."
+                          : undefined
+                      }
                     >
                       회수
                     </button>
