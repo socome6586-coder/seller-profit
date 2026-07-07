@@ -10,12 +10,28 @@ async function parseError(res) {
   }
 }
 
+// CSRF 더블 서브밋 쿠키(백엔드 CsrfFilter 참고). 서버가 모든 요청에 XSRF-TOKEN 쿠키를
+// (HttpOnly 아님) 심어주므로, 상태 변경 요청(GET/HEAD 이외)엔 그 값을 그대로 헤더로 되돌려준다.
+function readCsrfCookie() {
+  const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+function csrfHeaders(method) {
+  if (method === "GET" || method === "HEAD") return {};
+  const token = readCsrfCookie();
+  return token ? { "X-XSRF-TOKEN": token } : {};
+}
+
 /** JSON 요청. 실패(>=400) 시 서버 error 메시지를 담은 Error 를 던진다. status 도 붙인다. */
 export async function api(path, { method = "GET", body } = {}) {
   const res = await fetch(path, {
     method,
     credentials: "same-origin",
-    headers: body ? { "Content-Type": "application/json" } : undefined,
+    headers: {
+      ...(body ? { "Content-Type": "application/json" } : {}),
+      ...csrfHeaders(method),
+    },
     body: body ? JSON.stringify(body) : undefined,
   });
   if (res.status === 204) return null;
@@ -34,6 +50,7 @@ export async function uploadFile(path, formData) {
   const res = await fetch(path, {
     method: "POST",
     credentials: "same-origin",
+    headers: csrfHeaders("POST"),
     body: formData,
   });
   if (!res.ok) {

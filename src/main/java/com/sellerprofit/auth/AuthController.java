@@ -5,12 +5,14 @@ import com.sellerprofit.auth.dto.LoginRequest;
 import com.sellerprofit.auth.dto.PasswordResetConfirmRequest;
 import com.sellerprofit.auth.dto.PasswordResetRequestRequest;
 import com.sellerprofit.auth.dto.SignupRequest;
+import com.sellerprofit.security.RateLimiter;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Duration;
 import java.util.Map;
 
 /**
@@ -29,6 +32,7 @@ import java.util.Map;
  *     POST /api/auth/login   {"email":"a@b.com","password":"secret123","remember":true} → 세션에 userId 저장
  *     POST /api/auth/logout  → 세션 무효화(204)
  *     GET  /api/auth/me      → 현재 로그인 유저(세션 없으면 401)
+ *     DELETE /api/auth/me    → 회원 탈퇴(연동 데이터 전부 삭제 + 로그아웃), 관리자는 불가
  *     POST /api/auth/password-reset/request {"email":"a@b.com"} → 항상 204(계정 존재 여부 노출 안 함)
  *     POST /api/auth/password-reset/confirm {"token":"...","newPassword":"..."} → 204
  */
@@ -44,21 +48,28 @@ public class AuthController {
 
     private final AuthService authService;
     private final PasswordResetService passwordResetService;
+    private final RateLimiter rateLimiter;
 
-    public AuthController(AuthService authService, PasswordResetService passwordResetService) {
+    public AuthController(AuthService authService, PasswordResetService passwordResetService,
+                           RateLimiter rateLimiter) {
         this.authService = authService;
         this.passwordResetService = passwordResetService;
+        this.rateLimiter = rateLimiter;
     }
 
     /** 가입 폼의 이메일 "중복확인" 버튼이 호출한다. 존재 여부만 boolean 으로 응답. */
     @GetMapping("/check-email")
-    public Map<String, Boolean> checkEmail(@RequestParam String email) {
+    public Map<String, Boolean> checkEmail(@RequestParam String email, HttpServletRequest http) {
+        // 이메일 존재 여부를 노출하는 열거형 엔드포인트라 스크립트 전수조사 위험이 있다 — IP 기준으로만 제한.
+        rateLimiter.check("check-email:" + rateLimiter.clientIp(http), 30, Duration.ofMinutes(10));
         return Map.of("available", authService.isEmailAvailable(email));
     }
 
     @PostMapping("/signup")
     @ResponseStatus(HttpStatus.CREATED)
-    public AuthUserView signup(@Valid @RequestBody SignupRequest request) {
+    public AuthUserView signup(@Valid @RequestBody SignupRequest request, HttpServletRequest http) {
+        // 가입 스팸/자동화 방지: IP 기준 시간당 10건.
+        rateLimiter.check("signup:" + rateLimiter.clientIp(http), 10, Duration.ofHours(1));
         return authService.signup(request.email(), request.password(), request.phone());
     }
 
@@ -74,6 +85,10 @@ public class AuthController {
     @PostMapping("/login")
     public AuthUserView login(@Valid @RequestBody LoginRequest request, HttpServletRequest http,
                                HttpServletResponse response) {
+        // 크리덴셜 스터핑 방지: IP 기준(넓게) + 이메일 기준(좁게) 이중 제한. 성공/실패 모두 카운트해
+        // 결과에 따라 카운트 방식이 달라지지 않게 한다(계정 존재 여부 등 정보가 새지 않도록).
+        rateLimiter.check("login-ip:" + rateLimiter.clientIp(http), 30, Duration.ofMinutes(10));
+        rateLimiter.check("login-email:" + request.email().trim().toLowerCase(), 8, Duration.ofMinutes(10));
         AuthUserView user = authService.login(request.email(), request.password());
         // 세션 고정 공격 방지: 로그인 시점에 새 세션을 발급한다.
         HttpSession old = http.getSession(false);
@@ -117,20 +132,41 @@ public class AuthController {
     }
 
     /**
+     * 회원 탈퇴. 본인 확인은 세션(로그인 상태)만으로 충분하다고 보고 별도 비밀번호 재입력은
+     * 요구하지 않는다(프런트에서 명시적 문구 재입력 확인을 받는다). 성공 시 세션도 함께 무효화한다.
+     */
+    @DeleteMapping("/me")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void withdraw(HttpServletRequest http) {
+        HttpSession session = http.getSession(false);
+        Object userId = session == null ? null : session.getAttribute(SESSION_USER_ID);
+        if (userId == null) {
+            throw new UnauthorizedException("로그인이 필요합니다.");
+        }
+        authService.withdraw((Long) userId);
+        session.invalidate();
+    }
+
+    /**
      * 비밀번호 재설정 이메일 요청. 가입된 이메일이든 아니든 항상 204 — 응답만으로 계정 존재
      * 여부를 알 수 없게 한다(계정 열거 방지). SMTP 미설정 시 서버 로그에 링크가 남는다
      * (EmailService 참고).
      */
     @PostMapping("/password-reset/request")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void requestPasswordReset(@Valid @RequestBody PasswordResetRequestRequest request) {
+    public void requestPasswordReset(@Valid @RequestBody PasswordResetRequestRequest request, HttpServletRequest http) {
+        // 이메일 폭탄/SMTP 어뷰징 방지: 이메일 기준(좁게) + IP 기준(넓게) 이중 제한.
+        rateLimiter.check("reset-request-email:" + request.email().trim().toLowerCase(), 5, Duration.ofHours(1));
+        rateLimiter.check("reset-request-ip:" + rateLimiter.clientIp(http), 20, Duration.ofHours(1));
         passwordResetService.requestReset(request.email());
     }
 
     /** 재설정 토큰 확정: 새 비밀번호로 교체. 토큰이 유효하지 않거나 만료/사용됨이면 400. */
     @PostMapping("/password-reset/confirm")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void confirmPasswordReset(@Valid @RequestBody PasswordResetConfirmRequest request) {
+    public void confirmPasswordReset(@Valid @RequestBody PasswordResetConfirmRequest request, HttpServletRequest http) {
+        // 토큰은 32byte SecureRandom(사실상 추측 불가)이라 실위험은 낮지만 방어심층화 차원에서 IP 제한.
+        rateLimiter.check("reset-confirm-ip:" + rateLimiter.clientIp(http), 20, Duration.ofHours(1));
         passwordResetService.confirmReset(request.token(), request.newPassword());
     }
 }

@@ -63,6 +63,11 @@ services:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-}
       # KR1-Lite(RAM 1~2GB, 스왑 2GB) 대응 — Postgres/Caddy 와 공존할 수 있게 힙 상한을 둔다.
       JAVA_TOOL_OPTIONS: ${APP_JAVA_OPTS:--Xmx384m -XX:MaxMetaspaceSize=128m}
+      # 보안 감사(2026-07) 후속 조치 — 운영은 HTTPS(Caddy) 뒤이므로 세션 쿠키를 Secure 전용으로 강제한다.
+      # (application.yml 은 로컬 seed 프로파일과 공유돼 여기서만 켠다 — 로컬은 평문 HTTP 라 켜면 로그인 자체가 깨짐.)
+      SERVER_SERVLET_SESSION_COOKIE_SECURE: "true"
+      # 운영 로그에 SQL 구조가 상시 노출/누적되지 않게 낮춘다(로컬 개발은 application.yml 기본값 debug 유지).
+      LOGGING_LEVEL_ORG_HIBERNATE_SQL: WARN
 
   caddy:
     image: caddy:2-alpine

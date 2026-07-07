@@ -1,4 +1,5 @@
 import LegalPage, { LegalTodo } from "../components/Legal.jsx";
+import { CONTACT_EMAIL } from "../contact.js";
 
 // 개인정보처리방침("/privacy"). docs/trust-legal-tasks.md T14.1.
 //
@@ -92,20 +93,22 @@ export default function Privacy() {
         불만처리 및 피해구제 등을 위하여 아래와 같이 개인정보 보호책임자를 지정하고 있습니다.
       </p>
       <ul>
-        <li>성명: <LegalTodo>담당자 성명</LegalTodo></li>
-        <li>연락처(이메일): <LegalTodo>조민석 님 연락처/이메일</LegalTodo></li>
+        <li>성명: 조민석</li>
+        <li>연락처(이메일): {CONTACT_EMAIL}</li>
       </ul>
 
       <h2>9. 사업자 정보</h2>
       <p>
+        상호: 투민컴퍼니(TWO-MIN's Company)
+        <br />
         <LegalTodo>
-          상호·대표자·사업자등록번호·주소 — 사업자등록 완료 후 기입(CLAUDE.md 기준 현재
-          사업자등록 전 단계)
+          대표자·사업자등록번호·사업장 주소 — 사업자등록 승인 완료 후 기입(2026-07-07 기준
+          홈택스 신청 접수, 승인 대기 중)
         </LegalTodo>
       </p>
 
       <h2>10. 시행일자</h2>
-      <p><LegalTodo>실제 게시일 확정 후 기입</LegalTodo></p>
+      <p>2026년 7월 7일</p>
     </LegalPage>
   );
 }

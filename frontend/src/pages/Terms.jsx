@@ -90,7 +90,7 @@ export default function Terms() {
       </p>
 
       <h2>부칙</h2>
-      <p>본 약관은 <LegalTodo>실제 게시일 확정 후 기입</LegalTodo>부터 적용됩니다.</p>
+      <p>본 약관은 2026년 7월 7일부터 적용됩니다.</p>
     </LegalPage>
   );
 }

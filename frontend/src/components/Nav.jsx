@@ -20,6 +20,9 @@ export default function Nav() {
         <NavLink to="/pricing" className={({ isActive }) => (isActive ? "active" : "")}>
           요금제
         </NavLink>
+        <NavLink to="/mypage" className={({ isActive }) => (isActive ? "active" : "")}>
+          마이페이지
+        </NavLink>
         {user?.role === "ADMIN" ? (
           <NavLink to="/admin" className={({ isActive }) => (isActive ? "active" : "")}>
             관리자

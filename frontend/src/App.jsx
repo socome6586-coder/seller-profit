@@ -8,6 +8,7 @@ import ResetPassword from "./pages/ResetPassword.jsx";
 import Signup from "./pages/Signup.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Accounts from "./pages/Accounts.jsx";
+import MyPage from "./pages/MyPage.jsx";
 import Pricing from "./pages/Pricing.jsx";
 import AdRoi from "./pages/AdRoi.jsx";
 import Admin from "./pages/Admin.jsx";
@@ -76,6 +77,14 @@ export default function App() {
           element={
             <Protected>
               <AdRoi />
+            </Protected>
+          }
+        />
+        <Route
+          path="/mypage"
+          element={
+            <Protected>
+              <MyPage />
             </Protected>
           }
         />

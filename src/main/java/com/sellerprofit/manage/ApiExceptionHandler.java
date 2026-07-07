@@ -2,6 +2,7 @@ package com.sellerprofit.manage;
 
 import com.sellerprofit.admin.ForbiddenException;
 import com.sellerprofit.auth.UnauthorizedException;
+import com.sellerprofit.security.TooManyRequestsException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -45,6 +46,12 @@ public class ApiExceptionHandler {
     @ExceptionHandler(ForbiddenException.class)
     public ResponseEntity<Map<String, String>> handleForbidden(ForbiddenException e) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
+    }
+
+    /** 로그인/가입/비밀번호 재설정 등에 짧은 시간 안에 너무 많이 시도 → 429. */
+    @ExceptionHandler(TooManyRequestsException.class)
+    public ResponseEntity<Map<String, String>> handleTooManyRequests(TooManyRequestsException e) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(Map.of("error", e.getMessage()));
     }
 
     /** 기능이 아직 준비 안 됨(예: 토스 결제 키 미설정) → 503. */

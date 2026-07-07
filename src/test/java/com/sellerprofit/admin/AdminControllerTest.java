@@ -8,6 +8,7 @@ import com.sellerprofit.domain.type.Role;
 import com.sellerprofit.manage.ApiExceptionHandler;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
@@ -37,7 +38,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * (AdminAccessTest 가 가드 컴포넌트 자체는 이미 단위 검증했고, 여기서는 실제 컨트롤러+
  * ApiExceptionHandler 조합으로 "비관리자 403 / 미로그인 401 / 관리자 200" 을 확인한다.)
  */
+// addFilters=false: 이 테스트는 컨트롤러의 role 강제(403/401/200)만 검증한다.
+// CsrfFilter(security 패키지) 는 Filter 빈이라 슬라이스 컨텍스트에도 자동 포함되는데, 여기서
+// 검증 대상이 아니므로 꺼둔다 — CSRF 자체 동작은 CsrfFilterTest 가 별도로 검증한다.
 @WebMvcTest(AdminController.class)
+@AutoConfigureMockMvc(addFilters = false)
 @Import(ApiExceptionHandler.class)
 class AdminControllerTest {
 

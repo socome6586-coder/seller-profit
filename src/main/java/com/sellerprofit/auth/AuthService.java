@@ -3,6 +3,7 @@ package com.sellerprofit.auth;
 import com.sellerprofit.admin.AdminBootstrapService;
 import com.sellerprofit.auth.dto.AuthUserView;
 import com.sellerprofit.domain.User;
+import com.sellerprofit.domain.type.Role;
 import com.sellerprofit.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -74,6 +75,27 @@ public class AuthService {
         return userRepository.findById(userId)
                 .map(AuthUserView::of)
                 .orElseThrow(() -> new IllegalArgumentException("User 없음: " + userId));
+    }
+
+    /**
+     * 회원 탈퇴: {@code users} row 를 삭제하면 DB 의 {@code ON DELETE CASCADE} 로 연동 계정
+     * (market_accounts)·상품·주문·정산·반품·원가·광고비·비밀번호 재설정 토큰까지 전부 함께
+     * 삭제된다(V1~V7 마이그레이션 참고). User 엔티티엔 JPA 연관관계가 없어 이 삭제 자체가
+     * DB 레벨 캐스케이드에 온전히 의존한다는 점에 유의.
+     *
+     * <p>관리자 계정은 이 경로로 탈퇴시키지 않는다 — admin_audit.admin_user_id/target_user_id
+     * 는 CASCADE 없이 users 를 참조하므로 감사기록이 있으면 FK 위반이 나고, 마지막 관리자가
+     * 실수로 사라지는 사고도 막아야 하기 때문이다. 관리자 본인 탈퇴는 문의처로 안내한다.
+     */
+    @Transactional
+    public void withdraw(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User 없음: " + userId));
+        if (user.getRole() == Role.ADMIN) {
+            throw new IllegalArgumentException(
+                    "관리자 계정은 이 화면에서 탈퇴할 수 없습니다. 문의하기로 요청해 주세요.");
+        }
+        userRepository.delete(user);
     }
 
     private static String normalize(String email) {
