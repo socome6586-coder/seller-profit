@@ -210,7 +210,7 @@ export default function Admin() {
 
       <h2>감사 로그</h2>
       <div className="table-scroll">
-        <table>
+        <table className="audit-table">
           <thead>
             <tr>
               <th>일시</th>

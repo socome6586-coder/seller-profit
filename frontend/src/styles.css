@@ -29,20 +29,20 @@ a { color: var(--accent); text-decoration: none; }
   display: flex; align-items: center; gap: 6px;
   max-width: 1100px; margin: 0 auto; padding: 14px 24px;
 }
-.nav .brand { font-weight: 800; font-size: 17px; letter-spacing: -.01em; margin-right: 14px; }
+.nav .brand { font-weight: 800; font-size: 18.5px; letter-spacing: -.01em; margin-right: 14px; }
 .nav a {
-  color: var(--muted); font-size: 14px; font-weight: 600;
+  color: var(--muted); font-size: 15.5px; font-weight: 600;
   padding: 8px 14px; border-radius: var(--radius-pill);
   transition: background .12s ease, color .12s ease;
 }
 .nav a:hover { color: var(--text); background: var(--panel-2); }
 .nav a.active { color: #fff; background: var(--text); }
 .nav .spacer { flex: 1; }
-.nav .who { color: var(--muted); font-size: 13px; margin-right: 10px; }
+.nav .who { color: var(--muted); font-size: 14.5px; margin-right: 10px; }
 
-h1 { font-size: 24px; margin: 0 0 6px; letter-spacing: -.01em; }
-.sub { color: var(--muted); font-size: 13.5px; margin-bottom: 24px; }
-h2 { font-size: 17px; margin: 36px 0 14px; letter-spacing: -.01em; }
+h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: -.01em; }
+.sub { color: var(--muted); font-size: 15px; margin-bottom: 24px; }
+h2 { font-size: 18.5px; margin: 36px 0 14px; letter-spacing: -.01em; }
 
 .controls {
   display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;
@@ -51,10 +51,10 @@ h2 { font-size: 17px; margin: 36px 0 14px; letter-spacing: -.01em; }
   box-shadow: var(--shadow-sm);
 }
 .field { display: flex; flex-direction: column; gap: 6px; }
-.field label { font-size: 11.5px; color: var(--muted); font-weight: 600; }
+.field label { font-size: 12.5px; color: var(--muted); font-weight: 600; }
 .field input, .field select, select, input {
   background: #fff; border: 1px solid var(--line); color: var(--text);
-  border-radius: var(--radius-sm); padding: 9px 12px; font-size: 14px; min-width: 120px;
+  border-radius: var(--radius-sm); padding: 9px 12px; font-size: 15.5px; min-width: 120px;
   transition: border-color .12s ease, box-shadow .12s ease;
 }
 .field input:focus, .field select:focus, select:focus, input:focus {
@@ -62,7 +62,7 @@ h2 { font-size: 17px; margin: 36px 0 14px; letter-spacing: -.01em; }
 }
 button {
   background: var(--text); color: var(--bg); border: 0; border-radius: var(--radius-pill);
-  padding: 10px 20px; font-size: 14px; cursor: pointer; font-weight: 700;
+  padding: 10px 20px; font-size: 15.5px; cursor: pointer; font-weight: 700;
   transition: transform .08s ease, box-shadow .15s ease, filter .12s ease;
 }
 button:hover { filter: brightness(1.15); box-shadow: 0 10px 20px -12px rgba(21, 30, 42, .5); }
@@ -82,17 +82,17 @@ button.danger:hover { filter: brightness(1.1); box-shadow: 0 10px 20px -12px rgb
   transition: transform .15s ease, box-shadow .15s ease;
 }
 .card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-.card .k { color: var(--muted); font-size: 12px; font-weight: 600; margin-bottom: 10px; letter-spacing: .01em; }
-.card .v { font-size: 23px; font-weight: 800; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+.card .k { color: var(--muted); font-size: 13px; font-weight: 600; margin-bottom: 10px; letter-spacing: .01em; }
+.card .v { font-size: 25px; font-weight: 800; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
 
 table {
   width: 100%; border-collapse: separate; border-spacing: 0; background: var(--panel);
   border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden;
   box-shadow: var(--shadow-sm);
 }
-th, td { padding: 13px 16px; text-align: right; font-size: 14px; border-bottom: 1px solid var(--line); }
+th, td { padding: 13px 16px; text-align: right; font-size: 15.5px; border-bottom: 1px solid var(--line); }
 th {
-  color: var(--muted); font-weight: 700; font-size: 11.5px; letter-spacing: .03em;
+  color: var(--muted); font-weight: 700; font-size: 12.5px; letter-spacing: .03em;
   text-transform: uppercase; background: var(--panel-2);
 }
 th:first-child, td:first-child { text-align: left; }
@@ -108,7 +108,7 @@ tr.loss td:first-child { border-left: 1px solid var(--loss); }
 tr.loss td:last-child { border-right: 1px solid var(--loss); }
 tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
 .badge {
-  display: inline-block; font-size: 10.5px; font-weight: 800; padding: 3px 9px;
+  display: inline-block; font-size: 11.5px; font-weight: 800; padding: 3px 9px;
   border-radius: var(--radius-pill); margin-left: 8px; background: var(--loss); color: #fff;
   letter-spacing: .02em; vertical-align: middle;
 }
@@ -117,10 +117,10 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
 .empty { text-align: center; color: var(--muted); padding: 34px; }
 .error-banner {
   color: var(--loss); background: var(--loss-bg); border: 1px solid #F2C9C0;
-  border-radius: var(--radius-md); padding: 12px 16px; margin: 14px 0; font-size: 13.5px;
+  border-radius: var(--radius-md); padding: 12px 16px; margin: 14px 0; font-size: 15px;
 }
 .warn-banner { color: var(--text); background: #FFF6E0; border: 1px solid #EAD79A;
-  border-radius: var(--radius-md); padding: 12px 16px; margin: 14px 0; font-size: 13.5px; }
+  border-radius: var(--radius-md); padding: 12px 16px; margin: 14px 0; font-size: 15px; }
 
 .bar { display: inline-block; vertical-align: middle; height: 8px; border-radius: var(--radius-pill);
   background: var(--accent); margin-left: 8px; min-width: 2px; }
@@ -131,12 +131,12 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
   background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-lg);
   padding: 20px; box-shadow: var(--shadow-sm);
 }
-.panel h3 { margin: 0 0 14px; font-size: 15px; letter-spacing: -.01em; }
+.panel h3 { margin: 0 0 14px; font-size: 16.5px; letter-spacing: -.01em; }
 .panel .field { margin-bottom: 12px; }
 .panel .field input, .panel .field select { width: 100%; }
-.note { font-size: 12.5px; margin-top: 8px; min-height: 16px; font-weight: 600; }
+.note { font-size: 14px; margin-top: 8px; min-height: 16px; font-weight: 600; }
 .note.ok { color: var(--profit); } .note.err { color: var(--loss); }
-.cost-list { margin-top: 16px; font-size: 13px; color: var(--muted); }
+.cost-list { margin-top: 16px; font-size: 14.5px; color: var(--muted); }
 .cost-list div { padding: 8px 0; border-top: 1px solid var(--line); }
 @media (max-width: 720px) { .manage { grid-template-columns: 1fr; } .cards { grid-template-columns: repeat(2, 1fr); } }
 
@@ -147,23 +147,23 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
   padding: 18px 22px; box-shadow: var(--shadow-sm); margin-bottom: 20px;
 }
 .guide-summary {
-  cursor: pointer; font-weight: 800; font-size: 15px; letter-spacing: -.01em;
+  cursor: pointer; font-weight: 800; font-size: 16.5px; letter-spacing: -.01em;
   list-style: none; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
 }
 .guide-summary::-webkit-details-marker { display: none; }
 .guide-summary::before {
-  content: "▸"; color: var(--muted); font-size: 12px; transition: transform .15s ease;
+  content: "▸"; color: var(--muted); font-size: 13px; transition: transform .15s ease;
 }
 .guide[open] .guide-summary::before { transform: rotate(90deg); }
-.guide-summary-hint { font-weight: 400; font-size: 12px; color: var(--muted); }
+.guide-summary-hint { font-weight: 400; font-size: 13px; color: var(--muted); }
 .guide-steps {
   margin: 16px 0 0; padding-left: 22px; display: flex; flex-direction: column;
-  gap: 10px; font-size: 14px; line-height: 1.6;
+  gap: 10px; font-size: 15.5px; line-height: 1.6;
 }
 .guide-steps li::marker { font-weight: 800; color: var(--accent); }
 .guide-substeps {
   margin: 8px 0 0; padding-left: 18px; display: flex; flex-direction: column;
-  gap: 8px; font-size: 13.5px; color: var(--muted);
+  gap: 8px; font-size: 15px; color: var(--muted);
 }
 /* 4번 단계의 IP 주소 안내 — 기존 loss 색상 톤(.error-banner 계열)을 재사용해 눈에 띄게 강조. */
 .guide-ip-warn {
@@ -173,12 +173,12 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
 }
 .guide-ip-box { margin-top: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .guide-ip-box code {
-  font-family: ui-monospace, monospace; font-size: 14px; font-weight: 700; color: var(--loss);
+  font-family: ui-monospace, monospace; font-size: 15.5px; font-weight: 700; color: var(--loss);
   background: #fff; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 6px 10px;
 }
-.guide-ip-box button { padding: 6px 14px; font-size: 12.5px; }
-.guide-wing-link { display: inline-block; margin-top: 16px; font-weight: 700; font-size: 13.5px; }
-.guide-note { margin-top: 10px; font-size: 12px; line-height: 1.5; }
+.guide-ip-box button { padding: 6px 14px; font-size: 13.5px; }
+.guide-wing-link { display: inline-block; margin-top: 16px; font-weight: 700; font-size: 15px; }
+.guide-note { margin-top: 10px; font-size: 13px; line-height: 1.5; }
 @media (max-width: 720px) {
   .guide { padding: 14px 16px; }
   .guide-steps, .guide-substeps { padding-left: 18px; }
@@ -202,11 +202,11 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
   width: 56px; height: 56px; border-radius: 50%; font-size: 26px;
   background: var(--panel-2); margin-bottom: 18px;
 }
-.onboarding-title { margin: 0 0 10px; font-size: 19px; letter-spacing: -.01em; }
-.onboarding-desc { margin: 0 0 24px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+.onboarding-title { margin: 0 0 10px; font-size: 20.5px; letter-spacing: -.01em; }
+.onboarding-desc { margin: 0 0 24px; color: var(--muted); font-size: 15.5px; line-height: 1.6; }
 .onboarding-cta {
   display: inline-block; background: var(--text); color: var(--bg); font-weight: 700;
-  font-size: 15px; padding: 13px 26px; border-radius: var(--radius-pill);
+  font-size: 16.5px; padding: 13px 26px; border-radius: var(--radius-pill);
   transition: transform .08s ease, box-shadow .15s ease, filter .12s ease;
 }
 .onboarding-cta:hover { filter: brightness(1.15); box-shadow: 0 10px 20px -12px rgba(21, 30, 42, .5); }
@@ -357,12 +357,12 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
 }
 .plan:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
 .plan.current { border-color: var(--text); border-width: 2px; box-shadow: var(--shadow-md); }
-.plan .pname { font-size: 18px; font-weight: 800; letter-spacing: -.01em; }
-.plan .price { font-size: 28px; font-weight: 800; margin: 12px 0 4px; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
-.plan .price small { font-size: 13px; color: var(--muted); font-weight: 500; }
+.plan .pname { font-size: 19.5px; font-weight: 800; letter-spacing: -.01em; }
+.plan .price { font-size: 30px; font-weight: 800; margin: 12px 0 4px; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+.plan .price small { font-size: 14px; color: var(--muted); font-weight: 500; }
 .plan ul { list-style: none; padding: 0; margin: 16px 0; }
-.plan li { padding: 7px 0; font-size: 14px; color: var(--text); border-top: 1px solid var(--line); }
-.plan .tag { display: inline-block; font-size: 10.5px; font-weight: 800; padding: 3px 9px;
+.plan li { padding: 7px 0; font-size: 15.5px; color: var(--text); border-top: 1px solid var(--line); }
+.plan .tag { display: inline-block; font-size: 11.5px; font-weight: 800; padding: 3px 9px;
   border-radius: var(--radius-pill); background: var(--accent); color: #fff; margin-left: 8px; letter-spacing: .02em; }
 @media (max-width: 720px) { .plans { grid-template-columns: 1fr; } }
 
@@ -401,7 +401,7 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
 .pp-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .pp-chip {
   background: #fff; border: 1px solid var(--line); color: var(--text);
-  border-radius: var(--radius-pill); padding: 8px 15px; font-size: 13px; font-weight: 600;
+  border-radius: var(--radius-pill); padding: 8px 15px; font-size: 14.5px; font-weight: 600;
   cursor: pointer; transition: background .12s ease, border-color .12s ease, color .12s ease, box-shadow .12s ease;
 }
 .pp-chip:hover:not(:disabled) { border-color: var(--accent); }
@@ -409,8 +409,8 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
 .pp-chip:disabled { opacity: .45; cursor: not-allowed; }
 .pp-chip.limited { text-decoration: line-through; }
 .pp-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.pp-warn { color: var(--loss); font-size: 12px; }
-.pp-limit-note { color: var(--muted); font-size: 12px; }
+.pp-warn { color: var(--loss); font-size: 13px; }
+.pp-limit-note { color: var(--muted); font-size: 13px; }
 @media (prefers-reduced-motion: reduce) {
   .pp-chip { transition: none; }
 }
@@ -428,7 +428,7 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
 /* 힌트 문장이 길어서 줄바꿈 없이 늘어나면 부모(inline-flex)가 그 길이에 맞춰
    카드 전체 폭을 억지로 넓혀서(달력 그리드는 훨씬 좁은데) 정렬이 어긋나 보였다.
    최대 폭을 달력 그리드 폭 근처로 제한해 문장이 줄바꿈되게 한다. */
-.pp-calendar-hint { font-size: 12px; color: var(--muted); max-width: 280px; }
+.pp-calendar-hint { font-size: 13px; color: var(--muted); max-width: 280px; }
 .pp-calendar .rdp-root {
   --rdp-accent-color: var(--accent);
   --rdp-accent-background-color: #E7EEFC;
@@ -450,7 +450,7 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
 .pp-calendar th:first-child {
   text-align: center;
 }
-.pp-calendar-readout { font-size: 13px; color: var(--text); }
+.pp-calendar-readout { font-size: 14px; color: var(--text); }
 .pp-calendar-readout .muted { color: var(--muted); }
 @media (prefers-reduced-motion: reduce) {
   .pp-calendar .rdp-weeks_before_enter,
@@ -468,13 +468,28 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
 /* 관리자 화면(T10.5) */
 .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .table-scroll table { min-width: 720px; }
+/* 관리자 표 헤더는 "관리자"/"대상" 같은 두세 글자 한글 라벨이 많은데, 옆 칸(감사 로그의 "상세" —
+   공백 없는 JSON 문자열)이 표 폭을 밀어붙이면 이 헤더 칸이 비좁아져 음절 단위로("관리"/"자")
+   줄바꿈되는 문제가 있었다. 헤더는 항상 한 줄로 고정한다(칸 폭은 아래 .audit-table 이 대신 흡수). */
+.table-scroll th { white-space: nowrap; }
 .role-badge {
-  display: inline-block; font-size: 10.5px; font-weight: 800; padding: 3px 9px;
+  display: inline-block; font-size: 11.5px; font-weight: 800; padding: 3px 9px;
   border-radius: var(--radius-pill); background: var(--panel-2); color: var(--text); letter-spacing: .02em;
 }
 .role-badge.admin { background: var(--accent); color: #fff; }
 .grant-input { width: 64px; min-width: 64px; margin-right: 6px; text-align: right; }
 .pager { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+
+/* 감사 로그 표 — 관리자/동작/대상/상세는 숫자가 아니라 텍스트·ID·JSON 이라 전역 우측정렬
+   (위 93번 줄, 숫자 위주 대시보드 표 기준)이 읽기 불편하다. 특히 "상세" 칸의 JSON.stringify
+   결과는 공백이 전혀 없는 한 덩어리 문자열이라 줄바꿈 지점이 없어 표 전체 폭을 계속 밀어냈고,
+   그 여파로 "관리자"/"대상" 헤더 칸이 비좁아지는 게 실제 원인이었다(위 .table-scroll th 참고).
+   word-break 로 이 칸만 강제로 줄바꿈시켜 폭을 붙잡아 둔다. */
+.audit-table th, .audit-table td { text-align: left; }
+.audit-table td:last-child {
+  white-space: normal; word-break: break-all; max-width: 340px;
+  font-family: ui-monospace, monospace; font-size: 13.5px;
+}
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
@@ -485,13 +500,13 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
    "← 홈으로" 링크를 둔다. .legal-todo 는 조민석 님이 직접 채워야 하는 [작성 필요] 항목을
    loss 톤(기존 토큰)으로 눈에 띄게 강조한다. */
 .legal-page { padding-top: 32px; max-width: 760px; }
-.legal-back { margin-bottom: 18px; font-size: 13px; }
-.legal-page h2 { font-size: 16px; margin: 30px 0 10px; }
+.legal-back { margin-bottom: 18px; font-size: 14px; }
+.legal-page h2 { font-size: 17.5px; margin: 30px 0 10px; }
 .legal-page h2:first-of-type { margin-top: 20px; }
-.legal-page p, .legal-page li { font-size: 14px; line-height: 1.7; color: var(--text); }
+.legal-page p, .legal-page li { font-size: 15.5px; line-height: 1.7; color: var(--text); }
 .legal-page ul, .legal-page ol { padding-left: 20px; margin: 8px 0; }
-.legal-updated { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+.legal-updated { color: var(--muted); font-size: 14px; margin-bottom: 8px; }
 .legal-todo {
   background: var(--loss-bg); color: var(--loss); font-weight: 700;
-  padding: 1px 7px; border-radius: 6px; font-size: 13px;
+  padding: 1px 7px; border-radius: 6px; font-size: 14px;
 }
