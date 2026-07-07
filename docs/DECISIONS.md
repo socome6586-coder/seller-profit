@@ -442,3 +442,86 @@
   불일치가 있어, **이 세션에서는 Chrome 을 통한 라이브 화면 검증이 신뢰할 수 없다고 판단**하고
   코드 diff 재검토 + 빌드 성공 확인으로 갈음했다. 조민석 님 본인 브라우저에서 새로고침(또는
   개발 서버 재시작 후)으로 최종 확인을 권장한다.
+
+---
+
+## D10. 관리자 COMP 회수 잔여 버그 2건 수정 + 요금제 화면 한글 표기/정렬/해지 확인 알림
+
+- **날짜**: 2026-07-07
+- **관련**: `SubscriptionService.revokeComp`, `SubscriptionServiceTest`, `frontend/src/pages/Admin.jsx`,
+  `frontend/src/pages/Pricing.jsx`, `frontend/src/styles.css`
+- **배경**: D3(T10) 배포 이후 실사용(조민석 님 본인 admin 화면 사용) 중 발견된 잔여 버그 2건과,
+  요금제 화면 UX 피드백 1건이 이어서 들어왔다. D9 이후 커밋됐지만 이 문서에 기록이 빠져 있어
+  소급 기록한다(커밋: `7737225`,`d858d9d`,`935ed8b`,`b14595b`).
+  1. **버그: COMP 회수 후에도 `currentPeriodEnd` 가 남아있음.** `revokeComp` 가 `subscriptionStatus`
+     만 FREE 로 바꾸고 만료일 컬럼은 그대로 둬, 관리자 화면·본인 구독 화면(`/api/subscription`)에
+     회수된 지급의 예전 만료일이 계속 노출됐다. `PlanType.fromStatus` 는 상태만 보므로 플랜 게이팅
+     자체엔 영향 없었지만 표시값 버그였다 — `user.setCurrentPeriodEnd(null)` 추가로 수정.
+  2. **버그: 회수 버튼이 회수 후에도 계속 활성 상태.** 프론트 disabled 조건이 `u.source !== "COMP"`
+     만 검사했는데, `source` 는 회수해도 COMP 로 남아있고(영구 기록) 바뀌는 건 `subscriptionStatus`
+     뿐이라 버튼이 계속 눌리는 상태로 남았다. 실제로 다시 누르면 `before=FREE/after=FREE` 인
+     의미없는 감사 로그만 쌓이는 게 curl 로 재현됨(비파괴적 버그였지만 로그 오염). 프론트
+     (`u.subscriptionStatus !== "ACTIVE"` 를 disabled 조건에 추가)와 백엔드
+     (`revokeComp` 가 ACTIVE 아니면 `IllegalArgumentException`) 양쪽에 방어를 뒀다 — "서버가
+     진짜 방어선, UI 는 편의"(HANDOFF §2) 원칙 그대로 적용. `SubscriptionServiceTest` 에
+     회귀 테스트 추가.
+  3. **관리자 감사 로그 표 헤더 줄바꿈 + 전반적 폰트 확대.** 원인은 `JSON.stringify(a.detail)` 이
+     한 줄로 안 끊기는 긴 문자열을 만들어 표 전체 폭을 밀어, 옆 한글 헤더가 음절 중간에서
+     줄바꿈되던 것. `.table-scroll th { white-space: nowrap }` + 마지막 열만
+     `word-break: break-all; max-width: 340px` 로 감사 로그 detail 칼럼만 좁게 줄바꿈되게 하고,
+     나머지 화면 전반(nav/표/버튼/카드/배너 등, 로그인 화면은 이미 이전에 확대되어 있어 제외)
+     폰트 크기를 함께 키웠다(작아서 안 보인다는 피드백).
+  4. **요금제 화면**: `SubscriptionStatus`(FREE/ACTIVE/PAST_DUE/CANCELED) 영문 enum 이 그대로
+     노출되던 것을 `STATUS_LABELS` 매핑으로 한글화(알 수 없는 값은 원문 폴백). PRO 카드에서만
+     결제 미연동 안내문이 추가로 붙어 FREE/PRO 두 카드의 버튼 줄이 서로 어긋나 보이던 문제는
+     `.plan` 을 flex column + `.plan-actions { margin-top: auto }` 로 고정해 컨텐츠 길이가
+     달라도 버튼 행이 항상 카드 하단에 맞춰지게 했다(고정 높이 대신 유연한 방식 선택 — 다시
+     텍스트가 늘어나도 안 깨짐). 구독 해지 버튼에 `window.confirm` 확인창을 추가하고, 만료일이
+     있으면 "◯◯까지 PRO 이용이 가능합니다" 를 문구에 포함해 실수 클릭으로 즉시 해지되는
+     불안을 줄였다(실제 동작은 `BillingService.cancel` — 상태만 CANCELED 로 바꾸고 만료일까지
+     접근은 유지되므로 문구가 실제 동작과 정확히 일치).
+- **검증**: `SubscriptionServiceTest` 전체 스위트 그린(신규 회귀 테스트 포함). 로컬 `seed` 서버
+  기동 후 admin 화면에서 grant→revoke→재클릭(버튼 비활성 확인)까지 curl/브라우저로 실측.
+
+---
+
+## D11. 실서비스 운영 준비도 리뷰 — 에러 처리는 충분, 남은 갭은 사업자등록/결제이며 베타 우선으로 재정렬
+
+- **날짜**: 2026-07-07
+- **관련**: `manage/ApiExceptionHandler`, `frontend/src/App.jsx`(catch-all), `application.yml`,
+  `frontend/src/pages/Privacy.jsx`·`Terms.jsx`, `CLAUDE.md`"다음 단계"
+- **배경**: 조민석 님이 "오류페이지 문제없이 다 만들어져있어? 실사용에 부족한 점 검토해" 라고
+  요청. 연구 Agent 로 넓게 훑고, 안전에 중요한 주장(에러 핸들러 스코프·SPA catch-all·CI 존재
+  여부)은 직접 grep/ls 로 재확인해 정확성을 담보했다.
+- **결론 1 — 에러 페이지 자체는 실사용에 지장 없는 수준**: 백엔드 `ApiExceptionHandler` 가
+  7개 도메인 패키지 전체에 걸려 400/401/403/429/503 을 스택트레이스 없이 JSON 으로 처리
+  (직접 확인). `application.yml` 에 별도 `error`/`whitelabel` 설정 없음(grep 0건, 즉 그 7개
+  패키지 밖 예외는 Spring 기본 whitelabel 로 떨어짐 — API+SPA 구조라 실질 영향 작은 사소한 갭).
+  프론트는 `App.jsx` 의 `<Route path="*" element={<Navigate to="/dashboard" replace/>} />`
+  로 죽은 404 없이 항상 대시보드로 복귀(직접 확인).
+- **결론 2 — 실사용 관점의 진짜 갭은 "에러 화면"이 아니라 사업자등록/결제/운영 관측성**:
+  사업자등록(쿠팡 실키+토스 실결제 둘 다 차단) > 토스 SDK 카드등록 TODO 미완 > 법적 페이지
+  `LegalTodo` 3곳 잔존 > 모니터링/헬스체크(Actuator) 부재 > rate limit 이 `AuthController` 외
+  다른 입력 엔드포인트엔 없음 > `.github` 없어 CI/CD 부재(grep/ls 로 직접 확인) > Docker
+  헬스체크가 Postgres 에만 있고 app/Caddy 엔 없음 > 프론트 테스트 코드 없음.
+- **핵심 결정 — GTM 우선순위를 "베타테스트 우선"으로 재확정, `CLAUDE.md` 반영**: 조민석 님이
+  "지금은 유료회원을 모을 생각이 없고 베타테스트가 먼저" 라고 명시. 이 전제로 위 갭들을
+  다시 분류하면:
+  1. **사업자등록**은 "홈페이지가 정상 작동하는지"와 무관하다(사이트는 이미 배포되어 있고
+     정상 작동 중) — 실제로 막는 건 **토스 실 결제 수금**(PG 계약이 사업자등록+통신판매업
+     신고를 요구)뿐이다. 쿠팡 실 API 키조차, 베타 테스터가 이미 사업자등록이 있는 실제
+     쿠팡 셀러라면 **본인 키를 그대로 제공**할 수 있어 우리 회사의 사업자등록과 무관하게
+     검증 가능하다(`CLAUDE.md` "다음 단계 B-1" 의 대안 경로와 일치).
+  2. 따라서 **토스 실 연동(`Pricing.jsx` subscribe TODO)도 자연히 후순위** — 베타 기간엔
+     결제를 안 받으므로 지금 급하게 풀 이유가 없다. 지불의사 검증(HANDOFF §5-10) 이후로 미룬다.
+  3. **법적 페이지 `LegalTodo` 3곳은 "문제가 없다"가 아니라 "지금 채울 수 없고, 채울 필요도
+     없는" 항목이다.** 사업자등록번호·대표자·주소는 승인 전엔 존재하지 않는 값이고, 결제/환불
+     정책은 실 결제 시작 전엔 확정할 수 없는 값이다 — 지금 임의로 지어내면 허위 정보가 되므로
+     D8 결정(지어내지 않는다)을 그대로 유지한다. 나머지 조항(수집항목/목적/위탁 등)은 이미
+     실제 코드 근거로 작성되어 베타 노출에 문제없다. 사업자등록 승인 시 Privacy.jsx §9 만
+     채우면 완결된다.
+  4. `CLAUDE.md` "다음 단계 A" 순서를 이 결론에 맞춰 재배열했다 — 베타 셀러 모집(+ 실 쿠팡
+     키 라이브 검증)을 토스 실 연동보다 먼저 오도록 변경.
+- **범위 밖으로 남긴 것**: 모니터링/헬스체크(Actuator), 다른 입력 엔드포인트 rate limit 확장,
+  CI/CD, Docker 헬스체크 확장, 프론트 테스트는 이번엔 우선순위 재배치만 하고 실제 착수는
+  하지 않았다 — 베타 모집이 다음 실제 작업 단위다.
