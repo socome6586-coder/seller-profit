@@ -163,7 +163,7 @@ export default function Dashboard() {
             <div className="charts-grid">
               <ProfitDonut products={profit.products} />
               <div className="panel">
-                <h3>상품별 순이익 (금액이 큰 상품부터)</h3>
+                <h3>상품별 순이익</h3>
                 <ProfitBarChart products={profit.products} />
               </div>
             </div>
