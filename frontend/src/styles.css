@@ -187,6 +187,19 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
   .profit-bar-value { font-size: 12.5px; }
 }
 
+/* 적자 상품 진단(2026-07-07 피드백: 얼마나 적자인지는 보이는데 왜 적자인지는 안 보임) —
+   상품별로 원가/배분비용/광고비/반품률 비율만 보고 규칙 기반 문구를 만든다
+   (frontend/src/components/ProfitCharts.jsx 의 diagnoseLoss 참고). */
+.loss-insights {
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-lg);
+  padding: 20px 22px; box-shadow: var(--shadow-sm); margin-bottom: 26px;
+}
+.loss-insights h3 { margin: 0 0 14px; font-size: 15px; }
+.loss-insight-row + .loss-insight-row { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line); }
+.loss-insight-name { font-weight: 700; font-size: 14.5px; display: flex; align-items: center; gap: 2px; margin-bottom: 6px; }
+.loss-insight-notes { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.loss-insight-notes li { font-size: 13.5px; color: var(--loss); line-height: 1.5; }
+
 /* 계정 연동 발급 가이드(docs/onboarding-tasks.md T13.1) — 네이티브 <details>/<summary> 로
    접이식 구현(별도 JS 상태 없이 키보드/스크린리더 접근성 확보), 기본값은 펼쳐짐(open). */
 .guide {

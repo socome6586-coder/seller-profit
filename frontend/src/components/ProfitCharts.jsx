@@ -70,6 +70,68 @@ export function ProfitDonut({ products }) {
   );
 }
 
+// 도넛/바 차트는 "얼마나 적자인지"를 보여주지만 "왜 적자인지"는 말해주지 않는다는 피드백
+// (2026-07-07, 차트 도입 직후 이어진 요청) 반영. 원가/배분비용/광고비/반품률은 이미
+// ProfitDashboardController 가 계산해 내려주는 실수치이므로, 가짜 지표를 만들지 않고
+// 그 비율만으로 규칙 기반 진단 문구를 만든다(docs/HANDOFF.md "가짜 지표 금지" 원칙 준수).
+
+/** 적자 상품 1개에 대해 "무엇이 매출을 가장 많이 갚아먹었는지"와 반품률을 규칙으로 진단한다. */
+function diagnoseLoss(it) {
+  const revenue = Number(it.revenue) || 0;
+  const cogs = Number(it.cogsTotal) || 0;
+  const alloc = Number(it.allocatedCost) || 0;
+  const ad = Number(it.adSpend) || 0;
+  const units = Number(it.units) || 0;
+  const returnedUnits = Number(it.returnedUnits) || 0;
+  const notes = [];
+
+  if (revenue <= 0) {
+    notes.push("이 기간 매출이 없는데 비용만 발생했어요. 재고·광고 운영을 점검해보세요.");
+  } else {
+    const drivers = [
+      { ratio: cogs / revenue, text: (r) => `매입원가가 매출의 ${r}%예요. 매입가를 낮추거나 판매가를 올리는 걸 검토해보세요.` },
+      { ratio: alloc / revenue, text: (r) => `배분된 기타비용(배송비 등)이 매출의 ${r}%를 차지해요. 배송·포장 비용 절감을 검토해보세요.` },
+      { ratio: ad / revenue, text: (r) => `광고비가 매출의 ${r}%를 차지해요. 키워드·타겟팅을 재점검하거나 광고비를 줄여보세요.` },
+    ].sort((a, b) => b.ratio - a.ratio);
+    const top = drivers[0];
+    if (top && top.ratio > 0) notes.push(top.text(Math.round(top.ratio * 100)));
+  }
+
+  if (units > 0 && returnedUnits / units >= 0.1) {
+    notes.push(`반품률이 ${Math.round((returnedUnits / units) * 100)}%로 높은 편이에요. 상품 설명이나 품질을 점검해보세요.`);
+  }
+
+  if (notes.length === 0) {
+    notes.push("매출보다 비용이 근소하게 많아요. 판매가를 소폭 올리는 것만으로도 개선될 수 있어요.");
+  }
+  return notes;
+}
+
+/** 적자 상품마다 "왜 적자인지" + "무엇을 해볼 수 있는지"를 안내하는 진단 카드 목록. */
+export function LossInsights({ products, max = 6 }) {
+  const items = (products || []).filter((p) => p.loss).slice(0, max);
+  if (items.length === 0) return null;
+
+  return (
+    <div className="loss-insights">
+      <h3>적자 상품 진단</h3>
+      {items.map((it, i) => (
+        <div className="loss-insight-row" key={i}>
+          <div className="loss-insight-name">
+            {it.name}
+            <span className="badge">적자</span>
+          </div>
+          <ul className="loss-insight-notes">
+            {diagnoseLoss(it).map((note, j) => (
+              <li key={j}>{note}</li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /** 상품별 순이익을 절대값 큰 순서(가장 극적인 것부터)로 가로 바 차트로 보여준다. */
 export function ProfitBarChart({ products, max = 8 }) {
   const items = [...(products || [])]

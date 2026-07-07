@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, won, pct, num, signClass } from "../api";
 import PeriodPicker, { computeRange } from "../components/PeriodPicker.jsx";
-import { ProfitDonut, ProfitBarChart } from "../components/ProfitCharts.jsx";
+import { ProfitDonut, ProfitBarChart, LossInsights } from "../components/ProfitCharts.jsx";
 import { usePageTitle } from "../hooks/usePageTitle";
 
 export default function Dashboard() {
@@ -168,6 +168,8 @@ export default function Dashboard() {
               </div>
             </div>
           ) : null}
+
+          <LossInsights products={profit?.products} />
 
           <ProfitTable products={profit?.products} />
 
