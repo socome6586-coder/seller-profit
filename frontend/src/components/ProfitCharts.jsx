@@ -6,7 +6,7 @@ import { won } from "../api";
 // 그리는 방식)를 쓰고 있어 같은 접근을 그대로 잇는다. 번들 크기를 늘리지 않는 게 장점.
 // docs/DECISIONS.md 참고(차트 도입 결정 기록).
 
-/** 적자 상품 합계가 흑자 상품 합계를 얼마나 갚아먹는지 보여주는 도넛. */
+/** 적자 상품 합계가 흑자 상품 합계를 얼마나 갉아먹는지 보여주는 도넛. */
 export function ProfitDonut({ products }) {
   const items = products || [];
   let gain = 0;
@@ -61,7 +61,7 @@ export function ProfitDonut({ products }) {
       </div>
       {lossPct >= 1 ? (
         <div className="donut-callout">
-          적자 상품이 흑자의 <b>{lossPct.toFixed(0)}%</b>를 갚아먹고 있어요.
+          적자 상품이 흑자의 <b>{lossPct.toFixed(0)}%</b>를 갉아먹고 있어요.
         </div>
       ) : (
         <div className="donut-callout ok">적자 상품이 없어요. 좋은 흐름이에요 👍</div>
@@ -75,7 +75,7 @@ export function ProfitDonut({ products }) {
 // ProfitDashboardController 가 계산해 내려주는 실수치이므로, 가짜 지표를 만들지 않고
 // 그 비율만으로 규칙 기반 진단 문구를 만든다(docs/HANDOFF.md "가짜 지표 금지" 원칙 준수).
 
-/** 적자 상품 1개에 대해 "무엇이 매출을 가장 많이 갚아먹었는지"와 반품률을 규칙으로 진단한다. */
+/** 적자 상품 1개에 대해 "무엇이 매출을 가장 많이 갉아먹었는지"와 반품률을 규칙으로 진단한다. */
 function diagnoseLoss(it) {
   const revenue = Number(it.revenue) || 0;
   const cogs = Number(it.cogsTotal) || 0;
