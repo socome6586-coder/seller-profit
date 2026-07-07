@@ -112,6 +112,11 @@ public class SubscriptionService {
      * 결제(PAID) 구독은 여기서 다루지 않는다 — 해지는 {@code BillingService.cancel}(자기 해지)
      * 영역이라, 관리자가 남의 결제 구독을 임의로 끊지 않도록 COMP 만 대상으로 제한한다.
      *
+     * <p>{@code currentPeriodEnd} 도 함께 비운다(null) — 즉시 회수 성격상 남은 기간을 인정하지
+     * 않기 때문. 이걸 안 비우면 상태는 FREE 인데 예전 만료일이 그대로 남아 관리자 화면과
+     * 유저 본인의 구독 화면({@code /api/subscription})에 혼란스러운 값이 계속 노출된다(플랜
+     * 게이팅 자체는 {@link PlanType#fromStatus} 가 상태만 보므로 영향 없었지만, 표시값은 버그였음).
+     *
      * @param userId 회수 대상
      * @return 감사 로그 기록용 회수 전 상태
      */
@@ -124,6 +129,7 @@ public class SubscriptionService {
         }
         SubscriptionStatus before = user.getSubscriptionStatus();
         user.setSubscriptionStatus(SubscriptionStatus.FREE);
+        user.setCurrentPeriodEnd(null);
         return before;
     }
 }

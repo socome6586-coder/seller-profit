@@ -93,16 +93,19 @@ class SubscriptionServiceTest {
     }
 
     @Test
-    void COMP_구독은_회수시_FREE_로_강등() {
+    void COMP_구독은_회수시_FREE_로_강등하고_만료일도_비운다() {
         User user = User.create("comp@test.local", "hash");
         user.setSubscriptionStatus(SubscriptionStatus.ACTIVE);
         user.setSource(SubscriptionSource.COMP);
+        user.setCurrentPeriodEnd(OffsetDateTime.now(KST).plusMonths(10));
         when(userRepository.findById(4L)).thenReturn(Optional.of(user));
 
         SubscriptionStatus before = subscriptionService.revokeComp(4L);
 
         assertEquals(SubscriptionStatus.ACTIVE, before);
         assertEquals(SubscriptionStatus.FREE, user.getSubscriptionStatus());
+        // 회수 전 관리자 화면에서 실제로 보고된 버그: FREE 로 바뀌어도 예전 만료일이 남아있었다.
+        assertNull(user.getCurrentPeriodEnd());
     }
 
     @Test
