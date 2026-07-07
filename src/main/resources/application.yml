@@ -1,6 +1,27 @@
+server:
+  # Caddy(운영) 뒤에서 X-Forwarded-Proto 를 신뢰해 request.isSecure() 가 정확히 동작하게 한다.
+  # (자동로그인 쿠키의 Secure 플래그가 이 값을 기준으로 결정됨 — AuthController 참고)
+  forward-headers-strategy: framework
+
 spring:
   application:
     name: seller-profit
+
+  mail:
+    # 비밀번호 재설정 메일 발송용 SMTP. username/password 미설정(빈 문자열)이면
+    # EmailService 가 실제 발송 대신 로그로만 남긴다(플레이스홀더-세이프, toss.billing 과 동일 패턴).
+    #   Gmail 예: host=smtp.gmail.com, port=587, username=본인 Gmail 주소,
+    #             password=Gmail "앱 비밀번호"(일반 로그인 비밀번호 아님 — 구글 계정 설정 > 보안 > 2단계 인증 > 앱 비밀번호).
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
   datasource:
     # 호스트 5432 는 다른 프로젝트(lightdrone-pg)가 쓰므로 셀러는 5433 사용.
@@ -36,6 +57,12 @@ app:
   # 이 값(또는 배포 환경변수 APP_PUBLIC_SERVER_IP) 한 곳만 바꾸면 전체 가이드 문구가 갱신된다 —
   # 절대 프론트 코드에 이 IP 를 문자열로 흩뿌리지 않는다.
   public-server-ip: ${APP_PUBLIC_SERVER_IP:49.247.139.234}
+  # 비밀번호 재설정 이메일 안의 링크가 가리킬 프론트 주소. 로컬은 seed 프로파일 포트(8088),
+  # 운영은 반드시 실 도메인으로 덮어써야 한다(.env.production 의 APP_FRONTEND_BASE_URL).
+  frontend-base-url: ${APP_FRONTEND_BASE_URL:http://localhost:8088}
+  mail:
+    # 미설정이면 spring.mail.username 을 그대로 발신자로 쓴다(둘 다 없으면 아래 기본값).
+    from: ${MAIL_FROM:${MAIL_USERNAME:noreply@sellerprofit.co.kr}}
 
 toss:
   billing:

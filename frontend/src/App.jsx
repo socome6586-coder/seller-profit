@@ -3,6 +3,8 @@ import { useAuth } from "./auth.jsx";
 import Nav from "./components/Nav.jsx";
 import Landing from "./pages/Landing.jsx";
 import Login from "./pages/Login.jsx";
+import ForgotPassword from "./pages/ForgotPassword.jsx";
+import ResetPassword from "./pages/ResetPassword.jsx";
 import Signup from "./pages/Signup.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Accounts from "./pages/Accounts.jsx";
@@ -38,6 +40,8 @@ export default function App() {
       {user ? <Nav /> : null}
       <Routes>
         <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
+        <Route path="/forgot-password" element={user ? <Navigate to="/dashboard" replace /> : <ForgotPassword />} />
+        <Route path="/reset-password" element={user ? <Navigate to="/dashboard" replace /> : <ResetPassword />} />
         <Route path="/signup" element={user ? <Navigate to="/dashboard" replace /> : <Signup />} />
         <Route
           path="/"

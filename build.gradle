@@ -29,6 +29,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
+    // 비밀번호 재설정 메일 발송(EmailService). SMTP 미설정 시 안전하게 로그로만 남기고 발송은 스킵.
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
     // 비밀번호 BCrypt 해싱 (전체 시큐리티 필터체인 없이 암호화 유틸만)
     implementation 'org.springframework.security:spring-security-crypto'
 

@@ -51,6 +51,14 @@ services:
       APP_ADMIN_EMAILS: ${APP_ADMIN_EMAILS}
       TOSS_SECRET_KEY: ${TOSS_SECRET_KEY:-test_sk_PLACEHOLDER}
       TOSS_BASE_URL: ${TOSS_BASE_URL:-https://api.tosspayments.com}
+      # 비밀번호 재설정 메일. 미설정(빈 값)이면 EmailService 가 실제 발송 대신 서버 로그로만 남긴다.
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+      # 재설정 이메일 링크가 가리킬 실 도메인. 운영에선 반드시 https://sellerprofit.co.kr 로 설정.
+      APP_FRONTEND_BASE_URL: ${APP_FRONTEND_BASE_URL:-https://sellerprofit.co.kr}
       # 비워두거나 prod 만 허용. seed 를 여기 넣지 않는다.
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-}
       # KR1-Lite(RAM 1~2GB, 스왑 2GB) 대응 — Postgres/Caddy 와 공존할 수 있게 힙 상한을 둔다.

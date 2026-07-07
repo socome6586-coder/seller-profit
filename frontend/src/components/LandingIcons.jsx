@@ -104,52 +104,48 @@ export function IconMonitorWarning({ bg = "#F1EAFE" }) {
   );
 }
 
-export function IconDocCheck({ bg = "#FFEFE8" }) {
+// 밸류 카드 아이콘 4개 — 원형 배지 없이 큼직하게, 듀오톤(연한 채움 + 굵은 선)으로
+// 요즘 SaaS 랜딩에서 흔한 스타일(Linear/Notion류)에 맞춘 버전. 배경 원 없이 아이콘 자체가 주인공.
+export function IconDocCheck() {
   return (
-    <Badge bg={bg} size={48}>
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-        <path d="M7 2.5h7l4 4V20a1.6 1.6 0 01-1.6 1.6H7A1.6 1.6 0 015.4 20V4.1A1.6 1.6 0 017 2.5z" stroke="#FF5630" strokeWidth="2" />
-        <path d="M14 2.5v4h4" stroke="#FF5630" strokeWidth="2" strokeLinejoin="round" />
-        <path d="M8.5 13.5l2.2 2.2L15.5 11" stroke="#FF5630" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    </Badge>
+    <svg className="l-card-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M7 2.5h7l4 4V20a1.6 1.6 0 01-1.6 1.6H7A1.6 1.6 0 015.4 20V4.1A1.6 1.6 0 017 2.5z"
+        fill="#FF5630" fillOpacity=".12" stroke="#FF5630" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M14 2.5v4h4" stroke="#FF5630" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M8.3 13.6l2.3 2.3L15.7 11" stroke="#FF5630" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 
-export function IconChartSearch({ bg = "#FFEFE8" }) {
+export function IconChartSearch() {
   return (
-    <Badge bg={bg} size={48}>
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-        <path d="M4 18l5-5.5 3.2 3L20 6" stroke="#FF5630" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" />
-        <circle cx="17.2" cy="17.2" r="3.3" stroke="#FF5630" strokeWidth="2" />
-        <path d="M19.6 19.6L22 22" stroke="#FF5630" strokeWidth="2" strokeLinecap="round" />
-      </svg>
-    </Badge>
+    <svg className="l-card-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M3.5 19h17" stroke="#FF5630" strokeOpacity=".25" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M4 18l5-5.5 3.2 3L19 8" stroke="#FF5630" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="17.3" cy="17.3" r="3.6" fill="#FF5630" fillOpacity=".12" stroke="#FF5630" strokeWidth="1.6" />
+      <path d="M19.9 19.9L22 22" stroke="#FF5630" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
   );
 }
 
-export function IconCalcBalance({ bg = "#FFEFE8" }) {
+export function IconCalcBalance() {
   return (
-    <Badge bg={bg} size={48}>
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-        <rect x="3.2" y="3.2" width="7.4" height="7.4" rx="1.6" stroke="#FF5630" strokeWidth="2" />
-        <rect x="13.4" y="13.4" width="7.4" height="7.4" rx="1.6" stroke="#FF5630" strokeWidth="2" />
-        <path d="M5.4 6.9h3M15.6 17.1h3" stroke="#FF5630" strokeWidth="1.8" strokeLinecap="round" />
-        <path d="M14 10L10 14" stroke="#FF5630" strokeWidth="2" strokeLinecap="round" />
-      </svg>
-    </Badge>
+    <svg className="l-card-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="2.6" y="2.6" width="8.2" height="8.2" rx="2" fill="#FF5630" fillOpacity=".12" stroke="#FF5630" strokeWidth="1.6" />
+      <rect x="13.2" y="13.2" width="8.2" height="8.2" rx="2" fill="#FF5630" fillOpacity=".12" stroke="#FF5630" strokeWidth="1.6" />
+      <path d="M4.9 6.7h3.6M15.5 17.3h3.6" stroke="#FF5630" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M14.6 9.4L9.4 14.6" stroke="#FF5630" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
   );
 }
 
-export function IconTarget({ bg = "#FFEFE8" }) {
+export function IconTarget() {
   return (
-    <Badge bg={bg} size={48}>
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-        <circle cx="12" cy="12" r="8.5" stroke="#FF5630" strokeWidth="2" />
-        <circle cx="12" cy="12" r="4.6" stroke="#FF5630" strokeWidth="2" />
-        <circle cx="12" cy="12" r="1.1" fill="#FF5630" />
-      </svg>
-    </Badge>
+    <svg className="l-card-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="9.2" fill="#FF5630" fillOpacity=".08" stroke="#FF5630" strokeWidth="1.6" />
+      <circle cx="12" cy="12" r="5.2" stroke="#FF5630" strokeWidth="1.6" />
+      <circle cx="12" cy="12" r="1.4" fill="#FF5630" />
+    </svg>
   );
 }
 
