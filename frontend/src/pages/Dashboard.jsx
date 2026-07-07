@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, won, pct, num, signClass } from "../api";
 import PeriodPicker, { computeRange } from "../components/PeriodPicker.jsx";
+import { ProfitDonut, ProfitBarChart } from "../components/ProfitCharts.jsx";
 import { usePageTitle } from "../hooks/usePageTitle";
 
 export default function Dashboard() {
@@ -157,6 +158,16 @@ export default function Dashboard() {
               />
             </div>
           </div>
+
+          {profit?.products?.length ? (
+            <div className="charts-grid">
+              <ProfitDonut products={profit.products} />
+              <div className="panel">
+                <h3>상품별 순이익 (극적인 것부터)</h3>
+                <ProfitBarChart products={profit.products} />
+              </div>
+            </div>
+          ) : null}
 
           <ProfitTable products={profit?.products} />
 
