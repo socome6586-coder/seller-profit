@@ -266,9 +266,73 @@
   .landing .l-value-grid, .landing .l-final-grid { grid-template-columns: 1fr; gap: 32px; }
   .landing .l-value-grid .l-illust, .landing .l-final-grid .l-illust { max-width: 420px; }
 }
+
+/* 모바일 전용 튜닝(2026-07-08) — 실제 모바일 스크린샷에서 헤더 줄바꿈 깨짐(브랜드 로고가
+   "SELLER"/"PROFIT" 두 줄로 쪼개지며 로그인·시작 버튼과 겹침) 및 히어로/카드 섹션 여백·폰트가
+   데스크톱 값을 그대로 축소만 해서 과하게 빽빽해 보이는 문제를 확인해 반영. 태블릿(820px)
+   레이아웃은 그대로 두고, 폰 폭(640px 이하)에서 타이포·여백·아이콘 크기를 별도로 다시 잡는다. */
+@media (max-width: 640px) {
+  .landing .l-wrap { padding: 0 18px; }
+
+  .landing .l-hero { padding: 36px 0 48px; }
+  .landing .l-eyebrow { font-size: 14.5px; margin-bottom: 14px; }
+  .landing h1 { font-size: clamp(30px, 9vw, 42px); }
+  .landing .l-sub { font-size: 16px; margin-top: 14px; }
+  .landing .l-hero-cta { margin-top: 22px; gap: 10px; }
+  .landing .l-hero-cta .btn { width: 100%; }
+  .landing .l-hero-cta .btn-lg { padding: 14px 20px; font-size: 15px; }
+  .landing .l-tags { margin-top: 16px; gap: 6px; }
+  .landing .l-tags .tag { font-size: 12.5px; padding: 5px 11px; }
+
+  .landing .l-strip { padding: 44px 0; }
+  .landing .l-strip h2 { font-size: clamp(22px, 6.5vw, 28px); }
+  .landing .l-strip p { font-size: 15px; margin-top: 12px; }
+  .landing .contrast { gap: 10px; margin-top: 24px; }
+  .landing .chip { min-width: 0; width: 100%; padding: 16px 18px; }
+  .landing .chip .l-icon-badge { width: 40px !important; height: 40px !important; margin-bottom: 10px; }
+  .landing .chip .v { font-size: 20px; }
+
+  .landing .l-flow { padding: 44px 0 24px; }
+  .landing .l-flow h2 { font-size: clamp(22px, 6vw, 28px); }
+  .landing .l-flow-steps { margin-top: 26px; gap: 8px; }
+  .landing .l-flow-step { padding: 18px 16px; }
+  .landing .l-flow-step .l-icon-badge { width: 48px !important; height: 48px !important; margin: 12px 0 10px; }
+  .landing .l-flow-step .l-icon-badge svg { width: 24px; height: 24px; }
+  .landing .l-flow-step h3 { font-size: 16px; }
+  .landing .l-flow-step p { font-size: 13px; }
+  .landing .l-flow-arrow { font-size: 14px; }
+
+  .landing .l-value { padding: 48px 0; }
+  .landing .l-value-grid { margin-bottom: 32px; gap: 24px; }
+  .landing .l-value-grid .l-illust, .landing .l-final-grid .l-illust { max-width: 280px; margin: 0 auto; }
+  .landing .l-value h2 { font-size: clamp(24px, 7vw, 30px); }
+  .landing .l-sec-eyebrow { font-size: 16px; }
+  .landing .l-cards { gap: 14px; }
+  .landing .l-card { padding: 20px; }
+  .landing .l-card h3 { font-size: 18px; margin: 12px 0 8px; }
+  .landing .l-card p { font-size: 14px; }
+
+  .landing .l-pricing { padding: 8px 0 48px; }
+  .landing .l-pricing h2 { font-size: clamp(20px, 6vw, 26px); }
+  .landing .l-plans { max-width: 100%; margin-top: 22px; gap: 12px; }
+  .landing .l-plan { padding: 20px; }
+
+  .landing .l-final { padding: 48px 0; }
+  .landing .l-final h2 { font-size: clamp(22px, 6.5vw, 28px); }
+  .landing .l-final p { font-size: 14.5px; margin: 12px 0 20px; }
+  .landing .l-final-grid .btn-lg { width: 100%; }
+
+  .landing .l-footer { padding: 20px 18px; }
+}
 @media (max-width: 480px) {
-  .landing .l-nav-inner { padding: 14px 18px; }
-  .landing .l-brand { font-size: 22px; gap: 8px; }
+  /* 헤더 줄바꿈 깨짐 수정: 브랜드/버튼을 한 줄에 욱여넣지 않고, 공간이 부족하면
+     버튼 그룹을 아예 다음 줄로 내린다(폭 100%로 강제) — 브랜드 텍스트 자체가
+     어중간하게 줄바꿈되며 버튼과 겹치던 문제를 근본적으로 없앤다. */
+  .landing .l-nav-inner { flex-wrap: wrap; row-gap: 8px; padding: 12px 16px; }
+  .landing .l-brand { font-size: 18px; gap: 6px; white-space: nowrap; }
+  .landing .l-badge { font-size: 10px; padding: 3px 8px; }
+  .landing .l-nav-cta { width: 100%; justify-content: flex-end; gap: 8px; }
+  .landing .l-nav-cta .btn { padding: 9px 16px; font-size: 13.5px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .landing .reveal-up { transition: none; opacity: 1; transform: none; }
