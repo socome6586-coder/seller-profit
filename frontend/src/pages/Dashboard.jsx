@@ -229,6 +229,7 @@ function Card({ k, v, cls, sub }) {
 function ProfitTable({ products }) {
   const items = products || [];
   return (
+    <div className="table-scroll">
     <table>
       <thead>
         <tr>
@@ -261,6 +262,7 @@ function ProfitTable({ products }) {
         )}
       </tbody>
     </table>
+    </div>
   );
 }
 
@@ -268,6 +270,7 @@ function ReturnsTable({ returns }) {
   const items = returns && !returns.failed ? returns.reasons || [] : [];
   const maxShare = Math.max(...items.map((it) => Number(it.sharePct) || 0), 1);
   return (
+    <div className="table-scroll">
     <table>
       <thead>
         <tr><th>반품 사유</th><th>반품수량</th><th>건수</th><th>비중</th></tr>
@@ -300,6 +303,7 @@ function ReturnsTable({ returns }) {
         )}
       </tbody>
     </table>
+    </div>
   );
 }
 

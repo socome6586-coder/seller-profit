@@ -152,6 +152,7 @@ function Card({ k, v, cls }) {
 function AdRoiTable({ rows }) {
   const items = rows || [];
   return (
+    <div className="table-scroll">
     <table>
       <thead>
         <tr>
@@ -181,6 +182,7 @@ function AdRoiTable({ rows }) {
         )}
       </tbody>
     </table>
+    </div>
   );
 }
 

@@ -134,6 +134,7 @@ export default function Accounts() {
           {accounts == null ? "" : max >= 0 ? `${count} / ${max}` : `${count} (무제한)`}
         </span>
       </h2>
+      <div className="table-scroll">
       <table>
         <thead>
           <tr><th>채널</th><th>업체코드</th><th>계정 ID</th><th></th><th></th></tr>
@@ -162,6 +163,7 @@ export default function Accounts() {
           )}
         </tbody>
       </table>
+      </div>
 
       <h2>새 쿠팡 계정 연동</h2>
 
