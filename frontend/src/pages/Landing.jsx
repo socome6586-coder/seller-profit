@@ -4,11 +4,6 @@ import { api, won } from "../api";
 import { useAuth } from "../auth.jsx";
 import ReceiptCard from "../components/ReceiptCard.jsx";
 import {
-  IconLinkApi,
-  IconDatabase,
-  IconCalcWon,
-  IconCsvUpload,
-  IconMonitorWarning,
   IllustrationBarChart,
   IllustrationBrowserMock,
 } from "../components/LandingIcons.jsx";
@@ -44,31 +39,36 @@ const flowSteps = [
     num: "01",
     title: "계정 연동",
     desc: "쿠팡 Open API 키를 등록하면 정산 데이터를 불러옵니다.",
-    icon: <IconLinkApi />,
+    image: "/linking.png",
+    sourceSize: "large",
   },
   {
     num: "02",
     title: "자동 수집",
     desc: "주문, 정산, 반품 내역을 주기적으로 모아둡니다.",
-    icon: <IconDatabase />,
+    image: "/gather.png",
+    sourceSize: "large",
   },
   {
     num: "03",
     title: "원가 입력",
     desc: "상품별 매입원가와 기타비용을 바로 반영합니다.",
-    icon: <IconCalcWon />,
+    image: "/cost.png",
+    sourceSize: "compact",
   },
   {
     num: "04",
     title: "광고비 반영",
     desc: "CSV 업로드와 수기 입력으로 SKU별 광고비를 붙입니다.",
-    icon: <IconCsvUpload />,
+    image: "/advertising.png",
+    sourceSize: "compact",
   },
   {
     num: "05",
     title: "적자 상품 발견",
     desc: "광고후 순이익이 마이너스인 SKU를 선명하게 표시합니다.",
-    icon: <IconMonitorWarning />,
+    image: "/deficit.png",
+    sourceSize: "compact",
   },
 ];
 
@@ -99,9 +99,18 @@ export default function Landing() {
   usePageTitle("셀러프로핏 - 쿠팡 셀러 진짜 순이익 계산");
   const { user } = useAuth();
   const [plans, setPlans] = useState([]);
+  const [activeFlow, setActiveFlow] = useState(0);
 
   useEffect(() => {
     api("/api/plans").then(setPlans).catch(() => setPlans([]));
+  }, []);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return undefined;
+    const timer = window.setInterval(() => {
+      setActiveFlow((current) => (current + 1) % flowSteps.length);
+    }, 2600);
+    return () => window.clearInterval(timer);
   }, []);
 
   useScrollReveal(plans.length);
@@ -249,15 +258,47 @@ export default function Landing() {
               쿠팡 계정만 연동하면,
               <span>나머지는 자동으로 정리됩니다.</span>
             </h2>
+            <p className="l-section-copy reveal-up">
+              주문과 정산 데이터를 모으고 원가와 광고비를 반영해, 지금 손해 보는 상품까지 한 흐름으로
+              찾아냅니다.
+            </p>
           </div>
-          <div className="l-flow-steps">
-            {flowSteps.map((step) => (
-              <div className="l-flow-step reveal-up" key={step.num}>
+          <div className="l-flow-steps reveal-up" role="tablist" aria-label="자동 계산 단계">
+            <span
+              className="l-flow-active-orb"
+              style={{ left: `${10 + activeFlow * 20}%` }}
+              aria-hidden="true"
+            >
+              <img
+                className={`l-flow-image is-${flowSteps[activeFlow].sourceSize}`}
+                src={flowSteps[activeFlow].image}
+                alt=""
+              />
+            </span>
+            {flowSteps.map((step, index) => (
+              <button
+                className={`l-flow-step${activeFlow === index ? " is-active" : ""}`}
+                key={step.num}
+                type="button"
+                role="tab"
+                aria-selected={activeFlow === index}
+                aria-label={`${step.num} ${step.title}: ${step.desc}`}
+                onClick={() => setActiveFlow(index)}
+              >
+                <span className="l-flow-orb">
+                  <img
+                    className={`l-flow-image is-${step.sourceSize}`}
+                    src={step.image}
+                    alt=""
+                    aria-hidden="true"
+                  />
+                </span>
+                <span className="l-flow-marker" aria-hidden="true">
+                  <i />
+                </span>
                 <span className="l-flow-num">{step.num}</span>
-                {step.icon}
-                <h3>{step.title}</h3>
-                <p>{step.desc}</p>
-              </div>
+                <strong>{step.title}</strong>
+              </button>
             ))}
           </div>
         </div>
