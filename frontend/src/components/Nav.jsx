@@ -22,7 +22,7 @@ export default function Nav() {
   return (
     <div className="nav">
       <div className="nav-inner">
-        <span className="brand">셀러프로핏</span>
+        <span className="brand">SELLER PROFIT</span>
         <button
           type="button"
           className="nav-burger"

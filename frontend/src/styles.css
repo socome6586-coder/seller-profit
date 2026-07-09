@@ -1,43 +1,59 @@
 :root {
-  /* 랜딩 페이지(Landing.css)의 에디토리얼 팔레트 — 색상은 유지, 레이아웃/정렬/카드 톤만
-     참고 이미지(정산 대시보드류)에 맞춰 더 현대적/세련되게 다듬는다(간단 리스킨, 전체 리디자인은 다음). */
-  --bg: #FBFAF6; --panel: #FFFFFF; --panel-2: #F2EEE4; --line: #E6E0D4;
-  --text: #151E2A; --muted: #5C6773;
-  --loss: #D2402C; --loss-bg: #FBEAE6; --profit: #1E7A4A; --accent: #2454C7;
-  --radius-sm: 10px; --radius-md: 14px; --radius-lg: 18px; --radius-pill: 999px;
-  --shadow-sm: 0 1px 2px rgba(21, 30, 42, .05);
-  --shadow-md: 0 14px 28px -20px rgba(21, 30, 42, .22);
-  --shadow-lg: 0 26px 48px -26px rgba(21, 30, 42, .32);
+  --bg: #F7FAFF;
+  --panel: #FFFFFF;
+  --panel-2: #EEF5FF;
+  --panel-3: #FDFEFF;
+  --line: #DCE7F6;
+  --text: #101828;
+  --muted: #64748B;
+  --loss: #FF5B45;
+  --loss-bg: #FFF0EC;
+  --profit: #087F5B;
+  --profit-bg: #E8F8F1;
+  --accent: #246BFE;
+  --accent-dark: #123C9C;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-pill: 999px;
+  --shadow-sm: 0 1px 2px rgba(18, 60, 156, .06);
+  --shadow-md: 0 18px 46px -34px rgba(18, 60, 156, .35);
+  --shadow-lg: 0 34px 78px -52px rgba(18, 60, 156, .42);
 }
 * { box-sizing: border-box; }
 body {
-  margin: 0; background: var(--bg); color: var(--text);
+  margin: 0;
+  background:
+    linear-gradient(180deg, #F4F8FF 0%, #FFFFFF 48%, #F7FAFF 100%);
+  color: var(--text);
   font-family: "Pretendard", -apple-system, "Segoe UI", "Malgun Gothic", sans-serif;
   -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
 }
 a { color: var(--accent); text-decoration: none; }
-.wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px 64px; }
+a:hover { color: var(--accent-dark); }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px 72px; }
 
 /* 상단 네비 — 랜딩과 동일한 스티키/블러 바 패턴(내부 컨테이너 분리로 배경이 잘려 보이는 문제 방지) */
 .nav {
   position: sticky; top: 0; z-index: 30;
-  background: rgba(251, 250, 246, .86); backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--line);
-  margin-bottom: 28px;
+  background: rgba(255, 255, 255, .88); backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(220, 231, 246, .88);
+  margin-bottom: 34px;
 }
 .nav-inner {
   position: relative;
-  display: flex; align-items: center; gap: 6px;
-  max-width: 1100px; margin: 0 auto; padding: 14px 24px;
+  display: flex; align-items: center; gap: 8px;
+  max-width: 1160px; min-height: 72px; margin: 0 auto; padding: 0 24px;
 }
-.nav .brand { font-weight: 800; font-size: 18.5px; letter-spacing: -.01em; margin-right: 14px; }
+.nav .brand { font-weight: 950; font-size: 20px; letter-spacing: -.01em; margin-right: 16px; white-space: nowrap; }
 .nav a {
-  color: var(--muted); font-size: 15.5px; font-weight: 600;
-  padding: 8px 14px; border-radius: var(--radius-pill);
+  color: var(--muted); font-size: 14px; font-weight: 800;
+  padding: 9px 12px; border-radius: var(--radius-sm);
   transition: background .12s ease, color .12s ease;
 }
-.nav a:hover { color: var(--text); background: var(--panel-2); }
-.nav a.active { color: #fff; background: var(--text); }
+.nav a:hover { color: var(--accent); background: var(--panel-2); }
+.nav a.active { color: var(--accent); background: #EAF2FF; }
 .nav .spacer { flex: 1; }
 .nav .who { color: var(--muted); font-size: 14.5px; margin-right: 10px; }
 
@@ -70,50 +86,56 @@ a { color: var(--accent); text-decoration: none; }
   .nav-links button.ghost { width: 100%; }
 }
 
-h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: -.01em; }
-.sub { color: var(--muted); font-size: 15px; margin-bottom: 24px; }
-h2 { font-size: 18.5px; margin: 36px 0 14px; letter-spacing: -.01em; }
+h1 {
+  font-size: clamp(30px, 4vw, 44px);
+  margin: 0 0 8px;
+  letter-spacing: -.035em;
+  line-height: 1.12;
+  font-weight: 950;
+}
+.sub { color: var(--muted); font-size: 16px; margin-bottom: 26px; line-height: 1.65; }
+h2 { font-size: 20px; margin: 38px 0 14px; letter-spacing: -.02em; font-weight: 950; }
 
 .controls {
   display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;
   background: var(--panel); border: 1px solid var(--line);
-  border-radius: var(--radius-md); padding: 16px 18px; margin-bottom: 20px;
+  border-radius: var(--radius-lg); padding: 18px 20px; margin-bottom: 22px;
   box-shadow: var(--shadow-sm);
 }
 .field { display: flex; flex-direction: column; gap: 6px; }
-.field label { font-size: 12.5px; color: var(--muted); font-weight: 600; }
+.field label { font-size: 12.5px; color: var(--muted); font-weight: 800; }
 .field input, .field select, select, input {
   background: #fff; border: 1px solid var(--line); color: var(--text);
-  border-radius: var(--radius-sm); padding: 9px 12px; font-size: 15.5px; min-width: 120px;
+  border-radius: var(--radius-sm); padding: 10px 12px; font-size: 15.5px; min-width: 120px;
   transition: border-color .12s ease, box-shadow .12s ease;
 }
 .field input:focus, .field select:focus, select:focus, input:focus {
-  outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(36, 84, 199, .12);
+  outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(36, 107, 254, .14);
 }
 button {
-  background: var(--text); color: var(--bg); border: 0; border-radius: var(--radius-pill);
-  padding: 10px 20px; font-size: 15.5px; cursor: pointer; font-weight: 700;
-  transition: transform .08s ease, box-shadow .15s ease, filter .12s ease;
+  background: var(--accent); color: #fff; border: 0; border-radius: var(--radius-pill);
+  padding: 10px 20px; font-size: 15.5px; cursor: pointer; font-weight: 850;
+  transition: transform .08s ease, box-shadow .15s ease, filter .12s ease, background .15s ease;
 }
-button:hover { filter: brightness(1.15); box-shadow: 0 10px 20px -12px rgba(21, 30, 42, .5); }
+button:hover { filter: brightness(1.04); box-shadow: 0 18px 32px -22px rgba(36, 107, 254, .72); }
 button:active { transform: translateY(1px); }
 button:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
 button.ghost {
-  background: transparent; border: 1.5px solid var(--line); color: var(--text);
+  background: #fff; border: 1px solid var(--line); color: var(--text);
 }
-button.ghost:hover { filter: none; border-color: var(--text); box-shadow: none; }
+button.ghost:hover { filter: none; border-color: #B8CAE7; box-shadow: none; color: var(--accent); }
 button.danger { background: var(--loss); color: #fff; }
 button.danger:hover { filter: brightness(1.1); box-shadow: 0 10px 20px -12px rgba(210, 64, 44, .55); }
 
 .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 26px; }
 .card {
   background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-lg);
-  padding: 18px 20px; box-shadow: var(--shadow-sm);
+  padding: 20px; box-shadow: var(--shadow-sm);
   transition: transform .15s ease, box-shadow .15s ease;
 }
 .card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-.card .k { color: var(--muted); font-size: 13px; font-weight: 600; margin-bottom: 10px; letter-spacing: .01em; }
-.card .v { font-size: 25px; font-weight: 800; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+.card .k { color: var(--muted); font-size: 12.5px; font-weight: 850; margin-bottom: 10px; letter-spacing: .01em; }
+.card .v { font-size: 26px; font-weight: 950; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
 
 table {
   width: 100%; border-collapse: separate; border-spacing: 0; background: var(--panel);
@@ -122,12 +144,12 @@ table {
 }
 th, td { padding: 13px 16px; text-align: right; font-size: 15.5px; border-bottom: 1px solid var(--line); }
 th {
-  color: var(--muted); font-weight: 700; font-size: 12.5px; letter-spacing: .03em;
-  text-transform: uppercase; background: var(--panel-2);
+  color: var(--muted); font-weight: 850; font-size: 12.5px; letter-spacing: .03em;
+  text-transform: uppercase; background: #F6FAFF;
 }
 th:first-child, td:first-child { text-align: left; }
 tbody tr { transition: background .1s ease; }
-tbody tr:hover td { background: var(--panel-2); }
+tbody tr:hover td { background: #F8FBFF; }
 tr:last-child td { border-bottom: 0; }
 tr.loss td {
   background: var(--loss-bg);
@@ -179,9 +201,9 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
 .manage { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 .panel {
   background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-lg);
-  padding: 20px; box-shadow: var(--shadow-sm);
+  padding: 22px; box-shadow: var(--shadow-sm);
 }
-.panel h3 { margin: 0 0 14px; font-size: 16.5px; letter-spacing: -.01em; }
+.panel h3 { margin: 0 0 14px; font-size: 17px; letter-spacing: -.01em; }
 .panel .field { margin-bottom: 12px; }
 .panel .field input, .panel .field select { width: 100%; }
 .note { font-size: 14px; margin-top: 8px; min-height: 16px; font-weight: 600; }
@@ -189,6 +211,11 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
 .cost-list { margin-top: 16px; font-size: 14.5px; color: var(--muted); }
 .cost-list div { padding: 8px 0; border-top: 1px solid var(--line); }
 @media (max-width: 720px) { .manage { grid-template-columns: 1fr; } .cards { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) {
+  .wrap { padding-inline: 18px; }
+  .cards { grid-template-columns: 1fr; }
+  th, td { padding: 12px 14px; }
+}
 
 /* 대시보드 적자/흑자 시각화(2026-07-07 피드백: 표만으로는 한눈에 안 들어옴) — 도넛(비중) +
    가로 바(상품별, 극적인 순) 2단 배치. 차트 라이브러리 없이 순수 SVG/CSS 로 구현
@@ -218,7 +245,7 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
   font-size: 14px; font-weight: 700; color: var(--loss); background: var(--loss-bg);
   border-radius: var(--radius-md); padding: 10px 14px; line-height: 1.4;
 }
-.donut-callout.ok { color: var(--profit); background: #E7F5EC; }
+.donut-callout.ok { color: var(--profit); background: var(--profit-bg); }
 
 .profit-bars { display: flex; flex-direction: column; gap: 10px; }
 .profit-bar-row { display: grid; grid-template-columns: 140px 1fr 110px; align-items: center; gap: 10px; }
@@ -305,23 +332,22 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
   text-align: center; max-width: 720px; margin-left: auto; margin-right: auto;
 }
 .onboarding-icon {
-  display: block; background: none; width: auto; height: auto; border-radius: 0;
-  font-size: 46px; margin-bottom: 22px; line-height: 1;
+  display: none;
 }
 .onboarding-title {
-  margin: 0 auto 18px; max-width: 14em; font-weight: 800; letter-spacing: -.02em;
-  line-height: 1.28; font-size: clamp(28px, 4.4vw, 46px); color: var(--text);
+  margin: 0 auto 18px; max-width: 14em; font-weight: 950; letter-spacing: -.03em;
+  line-height: 1.18; font-size: clamp(30px, 4.6vw, 52px); color: var(--text);
 }
 .onboarding-desc {
   margin: 0 auto 34px; max-width: 480px; color: var(--muted);
   font-size: clamp(15.5px, 1.6vw, 18px); line-height: 1.65;
 }
 .onboarding-cta {
-  display: inline-block; background: var(--text); color: var(--bg); font-weight: 700;
+  display: inline-block; background: var(--accent); color: #fff; font-weight: 850;
   font-size: 17px; padding: 14px 30px; border-radius: var(--radius-pill);
   transition: transform .08s ease, box-shadow .15s ease, filter .12s ease;
 }
-.onboarding-cta:hover { filter: brightness(1.15); box-shadow: 0 10px 20px -12px rgba(21, 30, 42, .5); }
+.onboarding-cta:hover { filter: brightness(1.04); box-shadow: 0 18px 32px -22px rgba(36, 107, 254, .72); }
 .onboarding-cta:active { transform: translateY(1px); }
 @media (max-width: 720px) {
   .onboarding-card { padding: 48px 16px 56px; }
@@ -332,30 +358,28 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
    선택자로 재정의하므로, 여기 기본값을 키워도 실제로는 Login 화면에만 적용된다(사용자 요청:
    로그인 화면 전체 폰트 1.5배 확대).
 */
-.auth-wrap { max-width: 460px; margin: 72px auto; padding: 0 20px; position: relative; }
+.auth-wrap {
+  max-width: 460px;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 72px 20px;
+  position: relative;
+}
 /* 배경 장식 — 뷰포트 전체를 덮는 은은한 점무늬 + 블롭(사용자 요청: "로그인창 뒷쪽 백그라운드에
    은은하게 배경 그림 추가"). fixed 라 auth-wrap 자체의 크기/스크롤과 무관하게 항상 화면 전체를
    깐다. 카드 내용보다 뒤(z-index -1)라 어떤 상호작용도 가리지 않는다. */
-.auth-bg { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+.auth-bg { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; background: linear-gradient(180deg, #F4F8FF, #FFFFFF 58%, #F7FAFF); }
 .auth-bg::before {
   content: ""; position: absolute; inset: 0;
-  background-image: radial-gradient(rgba(21, 30, 42, .07) 1.4px, transparent 1.4px);
+  background-image: radial-gradient(rgba(36, 107, 254, .08) 1.2px, transparent 1.2px);
   background-size: 22px 22px;
   -webkit-mask-image: radial-gradient(70% 60% at 50% 0%, #000 30%, transparent 78%);
   mask-image: radial-gradient(70% 60% at 50% 0%, #000 30%, transparent 78%);
 }
-.auth-bg::after {
-  content: ""; position: absolute; width: 340px; height: 340px; border-radius: 50%;
-  top: -80px; right: -60px; filter: blur(60px);
-  background: radial-gradient(circle, rgba(36, 84, 199, .16), transparent 70%);
-}
-.auth-bg-blob-b {
-  position: absolute; width: 280px; height: 280px; border-radius: 50%; filter: blur(60px);
-  bottom: -60px; left: -60px;
-  background: radial-gradient(circle, rgba(210, 64, 44, .12), transparent 70%);
-}
+.auth-bg::after,
+.auth-bg-blob-b { content: none; display: none; }
 .auth-brand { text-align: center; margin-bottom: 28px; }
-.auth-brand-name { display: block; font-size: 34px; font-weight: 800; letter-spacing: -.02em; color: var(--text); }
+.auth-brand-name { display: block; font-size: 34px; font-weight: 950; letter-spacing: -.02em; color: var(--text); }
 .auth-brand-tag { display: block; margin-top: 6px; font-size: 15px; color: var(--muted); }
 .auth-card {
   background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-lg);
@@ -363,7 +387,7 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
 }
 .auth-card::before {
   content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px;
-  background: linear-gradient(90deg, var(--text), var(--accent));
+  background: linear-gradient(90deg, var(--accent-dark), var(--accent));
 }
 .auth-card h1 { font-size: 31px; margin: 0 0 24px; }
 .auth-card .field { margin-bottom: 20px; }
@@ -397,9 +421,13 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
 /* 세로 패딩 축소(48→40→32) — 카드 자체 폰트를 1.4배 키우고 살짝 더 키운 만큼(사용자 요청:
    "왼쪽 로그인 창 세로 크기 조금만 더 키우고 폰트 크기도 1.4배 키워"), 바깥 여백을 더 줄여
    오른쪽 3단계 블록 추가분과 함께 100vh 안에 다시 들어오도록 맞춘다(스크롤 재발 방지). */
-.auth-form-pane { position: relative; overflow: hidden; display: flex; flex-direction: column; min-height: 100vh; padding: 24px 48px; }
+.auth-form-pane {
+  position: relative; overflow: hidden; display: flex; flex-direction: column; min-height: 100vh; padding: 24px 48px;
+  background:
+    linear-gradient(180deg, rgba(244, 248, 255, .96), rgba(255, 255, 255, .98) 58%, rgba(247, 250, 255, .96));
+}
 .auth-form-brand, .auth-form-center, .auth-form-foot { position: relative; z-index: 1; }
-.auth-form-brand { font-weight: 800; font-size: 15px; letter-spacing: .01em; color: var(--text); }
+.auth-form-brand { font-weight: 950; font-size: 17px; letter-spacing: -.01em; color: var(--text); }
 .auth-form-center { flex: 1; display: flex; align-items: center; justify-content: center; }
 /* 카드 자체도 우측 패널만큼 존재감 있게 키움(사용자 피드백: "로그인 창만 덩그러니", 이번엔
    세로 크기를 조금 더+폰트 전체 1.4배) — 폭도 큰 글자에 맞춰 460→500 로 살짝 넓혀 줄바꿈을
@@ -442,12 +470,11 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
    카드 하나만 화면 가운데 덩그러니 떠 있는 느낌을 없앤다. 새 색상 없이 기존 전역 토큰만 재사용. */
 .auth-form-decor { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
 .auth-form-decor-blob {
-  position: absolute; top: -160px; left: -140px; width: 440px; height: 440px; border-radius: 50%;
-  background: radial-gradient(closest-side, var(--panel-2), transparent 72%); opacity: .8;
+  display: none;
 }
 .auth-form-decor-graph {
   position: absolute; left: 0; bottom: 0; width: 62%; max-width: 460px; height: auto;
-  color: var(--text); opacity: .09; transform: scaleX(-1);
+  color: var(--accent); opacity: .07; transform: scaleX(-1);
 }
 
 @media (max-width: 980px) {
@@ -473,13 +500,13 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
   display: flex; flex-direction: column;
 }
 .plan:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-.plan.current { border-color: var(--text); border-width: 2px; box-shadow: var(--shadow-md); }
-.plan .pname { font-size: 19.5px; font-weight: 800; letter-spacing: -.01em; }
-.plan .price { font-size: 30px; font-weight: 800; margin: 12px 0 4px; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+.plan.current { border-color: var(--accent); border-width: 2px; box-shadow: var(--shadow-md); }
+.plan .pname { font-size: 19.5px; font-weight: 950; letter-spacing: -.01em; }
+.plan .price { font-size: 32px; font-weight: 950; margin: 12px 0 4px; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
 .plan .price small { font-size: 14px; color: var(--muted); font-weight: 500; }
 .plan ul { list-style: none; padding: 0; margin: 16px 0; }
 .plan li { padding: 7px 0; font-size: 15.5px; color: var(--text); border-top: 1px solid var(--line); }
-.plan .tag { display: inline-block; font-size: 11.5px; font-weight: 800; padding: 3px 9px;
+.plan .tag { display: inline-block; font-size: 11.5px; font-weight: 900; padding: 3px 9px;
   border-radius: var(--radius-pill); background: var(--accent); color: #fff; margin-left: 8px; letter-spacing: .02em; }
 .plan-actions { margin-top: auto; }
 @media (max-width: 720px) { .plans { grid-template-columns: 1fr; } }
@@ -534,7 +561,7 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
 .pp-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .pp-chip {
   background: #fff; border: 1px solid var(--line); color: var(--text);
-  border-radius: var(--radius-pill); padding: 8px 15px; font-size: 14.5px; font-weight: 600;
+  border-radius: var(--radius-pill); padding: 8px 15px; font-size: 14.5px; font-weight: 800;
   cursor: pointer; transition: background .12s ease, border-color .12s ease, color .12s ease, box-shadow .12s ease;
 }
 .pp-chip:hover:not(:disabled) { border-color: var(--accent); }
@@ -632,7 +659,7 @@ tr.loss:hover td { background: var(--loss-bg); filter: brightness(.98); }
    랜딩 푸터·회원가입 화면에서 바로 들어올 수 있어 전역 Nav 가 없을 수 있다 — 자체 상단 여백과
    "← 홈으로" 링크를 둔다. .legal-todo 는 조민석 님이 직접 채워야 하는 [작성 필요] 항목을
    loss 톤(기존 토큰)으로 눈에 띄게 강조한다. */
-.legal-page { padding-top: 32px; max-width: 760px; }
+.legal-page { padding-top: 32px; max-width: 800px; }
 .legal-back { margin-bottom: 18px; font-size: 14px; }
 .legal-page h2 { font-size: 17.5px; margin: 30px 0 10px; }
 .legal-page h2:first-of-type { margin-top: 20px; }

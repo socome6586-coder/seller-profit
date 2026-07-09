@@ -3,17 +3,17 @@
    도입하지 않고 기존 랜딩 팔레트 값을 로컬 변수로 그대로 옮겨 "흰 종이 영수증" 톤을 유지한다
    (앱 다크 테마 화면(Signup 등)에 놓여도 실물 영수증처럼 항상 밝은 카드로 보이는 게 의도된 디자인). */
 .receipt {
-  --rc-paper-2: #F2EEE4;
-  --rc-ink: #151E2A;
-  --rc-ink-2: #26313F;
-  --rc-muted: #5C6773;
-  --rc-line: #E6E0D4;
-  --rc-loss: #D2402C;
-  --rc-profit: #1E7A4A;
+  --rc-paper-2: #EEF5FF;
+  --rc-ink: #101828;
+  --rc-ink-2: #25324A;
+  --rc-muted: #64748B;
+  --rc-line: #DCE7F6;
+  --rc-loss: #FF5B45;
+  --rc-profit: #087F5B;
   --rc-mono: "Space Mono", ui-monospace, monospace;
 
-  background: #fff; border: 1px solid var(--rc-line); border-radius: 16px;
-  box-shadow: 0 30px 60px -34px rgba(21, 30, 42, .4); overflow: hidden;
+  background: #fff; border: 1px solid var(--rc-line); border-radius: 12px;
+  box-shadow: 0 34px 78px -52px rgba(18, 60, 156, .42); overflow: hidden;
   color: var(--rc-ink);
 }
 .receipt .receipt-top {
@@ -23,7 +23,7 @@
 .receipt .r-name { font-weight: 700; font-size: 15px; }
 .receipt .roas {
   font-family: var(--rc-mono); font-weight: 700; font-size: 13px; color: var(--rc-profit);
-  background: #E4F1E9; padding: 4px 10px; border-radius: 999px;
+  background: #E8F8F1; padding: 4px 10px; border-radius: 999px;
 }
 .receipt .r-body { padding: 20px 22px 6px; }
 .receipt .r-line { display: flex; justify-content: space-between; align-items: baseline; padding: 9px 0; font-size: 15px; }
