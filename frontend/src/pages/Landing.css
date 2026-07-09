@@ -127,19 +127,14 @@
   position: relative;
   overflow: hidden;
   padding: 72px 0 84px;
-  background:
-    linear-gradient(180deg, #F8FBFF 0%, #EEF5FF 58%, #F7FAFF 100%);
+  background-color: #F4F8FF;
+  background-image: url("/bg.png");
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 .landing .l-hero::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image:
-    linear-gradient(rgba(36, 107, 254, .08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(36, 107, 254, .08) 1px, transparent 1px);
-  background-size: 44px 44px;
-  mask-image: linear-gradient(180deg, rgba(0,0,0,.5), transparent 72%);
+  content: none;
 }
 .landing .l-hero .l-wrap { position: relative; z-index: 1; }
 .landing .l-hero-copy {
@@ -724,6 +719,7 @@
   }
   .landing .l-hero {
     padding: 48px 0 56px;
+    background-position: 58% top;
   }
   .landing .l-eyebrow,
   .landing .l-sec-eyebrow {
