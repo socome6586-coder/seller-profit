@@ -187,7 +187,7 @@ export default function Accounts() {
               <li>업체명: 아무 값 (예: 개인 상호명)</li>
               <li>URL: 없으면 <code>wing.coupang.com</code> 입력해도 무방</li>
               <li className="guide-ip-warn">
-                <span className="badge">⚠️ 필수</span>
+                <span className="badge">필수</span>
                 <b> IP 주소: 반드시 seller-profit 운영 서버의 공인 IP를 입력하세요.</b>{" "}
                 본인 PC의 IP가 아닙니다 — 실제 API 호출은 seller-profit 서버에서 나갑니다.
                 <div className="guide-ip-box">

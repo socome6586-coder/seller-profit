@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth.jsx";
@@ -6,6 +6,19 @@ import { mailto } from "../contact";
 import { usePageTitle } from "../hooks/usePageTitle";
 
 const CONFIRM_PHRASE = "회원탈퇴";
+const STATUS_LABELS = {
+  FREE: "무료",
+  ACTIVE: "PRO 이용중",
+  PAST_DUE: "결제 연체",
+  CANCELED: "해지 예정",
+};
+
+function formatDateTime(value) {
+  if (!value) return "–";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+  return d.toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" });
+}
 
 // 개인정보처리방침(6항)에서 "마이페이지에서 회원 탈퇴 가능"이라고 안내하는 실제 화면.
 // 관리자 계정은 서버에서 거부되므로(admin_audit 참조무결성 + 마지막 관리자 보호),
@@ -15,8 +28,15 @@ export default function MyPage() {
   const { user, refresh } = useAuth();
   const navigate = useNavigate();
   const [confirmText, setConfirmText] = useState("");
+  const [subscription, setSubscription] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    api("/api/subscription")
+      .then(setSubscription)
+      .catch(() => setSubscription(null));
+  }, []);
 
   async function withdraw() {
     setError("");
@@ -46,6 +66,19 @@ export default function MyPage() {
         <div className="field">
           <label>이메일</label>
           <div>{user?.email}</div>
+        </div>
+        <div className="field">
+          <label>내 요금제</label>
+          <div>
+            {subscription?.plan?.name || STATUS_LABELS[user?.subscriptionStatus] || user?.subscriptionStatus || "–"}
+            {subscription?.status ? (
+              <span className="muted"> · {STATUS_LABELS[subscription.status] || subscription.status}</span>
+            ) : null}
+          </div>
+        </div>
+        <div className="field">
+          <label>만료 기한</label>
+          <div>{formatDateTime(subscription?.currentPeriodEnd)}</div>
         </div>
       </div>
 

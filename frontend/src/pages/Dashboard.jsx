@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, won, pct, num, signClass } from "../api";
 import PeriodPicker, { computeRange } from "../components/PeriodPicker.jsx";
-import { ProfitDonut, ProfitBarChart, LossInsights } from "../components/ProfitCharts.jsx";
+import { ProfitDonut, ProfitBarChart, LossInsights, LossProductName } from "../components/ProfitCharts.jsx";
 import { usePageTitle } from "../hooks/usePageTitle";
 
 export default function Dashboard() {
@@ -246,8 +246,7 @@ function ProfitTable({ products }) {
           items.map((it, i) => (
             <tr key={i} className={it.loss ? "loss" : ""}>
               <td>
-                {it.name}
-                {it.loss ? <span className="badge">적자</span> : null}
+                {it.loss ? <LossProductName name={it.name} /> : it.name}
               </td>
               <td>{won(it.revenue)}</td>
               <td>{num(it.units)}</td>

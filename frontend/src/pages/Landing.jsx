@@ -4,16 +4,11 @@ import { api, won } from "../api";
 import { useAuth } from "../auth.jsx";
 import ReceiptCard from "../components/ReceiptCard.jsx";
 import {
-  IconTrendUp,
   IconLinkApi,
   IconDatabase,
   IconCalcWon,
   IconCsvUpload,
   IconMonitorWarning,
-  IconDocCheck,
-  IconChartSearch,
-  IconCalcBalance,
-  IconTarget,
   IconSparkle,
   IllustrationBarChart,
   IllustrationBrowserMock,
@@ -99,7 +94,7 @@ export default function Landing() {
         <div className="l-hero-blob l-hero-blob-b" aria-hidden="true" />
         <div className="l-wrap l-hero-grid">
           <div>
-            <div className="l-eyebrow">쿠팡 셀러 순이익 분석 · 무료가입 카드 등록 불필요!</div>
+            <div className="l-eyebrow">쿠팡 셀러 순이익 분석 · 카드 등록 불필요</div>
             <h1>
               ROAS는 <span className="red">13.5배.</span>
               <br />
@@ -166,7 +161,7 @@ export default function Landing() {
         <IconSparkle className="l-flow-star l-flow-star-a" />
         <IconSparkle className="l-flow-star l-flow-star-b" />
         <div className="l-wrap">
-          <div className="l-pill reveal-up">
+          <div className="l-burn-label reveal-up">
             어떻게 계산하나요?
           </div>
           <h2 className="reveal-up">
@@ -215,8 +210,7 @@ export default function Landing() {
       <section className="l-value">
         <div className="l-wrap l-value-grid">
           <div>
-            <div className="l-pill l-pill-accent reveal-up">
-              <IconTrendUp bg="transparent" />
+            <div className="l-burn-label l-burn-label-accent reveal-up">
               SELLER PROFIT이 보여주는 것!
             </div>
             <h2 className="reveal-up">
@@ -230,36 +224,32 @@ export default function Landing() {
         <div className="l-wrap">
           <div className="l-cards">
             <div className="l-card reveal-up">
-              <IconDocCheck />
               <span className="l-card-num">01</span>
-              <h3>정산 실수령 기준 진짜 순이익</h3>
+              <h3>정산 실수령 기준 진짜 순이익!</h3>
               <p>
                 주문 금액이 아니라 쿠팡이 실제로 입금한 정산 금액에서 원가·비용을 뺍니다. 가장
                 정직한 바닥 숫자.
               </p>
             </div>
             <div className="l-card reveal-up">
-              <IconChartSearch />
               <span className="l-card-num">02</span>
-              <h3>SKU별 광고 손익</h3>
+              <h3>SKU별 광고 손익!</h3>
               <p>
                 ROAS가 높아도 순이익을 갉아먹는 상품을 빨갛게 적발합니다. 어떤 광고를 꺼야 하는지
                 바로 보입니다.
               </p>
             </div>
             <div className="l-card reveal-up">
-              <IconCalcBalance />
               <span className="l-card-num">03</span>
-              <h3>정직한 계산</h3>
+              <h3>정직한 계산!</h3>
               <p>
                 반품 이중차감을 막고, 상품에 붙일 수 없는 광고비는 '미할당'으로 투명하게 남깁니다.
                 숫자를 믿을 수 있게.
               </p>
             </div>
             <div className="l-card reveal-up">
-              <IconTarget />
               <span className="l-card-num">04</span>
-              <h3>쿠팡에 맞춰 정밀하게</h3>
+              <h3>쿠팡에 맞춰 정밀하게!</h3>
               <p>쿠팡의 정산·수수료·반품 구조에 맞춰 설계했습니다. 넓게 얕은 대신, 한 채널을 제대로.</p>
             </div>
           </div>
@@ -271,6 +261,7 @@ export default function Landing() {
         <div className="l-wrap">
           <div className="l-sec-eyebrow reveal-up">요금제</div>
           <h2 className="reveal-up">필요한 만큼만.</h2>
+          <p className="l-plan-gift reveal-up">가입 시 한 달 PRO PLAN 무료 지급!</p>
           <div className="l-plans">
             {plans.map((p) => (
               <div key={p.code} className={"l-plan reveal-up" + (p.code === "PRO" ? " pro" : "")}>
@@ -307,7 +298,7 @@ export default function Landing() {
             <h2>
               당신의 적자 상품,
               <br />
-              <span className="l-underline-thick">지금 확인하세요.</span>
+              <span className="l-burn-heading">지금 확인하셨나요?</span>
             </h2>
             <p>쿠팡 계정만 연동하면, 광고비까지 반영한 진짜 순이익을 상품별로 바로 보여드립니다.</p>
             <Link className="btn btn-primary btn-lg" to="/signup">

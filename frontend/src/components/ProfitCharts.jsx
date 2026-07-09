@@ -6,6 +6,15 @@ import { won } from "../api";
 // 그리는 방식)를 쓰고 있어 같은 접근을 그대로 잇는다. 번들 크기를 늘리지 않는 게 장점.
 // docs/DECISIONS.md 참고(차트 도입 결정 기록).
 
+export function LossProductName({ name }) {
+  return (
+    <span className="loss-product-name">
+      <span className="loss-product-mark">{name}</span>
+      <span className="loss-product-text">적자</span>
+    </span>
+  );
+}
+
 /** 적자 상품 합계가 흑자 상품 합계를 얼마나 갉아먹는지 보여주는 도넛. */
 export function ProfitDonut({ products }) {
   const items = products || [];
@@ -118,8 +127,7 @@ export function LossInsights({ products, max = 6 }) {
       {items.map((it, i) => (
         <div className="loss-insight-row" key={i}>
           <div className="loss-insight-name">
-            {it.name}
-            <span className="badge">적자</span>
+            <LossProductName name={it.name} />
           </div>
           <ul className="loss-insight-notes">
             {diagnoseLoss(it).map((note, j) => (
@@ -152,8 +160,7 @@ export function ProfitBarChart({ products, max = 8 }) {
         return (
           <div className="profit-bar-row" key={i}>
             <div className="profit-bar-name" title={it.name}>
-              {it.name}
-              {it.loss ? <span className="badge">적자</span> : null}
+              {it.loss ? <LossProductName name={it.name} /> : it.name}
             </div>
             <div className="profit-bar-track">
               <div className={"profit-bar-fill " + (isLoss ? "is-loss" : "is-profit")} style={{ width: w + "%" }} />

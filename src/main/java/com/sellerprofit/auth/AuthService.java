@@ -4,19 +4,26 @@ import com.sellerprofit.admin.AdminBootstrapService;
 import com.sellerprofit.auth.dto.AuthUserView;
 import com.sellerprofit.domain.User;
 import com.sellerprofit.domain.type.Role;
+import com.sellerprofit.domain.type.SubscriptionSource;
+import com.sellerprofit.domain.type.SubscriptionStatus;
 import com.sellerprofit.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+
 /**
  * 회원가입 처리. 비밀번호는 BCrypt 해시로만 저장한다(평문 금지).
  *
- * 가입자는 별도 결제 없이 무료(FREE) 플랜으로 시작한다 — 유저 확보 우선.
+ * 가입자는 별도 결제 없이 1개월 PRO 무료 지급(COMP)으로 시작한다 — 유저 확보 우선.
  * 로그인/세션은 Phase 2, 유료 전환(토스 빌링)은 Phase 3.
  */
 @Service
 public class AuthService {
+
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -39,11 +46,17 @@ public class AuthService {
         if (userRepository.existsByPhone(normalizedPhone)) {
             throw new IllegalArgumentException("이미 가입된 휴대전화번호입니다.");
         }
-        User user = userRepository.save(
-                User.create(normalizedEmail, passwordEncoder.encode(rawPassword), normalizedPhone));
-        // 기본값이 FREE 라 추가 결제 없이 바로 사용 가능.
+        User user = User.create(normalizedEmail, passwordEncoder.encode(rawPassword), normalizedPhone);
+        grantSignupProTrial(user);
+        userRepository.save(user);
         adminBootstrapService.promoteIfBootstrapAdmin(user);   // app.admin-emails 계정이면 즉시 ADMIN
         return AuthUserView.of(user);
+    }
+
+    private static void grantSignupProTrial(User user) {
+        user.setSubscriptionStatus(SubscriptionStatus.ACTIVE);
+        user.setSource(SubscriptionSource.COMP);
+        user.setCurrentPeriodEnd(OffsetDateTime.now(KST).plusMonths(1));
     }
 
     /** 가입 폼의 "중복확인" 버튼용 — 이미 쓰이는 이메일인지 여부만 알려준다(계정 존재 자체는 노출해도

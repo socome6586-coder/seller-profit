@@ -28,7 +28,7 @@ import java.util.Map;
  * 인증 API. 세션(쿠키) 기반이며, 별도 시큐리티 필터체인 없이 컨트롤러가 직접 세션을 다룬다.
  *
  * 예) GET  /api/auth/check-email?email=a@b.com → {"available":true|false}
- *     POST /api/auth/signup  {"email":"a@b.com","password":"secret123","phone":"01012345678"} → 무료 가입
+ *     POST /api/auth/signup  {"email":"a@b.com","password":"secret123","phone":"01012345678"} → 1개월 PRO 무료 지급 가입
  *     POST /api/auth/login   {"email":"a@b.com","password":"secret123","remember":true} → 세션에 userId 저장
  *     POST /api/auth/logout  → 세션 무효화(204)
  *     GET  /api/auth/me      → 현재 로그인 유저(세션 없으면 401)

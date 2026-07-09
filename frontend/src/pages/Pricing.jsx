@@ -135,7 +135,7 @@ export default function Pricing() {
                       </button>
                       {!billingEnabled ? (
                         <div className="note muted" style={{ marginTop: 8 }}>
-                          결제 연동 준비 중입니다(토스 키 설정 후 활성화).
+                          결제 연동 준비 중입니다.
                         </div>
                       ) : null}
                     </>
