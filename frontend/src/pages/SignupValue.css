@@ -86,9 +86,13 @@
 }
 .av-receipt-icon.sm { width: 30px; height: 30px; }
 .av-receipt-head { display: flex; align-items: center; gap: 12px; padding-bottom: 14px; }
-.av-receipt-name { font-weight: 700; font-size: 16px; color: var(--text); }
+.av-receipt-name { font-weight: 700; font-size: 16px; color: var(--text); min-width: 0; }
+/* 좁은 화면에서 상품명이 길어지면 ROAS 배지가 줄바꿈되거나 눌려 찌그러질 수 있어
+   항상 한 줄 폭 그대로(줄어들지 않게) 유지한다 — 정렬 자체는 실측으로 문제없음을 확인했지만
+   엣지 케이스(초소형 화면) 방어용. */
 .av-receipt-roas {
-  margin-left: auto; font-family: ui-monospace, monospace; font-weight: 700; font-size: 13.5px;
+  margin-left: auto; flex-shrink: 0; white-space: nowrap;
+  font-family: ui-monospace, monospace; font-weight: 700; font-size: 13.5px;
   color: var(--av-mint-ink); background: var(--av-mint); padding: 5px 12px; border-radius: var(--radius-pill);
 }
 .av-receipt-body { border-top: 1px dashed var(--line); }
@@ -171,7 +175,11 @@
 
 @media (max-width: 760px) {
   .av-panel { min-height: 0; padding: 44px 24px 56px; }
-  .av-footer { flex-direction: column; gap: 18px; padding: 22px 18px; }
-  .av-footer-col { text-align: left; padding: 0; }
-  .av-footer-col + .av-footer-col { border-left: 0; border-top: 1px solid var(--line); padding-top: 18px; }
+  /* 사용자 피드백(2026-07-09): 세로로 쌓이며 구분선 사이 여백이 커서 "여백투성이"로 보였다.
+     데스크톱과 동일하게 가로 3열을 유지하되, 좁은 화면에 맞게 글자 크기·패딩만 줄인다. */
+  .av-footer { padding: 14px 6px; }
+  .av-footer-col { padding: 0 8px; }
+  .av-footer-icon { width: 30px; height: 30px; margin-bottom: 6px; }
+  .av-footer-title { font-size: 12.5px; }
+  .av-footer-desc { font-size: 11px; margin-top: 4px; }
 }
