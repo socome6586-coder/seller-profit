@@ -144,16 +144,38 @@
 }
 .landing .l-eyebrow,
 .landing .l-sec-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  min-height: 34px;
-  padding: 0 14px;
-  border: 1px solid #C9D8F5;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, .78);
-  color: var(--l-blue-dark);
-  font-size: 14px;
+  position: relative;
+  z-index: 0;
+  display: inline-block;
+  min-height: 0;
+  padding: 0 3px 5px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #132D63;
+  font-size: clamp(17px, 1.7vw, 21px);
   font-weight: 900;
+  line-height: 1.25;
+  letter-spacing: 0;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, .8),
+    0 0 11px rgba(255, 91, 69, .22),
+    0 2px 8px rgba(16, 42, 92, .16);
+}
+.landing .l-eyebrow::after,
+.landing .l-sec-eyebrow::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  right: -5px;
+  bottom: 2px;
+  left: -5px;
+  height: 11px;
+  background:
+    linear-gradient(90deg, transparent 0 5%, rgba(255, 91, 69, .18) 5% 13%, rgba(255, 214, 83, .52) 13% 82%, rgba(255, 91, 69, .22) 82% 96%, transparent 96%),
+    repeating-linear-gradient(-7deg, rgba(117, 45, 27, .16) 0 2px, transparent 2px 7px);
+  filter: blur(.15px);
+  transform: rotate(-1deg);
 }
 .landing h1,
 .landing h2 {
@@ -187,20 +209,24 @@
   flex-wrap: wrap;
 }
 .landing .l-hero-metrics {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  display: flex;
+  justify-content: center;
+  gap: 0;
   max-width: 760px;
   margin: 34px auto 0;
+  border-top: 1px solid rgba(18, 60, 156, .16);
+  border-bottom: 1px solid rgba(18, 60, 156, .16);
+  background: rgba(255, 255, 255, .42);
+  backdrop-filter: blur(10px);
 }
 .landing .l-hero-metrics div {
-  min-height: 78px;
-  padding: 16px 18px;
-  border: 1px solid rgba(201, 216, 245, .9);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, .78);
+  flex: 1 1 0;
+  min-height: 74px;
+  padding: 15px 24px;
   text-align: left;
-  box-shadow: 0 18px 46px -34px rgba(18, 60, 156, .35);
+}
+.landing .l-hero-metrics div + div {
+  border-left: 1px solid rgba(18, 60, 156, .16);
 }
 .landing .l-hero-metrics span {
   display: block;
@@ -217,21 +243,24 @@
 }
 
 .landing .l-product-stage {
-  margin-top: 44px;
+  max-width: 1020px;
+  margin: 50px auto 0;
   overflow: hidden;
-  border: 1px solid #C9D8F5;
-  border-radius: 30px;
-  background: rgba(255,255,255,.9);
-  box-shadow: var(--l-shadow);
+  border-top: 1px solid rgba(18, 60, 156, .22);
+  border-bottom: 1px solid rgba(18, 60, 156, .22);
+  background: linear-gradient(180deg, rgba(255,255,255,.56), rgba(255,255,255,.34));
+  box-shadow: 0 34px 78px -58px rgba(18, 60, 156, .42);
+  backdrop-filter: blur(14px);
 }
 .landing .l-stage-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  padding: 20px 24px;
-  border-bottom: 1px solid var(--l-line);
-  background: #FDFEFF;
+  padding: 19px 2px 16px;
+  margin: 0 28px;
+  border-bottom: 1px solid rgba(18, 60, 156, .14);
+  background: transparent;
 }
 .landing .l-stage-top > div {
   display: flex;
@@ -252,83 +281,74 @@
 }
 .landing .l-stage-status {
   flex: 0 0 auto;
-  padding: 7px 12px;
-  border-radius: 999px;
-  background: #FFF0EC;
+  padding: 0 0 4px;
+  border-bottom: 4px solid rgba(255, 91, 69, .42);
   color: var(--l-coral);
   font-size: 13px;
   font-weight: 900;
 }
-.landing .l-stage-grid {
+.landing .l-stage-ledger {
+  padding: 7px 28px 0;
+}
+.landing .l-ledger-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(300px, .95fr);
-  gap: 18px;
-  padding: 22px;
-}
-.landing .l-product-stage .receipt {
-  min-height: 100%;
-  border-color: #DCE7F6;
-  box-shadow: none;
-}
-.landing .l-stage-panel {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: 320px;
-  padding: 26px;
-  border: 1px solid #DCE7F6;
-  border-radius: 20px;
-  background: linear-gradient(180deg, #F7FAFF, #FFFFFF);
-}
-.landing .l-panel-title {
-  margin-bottom: 18px;
-  color: var(--l-ink);
-  font-size: 18px;
-  font-weight: 900;
-}
-.landing .l-panel-row {
-  display: flex;
+  grid-template-columns: 1.15fr .95fr .9fr auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-top: 12px;
+  gap: 20px;
+  min-height: 68px;
+  border-bottom: 1px solid rgba(18, 60, 156, .12);
   color: var(--l-ink-2);
   font-size: 14px;
   font-weight: 800;
 }
-.landing .l-panel-row strong {
+.landing .l-ledger-row strong {
   font-family: var(--l-mono);
   white-space: nowrap;
+  font-size: 16px;
+}
+.landing .l-ledger-name {
+  position: relative;
+  display: inline-block;
+  width: max-content;
+  color: var(--l-ink);
+  font-size: 17px;
+  font-weight: 950;
+}
+.landing .l-ledger-row.is-loss .l-ledger-name::after {
+  content: "적자";
+  margin-left: 10px;
+  color: var(--l-coral);
+  font-size: 13px;
+  font-weight: 950;
+}
+.landing .l-ledger-row.is-loss .l-ledger-name::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  right: -5px;
+  bottom: 1px;
+  left: -5px;
+  height: 11px;
+  background: linear-gradient(90deg, rgba(255, 91, 69, .1), rgba(255, 91, 69, .34), rgba(255, 230, 109, .28));
+  transform: rotate(-1.2deg);
+}
+.landing .l-stage-summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 20px 28px 24px;
+  color: var(--l-muted);
+  font-size: 15px;
+  font-weight: 800;
+}
+.landing .l-stage-summary strong {
+  color: var(--l-ink);
+  font-size: 18px;
+  font-weight: 950;
 }
 .landing .profit { color: #087F5B; }
 .landing .loss { color: var(--l-coral); }
-.landing .l-panel-bar {
-  position: relative;
-  height: 10px;
-  margin-top: 9px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: #E8EEF8;
-}
-.landing .l-panel-bar::after {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: var(--bar);
-  border-radius: inherit;
-}
-.landing .l-panel-bar.profit::after { background: var(--l-mint); }
-.landing .l-panel-bar.loss::after { background: var(--l-coral); }
-.landing .l-panel-callout {
-  margin-top: 24px;
-  padding: 16px 18px;
-  border-radius: 18px;
-  background: #102A5C;
-  color: #FFFFFF;
-  font-size: 15px;
-  font-weight: 850;
-  line-height: 1.55;
-}
 
 .landing .l-strip {
   padding: 78px 0;
@@ -336,9 +356,15 @@
   color: #fff;
 }
 .landing .l-strip .l-sec-eyebrow {
-  border-color: rgba(255,255,255,.24);
-  background: rgba(255,255,255,.1);
-  color: #DDE9FF;
+  color: #FFFFFF;
+  text-shadow:
+    0 0 12px rgba(255, 91, 69, .34),
+    0 2px 9px rgba(0, 0, 0, .25);
+}
+.landing .l-strip .l-sec-eyebrow::after {
+  background:
+    linear-gradient(90deg, transparent 0 5%, rgba(255, 91, 69, .26) 5% 18%, rgba(255, 230, 109, .38) 18% 84%, rgba(255, 91, 69, .22) 84% 96%, transparent 96%),
+    repeating-linear-gradient(-7deg, rgba(0, 0, 0, .18) 0 2px, transparent 2px 7px);
 }
 .landing .l-strip-grid {
   display: grid;
@@ -419,13 +445,13 @@
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0;
   margin-top: 46px;
-  padding-top: 4px;
+  padding: 12px 0 10px;
 }
 .landing .l-flow-steps::after {
   content: "";
   position: absolute;
   z-index: 0;
-  top: 264px;
+  top: 190px;
   right: calc((100% / 5) / 2);
   left: calc((100% / 5) / 2);
   height: 1px;
@@ -435,15 +461,11 @@
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-rows: 250px 30px auto auto;
+  grid-template-rows: 178px 30px auto auto;
   justify-items: center;
   min-width: 0;
   padding: 0 8px 8px;
-  border: 0;
-  background: transparent;
   color: var(--l-ink);
-  font: inherit;
-  cursor: pointer;
 }
 .landing .l-flow-orb {
   align-self: center;
@@ -451,48 +473,25 @@
   place-items: center;
   width: 152px;
   height: 152px;
-  overflow: hidden;
+  overflow: visible;
   border-radius: 50%;
-  background: #EFF4F9;
-  box-shadow: inset 0 0 0 1px rgba(36, 107, 254, .04);
-  transition: opacity .25s ease;
-}
-.landing .l-flow-step.is-active .l-flow-orb {
-  opacity: 0;
-}
-.landing .l-flow-active-orb {
-  position: absolute;
-  z-index: 2;
-  top: 17px;
-  display: grid;
-  place-items: center;
-  width: 224px;
-  height: 224px;
-  overflow: hidden;
-  border-radius: 50%;
-  background: #102A5C;
-  box-shadow: 0 24px 54px -28px rgba(16, 42, 92, .72);
-  pointer-events: none;
-  transform: translateX(-50%);
-  transition: left .7s cubic-bezier(.2, .8, .2, 1);
+  background:
+    radial-gradient(circle at 45% 38%, #FFFFFF 0 18%, #EAF6FF 42%, #EFF4F9 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(36, 107, 254, .06),
+    0 18px 46px -34px rgba(18, 60, 156, .36);
 }
 .landing .l-flow-image {
   display: block;
-  max-width: none;
+  max-width: 100%;
+  height: auto;
   object-fit: contain;
-  transition: width .55s cubic-bezier(.2, .8, .2, 1), transform .55s cubic-bezier(.2, .8, .2, 1);
 }
 .landing .l-flow-image.is-large {
-  width: 116%;
+  width: 84%;
 }
 .landing .l-flow-image.is-compact {
-  width: 94%;
-}
-.landing .l-flow-active-orb .l-flow-image.is-large {
-  width: 120%;
-}
-.landing .l-flow-active-orb .l-flow-image.is-compact {
-  width: 98%;
+  width: 72%;
 }
 .landing .l-flow-marker {
   position: relative;
@@ -509,12 +508,10 @@
   border-radius: 50%;
   background: #D8DEE8;
   box-shadow: 0 0 0 1px transparent;
-  transition: background-color .25s ease, box-shadow .25s ease, transform .25s ease;
 }
-.landing .l-flow-step.is-active .l-flow-marker i {
+.landing .l-flow-step:first-child .l-flow-marker i {
   background: var(--l-blue);
   box-shadow: 0 0 0 2px var(--l-blue);
-  transform: scale(1.12);
 }
 .landing .l-flow-num {
   margin-top: 4px;
@@ -522,23 +519,16 @@
   font-family: var(--l-mono);
   font-size: 16px;
   line-height: 1.4;
-  transition: color .25s ease;
 }
 .landing .l-flow-step strong {
   margin-top: 4px;
   font-size: 18px;
   line-height: 1.35;
   letter-spacing: 0;
-  transition: color .25s ease;
 }
-.landing .l-flow-step.is-active .l-flow-num,
-.landing .l-flow-step.is-active strong {
+.landing .l-flow-step:first-child .l-flow-num,
+.landing .l-flow-step:first-child strong {
   color: var(--l-blue);
-}
-.landing .l-flow-step:focus-visible {
-  outline: 3px solid rgba(36, 107, 254, .25);
-  outline-offset: 4px;
-  border-radius: 8px;
 }
 
 .landing .l-value {
@@ -751,7 +741,6 @@
   .landing .l-nav-links {
     display: none;
   }
-  .landing .l-stage-grid,
   .landing .l-strip-grid,
   .landing .l-value-grid,
   .landing .l-final-grid {
@@ -761,16 +750,11 @@
     width: 118px;
     height: 118px;
   }
-  .landing .l-flow-active-orb {
-    top: 15px;
-    width: 172px;
-    height: 172px;
-  }
   .landing .l-flow-step {
-    grid-template-rows: 194px 28px auto auto;
+    grid-template-rows: 142px 28px auto auto;
   }
   .landing .l-flow-steps::after {
-    top: 207px;
+    top: 154px;
   }
   .landing .l-cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -816,9 +800,8 @@
   }
   .landing .l-eyebrow,
   .landing .l-sec-eyebrow {
-    min-height: 30px;
-    padding: 0 11px;
-    font-size: 12.5px;
+    padding: 0 2px 5px;
+    font-size: 15px;
   }
   .landing h1 {
     margin-top: 18px;
@@ -836,9 +819,7 @@
     width: 100%;
   }
   .landing .l-hero-metrics {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
     margin-top: 24px;
-    gap: 8px;
   }
   .landing .l-hero-metrics div {
     min-height: 72px;
@@ -850,20 +831,27 @@
   }
   .landing .l-product-stage {
     margin-top: 28px;
-    border-radius: 22px;
   }
   .landing .l-stage-top {
     align-items: flex-start;
-    padding: 16px;
+    margin: 0 16px;
+    padding: 16px 0;
     flex-direction: column;
   }
-  .landing .l-stage-grid {
-    padding: 14px;
-    gap: 14px;
+  .landing .l-stage-ledger {
+    padding: 0 16px;
   }
-  .landing .l-stage-panel {
+  .landing .l-ledger-row {
+    grid-template-columns: 1fr;
+    gap: 5px;
     min-height: 0;
-    padding: 18px;
+    padding: 16px 0;
+  }
+  .landing .l-stage-summary {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 18px 16px 22px;
+    gap: 4px;
   }
   .landing .l-strip,
   .landing .l-flow,
@@ -893,7 +881,7 @@
     padding: 20px;
   }
   .landing .l-flow-step {
-    grid-template-rows: 108px 24px auto auto;
+    grid-template-rows: 72px 24px auto auto;
     min-height: 0;
     padding: 0 2px 6px;
   }
@@ -901,17 +889,11 @@
     margin-top: 30px;
   }
   .landing .l-flow-steps::after {
-    top: 119px;
+    top: 83px;
   }
   .landing .l-flow-orb {
     width: 58px;
     height: 58px;
-  }
-  .landing .l-flow-active-orb {
-    top: 10px;
-    width: 88px;
-    height: 88px;
-    box-shadow: 0 16px 32px -20px rgba(16, 42, 92, .68);
   }
   .landing .l-flow-marker {
     height: 24px;

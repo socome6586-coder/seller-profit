@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, won } from "../api";
 import { useAuth } from "../auth.jsx";
-import ReceiptCard from "../components/ReceiptCard.jsx";
 import {
   IllustrationBarChart,
   IllustrationBrowserMock,
@@ -99,18 +98,9 @@ export default function Landing() {
   usePageTitle("셀러프로핏 - 쿠팡 셀러 진짜 순이익 계산");
   const { user } = useAuth();
   const [plans, setPlans] = useState([]);
-  const [activeFlow, setActiveFlow] = useState(0);
 
   useEffect(() => {
     api("/api/plans").then(setPlans).catch(() => setPlans([]));
-  }, []);
-
-  useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return undefined;
-    const timer = window.setInterval(() => {
-      setActiveFlow((current) => (current + 1) % flowSteps.length);
-    }, 2600);
-    return () => window.clearInterval(timer);
   }, []);
 
   useScrollReveal(plans.length);
@@ -192,27 +182,29 @@ export default function Landing() {
               </div>
               <span className="l-stage-status">적자 SKU 감지</span>
             </div>
-            <div className="l-stage-grid">
-              <ReceiptCard />
-              <div className="l-stage-panel">
-                <div className="l-panel-title">이번 달 손익 요약</div>
-                <div className="l-panel-row">
-                  <span>흑자상품 A</span>
-                  <strong className="profit">₩407,368</strong>
-                </div>
-                <div className="l-panel-bar profit" style={{ "--bar": "92%" }} />
-                <div className="l-panel-row">
-                  <span>적자상품 B</span>
-                  <strong className="loss">-₩159,737</strong>
-                </div>
-                <div className="l-panel-bar loss" style={{ "--bar": "54%" }} />
-                <div className="l-panel-row">
-                  <span>흑자상품 C</span>
-                  <strong className="profit">₩102,368</strong>
-                </div>
-                <div className="l-panel-bar profit" style={{ "--bar": "38%" }} />
-                <div className="l-panel-callout">매출은 좋아 보여도, 광고후 순이익은 다르게 보입니다.</div>
+            <div className="l-stage-ledger" aria-label="손익 진단 예시">
+              <div className="l-ledger-row">
+                <span className="l-ledger-name">흑자상품 A</span>
+                <span>정산 ₩720,000</span>
+                <span>광고비 ₩30,000</span>
+                <strong className="profit">₩407,368</strong>
               </div>
+              <div className="l-ledger-row is-loss">
+                <span className="l-ledger-name">적자상품 B</span>
+                <span>정산 ₩270,000</span>
+                <span>광고비 ₩20,000</span>
+                <strong className="loss">-₩159,737</strong>
+              </div>
+              <div className="l-ledger-row">
+                <span className="l-ledger-name">흑자상품 C</span>
+                <span>정산 ₩150,000</span>
+                <span>광고비 ₩0</span>
+                <strong className="profit">₩102,368</strong>
+              </div>
+            </div>
+            <div className="l-stage-summary">
+              <span>매출은 좋아 보여도</span>
+              <strong>광고후 순이익은 다르게 보입니다.</strong>
             </div>
           </div>
         </div>
@@ -263,27 +255,11 @@ export default function Landing() {
               찾아냅니다.
             </p>
           </div>
-          <div className="l-flow-steps reveal-up" role="tablist" aria-label="자동 계산 단계">
-            <span
-              className="l-flow-active-orb"
-              style={{ left: `${10 + activeFlow * 20}%` }}
-              aria-hidden="true"
-            >
-              <img
-                className={`l-flow-image is-${flowSteps[activeFlow].sourceSize}`}
-                src={flowSteps[activeFlow].image}
-                alt=""
-              />
-            </span>
-            {flowSteps.map((step, index) => (
-              <button
-                className={`l-flow-step${activeFlow === index ? " is-active" : ""}`}
+          <div className="l-flow-steps reveal-up" aria-label="자동 계산 단계">
+            {flowSteps.map((step) => (
+              <div
+                className="l-flow-step"
                 key={step.num}
-                type="button"
-                role="tab"
-                aria-selected={activeFlow === index}
-                aria-label={`${step.num} ${step.title}: ${step.desc}`}
-                onClick={() => setActiveFlow(index)}
               >
                 <span className="l-flow-orb">
                   <img
@@ -298,7 +274,7 @@ export default function Landing() {
                 </span>
                 <span className="l-flow-num">{step.num}</span>
                 <strong>{step.title}</strong>
-              </button>
+              </div>
             ))}
           </div>
         </div>
