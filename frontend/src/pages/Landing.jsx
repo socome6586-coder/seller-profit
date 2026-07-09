@@ -9,22 +9,14 @@ import {
   IconCalcWon,
   IconCsvUpload,
   IconMonitorWarning,
-  IconSparkle,
   IllustrationBarChart,
   IllustrationBrowserMock,
 } from "../components/LandingIcons.jsx";
 import "./Landing.css";
 import { usePageTitle } from "../hooks/usePageTitle";
 
-// 공개 랜딩 페이지("/"). 비로그인 방문자에게 보여주는 첫 세일즈 자산.
-// 디자인 기준: docs/landing-mockup.html (섹션 순서·카피·색/타이포 그대로 구현, 스타일은 Landing.css 로 격리).
-// 가짜 지표 없음(docs/landing-page-tasks.md 절대 규칙) — 히어로의 숫자는 시드 데모(적자상품 B)와 정합.
-// 요금제는 /api/plans 에서 받아 렌더(하드코딩 금지, PlanType 이 유일한 정책 소스).
-// 스크롤로 뷰포트에 들어오는 요소에 .is-in 을 붙여 CSS 리빌 애니메이션을 트리거한다.
-// prefers-reduced-motion 이면 애니메이션 없이 즉시 표시(접근성, docs/landing-page-tasks.md 8.4).
 function useScrollReveal(dep) {
   useEffect(() => {
-    // 요금제(.l-plan)는 /api/plans 응답 후에야 DOM 에 생기므로 dep(plans) 로 재실행해 다시 관찰한다.
     const targets = document.querySelectorAll(".landing .reveal-up");
     if (!targets.length) return undefined;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -44,12 +36,67 @@ function useScrollReveal(dep) {
     );
     targets.forEach((el) => io.observe(el));
     return () => io.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dep]);
 }
 
+const flowSteps = [
+  {
+    num: "01",
+    title: "계정 연동",
+    desc: "쿠팡 Open API 키를 등록하면 정산 데이터를 불러옵니다.",
+    icon: <IconLinkApi />,
+  },
+  {
+    num: "02",
+    title: "자동 수집",
+    desc: "주문, 정산, 반품 내역을 주기적으로 모아둡니다.",
+    icon: <IconDatabase />,
+  },
+  {
+    num: "03",
+    title: "원가 입력",
+    desc: "상품별 매입원가와 기타비용을 바로 반영합니다.",
+    icon: <IconCalcWon />,
+  },
+  {
+    num: "04",
+    title: "광고비 반영",
+    desc: "CSV 업로드와 수기 입력으로 SKU별 광고비를 붙입니다.",
+    icon: <IconCsvUpload />,
+  },
+  {
+    num: "05",
+    title: "적자 상품 발견",
+    desc: "광고후 순이익이 마이너스인 SKU를 선명하게 표시합니다.",
+    icon: <IconMonitorWarning />,
+  },
+];
+
+const valueCards = [
+  {
+    num: "01",
+    title: "정산 실수령 기준 진짜 순이익!",
+    desc: "주문 금액이 아니라 쿠팡이 실제로 입금한 정산 금액에서 원가와 비용을 뺍니다.",
+  },
+  {
+    num: "02",
+    title: "SKU별 광고 손익!",
+    desc: "ROAS가 좋아도 순이익을 갉아먹는 상품을 찾아 어떤 광고를 줄일지 보여줍니다.",
+  },
+  {
+    num: "03",
+    title: "정직한 계산!",
+    desc: "반품 이중차감을 막고, 상품에 붙일 수 없는 광고비는 미할당으로 투명하게 남깁니다.",
+  },
+  {
+    num: "04",
+    title: "쿠팡에 맞춘 분석!",
+    desc: "쿠팡 정산, 수수료, 반품 구조에 맞춰 한 채널을 더 깊게 계산합니다.",
+  },
+];
+
 export default function Landing() {
-  usePageTitle("셀러프로핏 — 쿠팡 셀러 진짜 순이익 계산");
+  usePageTitle("셀러프로핏 - 쿠팡 셀러 진짜 순이익 계산");
   const { user } = useAuth();
   const [plans, setPlans] = useState([]);
 
@@ -63,9 +110,14 @@ export default function Landing() {
     <div className="landing">
       <nav className="l-nav">
         <div className="l-nav-inner">
-          <div className="l-brand">
+          <Link className="l-brand" to="/">
             SELLER PROFIT
             <span className="l-badge">얼리액세스</span>
+          </Link>
+          <div className="l-nav-links" aria-label="랜딩 섹션">
+            <a href="#how">계산 방식</a>
+            <a href="#value">핵심 기능</a>
+            <a href="#pricing">요금제</a>
           </div>
           <div className="l-nav-cta">
             {user ? (
@@ -86,58 +138,92 @@ export default function Landing() {
         </div>
       </nav>
 
-      {/* HERO */}
       <header className="l-hero">
-        <div className="l-hero-bg" aria-hidden="true" />
-        <div className="l-hero-dots" aria-hidden="true" />
-        <div className="l-hero-blob l-hero-blob-a" aria-hidden="true" />
-        <div className="l-hero-blob l-hero-blob-b" aria-hidden="true" />
-        <div className="l-wrap l-hero-grid">
-          <div>
+        <div className="l-wrap">
+          <div className="l-hero-copy">
             <div className="l-eyebrow">쿠팡 셀러 순이익 분석 · 카드 등록 불필요</div>
             <h1>
-              ROAS는 <span className="red">13.5배.</span>
-              <br />
-              그런데 팔수록
-              <br />
-              손해입니다.
+              쿠팡 정산부터 광고비까지,
+              <span>진짜 순이익을 한 화면에.</span>
             </h1>
             <p className="l-sub">
-              매출도 광고 효율도 좋아 보이는 상품이, 정산 실수령 기준으로 계산하면 적자인 경우가
-              있습니다. seller-profit은 광고비까지 반영한 <b>진짜 순이익</b>을 상품별로 보여줍니다.
+              매출과 ROAS만 보고 판단하면 적자 상품을 놓칩니다. 셀러프로핏은 정산 실수령액,
+              원가, 반품, 광고비를 한 번에 계산해 상품별로 실제 남는 돈을 보여줍니다.
             </p>
             <div className="l-hero-cta">
               <Link className="btn btn-primary btn-lg" to="/signup">
-                무료로 내 순이익 보기
+                무료로 내 손익 보기
               </Link>
-              <a className="btn btn-ghost btn-lg" href="#how">
-                어떻게 계산하나요 →
+              <a className="btn btn-soft btn-lg" href="#how">
+                계산 방식 보기
               </a>
-            </div>
-            <div className="l-tags">
-              <span className="tag">쿠팡 계정 연동</span>
-              <span className="tag">정산 실수령 기준</span>
-              <span className="tag">반품·광고비 자동 반영</span>
             </div>
           </div>
 
-          {/* 시그니처: 정산 명세서 (공용 컴포넌트, docs/signup-tasks.md T11.1) */}
-          <ReceiptCard />
+          <div className="l-hero-metrics" aria-label="핵심 지표 예시">
+            <div>
+              <span>정산 기준</span>
+              <strong>실수령액</strong>
+            </div>
+            <div>
+              <span>광고 포함</span>
+              <strong>SKU 손익</strong>
+            </div>
+            <div>
+              <span>가입 혜택</span>
+              <strong>PRO 1개월</strong>
+            </div>
+          </div>
+
+          <div className="l-product-stage reveal-up">
+            <div className="l-stage-top">
+              <div>
+                <span className="l-stage-kicker">PROFIT CONTROL CENTER</span>
+                <strong>광고후 순이익 실시간 진단</strong>
+              </div>
+              <span className="l-stage-status">적자 SKU 감지</span>
+            </div>
+            <div className="l-stage-grid">
+              <ReceiptCard />
+              <div className="l-stage-panel">
+                <div className="l-panel-title">이번 달 손익 요약</div>
+                <div className="l-panel-row">
+                  <span>흑자상품 A</span>
+                  <strong className="profit">₩407,368</strong>
+                </div>
+                <div className="l-panel-bar profit" style={{ "--bar": "92%" }} />
+                <div className="l-panel-row">
+                  <span>적자상품 B</span>
+                  <strong className="loss">-₩159,737</strong>
+                </div>
+                <div className="l-panel-bar loss" style={{ "--bar": "54%" }} />
+                <div className="l-panel-row">
+                  <span>흑자상품 C</span>
+                  <strong className="profit">₩102,368</strong>
+                </div>
+                <div className="l-panel-bar profit" style={{ "--bar": "38%" }} />
+                <div className="l-panel-callout">매출은 좋아 보여도, 광고후 순이익은 다르게 보입니다.</div>
+              </div>
+            </div>
+          </div>
         </div>
       </header>
 
-      {/* PROBLEM */}
       <section className="l-strip" id="how">
-        <div className="l-wrap">
-          <h2 className="reveal-up">
-            매출과 ROAS는 잘 보여요.
-            <br />
-            그런데 <span className="l-underline">통장</span>은 왜 다를까요?
-          </h2>
+        <div className="l-wrap l-strip-grid">
+          <div>
+            <div className="l-sec-eyebrow reveal-up">왜 필요한가요?</div>
+            <h2 className="reveal-up">
+              매출과 ROAS는 잘 보여요.
+              <span>그런데 통장은 왜 다를까요?</span>
+            </h2>
+          </div>
           <p className="reveal-up">
-            쿠팡 대시보드는 매출을 보여주지, 수수료·원가·반품·광고비를 다 뺀 뒤 실제로 남은 돈은
-            알려주지 않습니다. 그 격차 속에 적자 상품이 숨어 있습니다.
+            쿠팡 대시보드는 매출을 보여주지만, 수수료, 원가, 반품, 광고비를 모두 뺀 뒤 실제로 남은
+            돈까지 한 번에 말해주지는 않습니다. 그 사이에 적자 상품이 숨어 있습니다.
           </p>
+        </div>
+        <div className="l-wrap">
           <div className="contrast">
             <div className="chip reveal-up">
               <div className="k">쿠팡이 보여주는 것</div>
@@ -145,123 +231,76 @@ export default function Landing() {
             </div>
             <div className="chip reveal-up">
               <div className="k">광고 대시보드</div>
-              <div className="v ok">ROAS 13.5×</div>
+              <div className="v ok">ROAS 13.5x</div>
             </div>
-            <div className="chip reveal-up">
+            <div className="chip danger reveal-up">
               <div className="k">실제 통장에 남는 것</div>
-              <div className="v bad">−₩159,737</div>
+              <div className="v bad">-₩159,737</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* FLOW — 실제 동작 과정(완료된 기능 그대로, 가짜 지표 아님) */}
       <section className="l-flow">
-        <div className="l-flow-dots" aria-hidden="true" />
-        <IconSparkle className="l-flow-star l-flow-star-a" />
-        <IconSparkle className="l-flow-star l-flow-star-b" />
         <div className="l-wrap">
-          <div className="l-burn-label reveal-up">
-            어떻게 계산하나요?
+          <div className="l-section-head">
+            <div className="l-sec-eyebrow reveal-up">자동 계산 흐름</div>
+            <h2 className="reveal-up">
+              쿠팡 계정만 연동하면,
+              <span>나머지는 자동으로 정리됩니다.</span>
+            </h2>
           </div>
-          <h2 className="reveal-up">
-            쿠팡 계정만 연동하면, <span className="l-accent-text">나머지는 자동입니다.</span>
-          </h2>
           <div className="l-flow-steps">
-            <div className="l-flow-step reveal-up">
-              <span className="l-flow-num l-flow-num-1">01</span>
-              <IconLinkApi />
-              <h3>계정 연동</h3>
-              <p>쿠팡 Open API 키를 등록해 연동</p>
-            </div>
-            <span className="l-flow-arrow" aria-hidden="true">→</span>
-            <div className="l-flow-step reveal-up">
-              <span className="l-flow-num l-flow-num-2">02</span>
-              <IconDatabase />
-              <h3>자동 수집</h3>
-              <p>정산·주문·반품을 주기적으로 수집</p>
-            </div>
-            <span className="l-flow-arrow" aria-hidden="true">→</span>
-            <div className="l-flow-step reveal-up">
-              <span className="l-flow-num l-flow-num-3">03</span>
-              <IconCalcWon />
-              <h3>원가 입력</h3>
-              <p>매입원가·기타비용을 상품에 직접 입력</p>
-            </div>
-            <span className="l-flow-arrow" aria-hidden="true">→</span>
-            <div className="l-flow-step reveal-up">
-              <span className="l-flow-num l-flow-num-4">04</span>
-              <IconCsvUpload />
-              <h3>광고비 반영</h3>
-              <p>CSV 업로드 또는 수기 입력으로 SKU에 귀속</p>
-            </div>
-            <span className="l-flow-arrow" aria-hidden="true">→</span>
-            <div className="l-flow-step reveal-up">
-              <span className="l-flow-num l-flow-num-5">05</span>
-              <IconMonitorWarning />
-              <h3>적자 상품 적발</h3>
-              <p>광고후 순이익이 마이너스인 SKU를 자동으로 표시</p>
-            </div>
+            {flowSteps.map((step) => (
+              <div className="l-flow-step reveal-up" key={step.num}>
+                <span className="l-flow-num">{step.num}</span>
+                {step.icon}
+                <h3>{step.title}</h3>
+                <p>{step.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* VALUE */}
-      <section className="l-value">
+      <section className="l-value" id="value">
         <div className="l-wrap l-value-grid">
           <div>
-            <div className="l-burn-label l-burn-label-accent reveal-up">
-              SELLER PROFIT이 보여주는 것!
-            </div>
+            <div className="l-sec-eyebrow reveal-up">SELLER PROFIT이 보여주는 것!</div>
             <h2 className="reveal-up">
               매출이 아니라,
-              <br />
-              <span className="l-accent-text l-underline-thick">실제로 남은 돈을 봅니다.</span>
+              <span>실제로 남은 돈을 봅니다.</span>
             </h2>
+            <p className="l-section-copy reveal-up">
+              정산 기준의 순이익, SKU별 광고 손익, 반품 반영 여부까지 한 화면에서 확인할 수 있게
+              구성했습니다.
+            </p>
           </div>
           <IllustrationBarChart />
         </div>
         <div className="l-wrap">
           <div className="l-cards">
-            <div className="l-card reveal-up">
-              <span className="l-card-num">01</span>
-              <h3>정산 실수령 기준 진짜 순이익!</h3>
-              <p>
-                주문 금액이 아니라 쿠팡이 실제로 입금한 정산 금액에서 원가·비용을 뺍니다. 가장
-                정직한 바닥 숫자.
-              </p>
-            </div>
-            <div className="l-card reveal-up">
-              <span className="l-card-num">02</span>
-              <h3>SKU별 광고 손익!</h3>
-              <p>
-                ROAS가 높아도 순이익을 갉아먹는 상품을 빨갛게 적발합니다. 어떤 광고를 꺼야 하는지
-                바로 보입니다.
-              </p>
-            </div>
-            <div className="l-card reveal-up">
-              <span className="l-card-num">03</span>
-              <h3>정직한 계산!</h3>
-              <p>
-                반품 이중차감을 막고, 상품에 붙일 수 없는 광고비는 '미할당'으로 투명하게 남깁니다.
-                숫자를 믿을 수 있게.
-              </p>
-            </div>
-            <div className="l-card reveal-up">
-              <span className="l-card-num">04</span>
-              <h3>쿠팡에 맞춰 정밀하게!</h3>
-              <p>쿠팡의 정산·수수료·반품 구조에 맞춰 설계했습니다. 넓게 얕은 대신, 한 채널을 제대로.</p>
-            </div>
+            {valueCards.map((card) => (
+              <div className="l-card reveal-up" key={card.num}>
+                <span className="l-card-num">{card.num}</span>
+                <h3>{card.title}</h3>
+                <p>{card.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* PRICING — /api/plans 에서 동적으로 받아 렌더(하드코딩 금지) */}
-      <section className="l-pricing">
+      <section className="l-pricing" id="pricing">
         <div className="l-wrap">
-          <div className="l-sec-eyebrow reveal-up">요금제</div>
-          <h2 className="reveal-up">필요한 만큼만.</h2>
-          <p className="l-plan-gift reveal-up">가입 시 한 달 PRO PLAN 무료 지급!</p>
+          <div className="l-section-head">
+            <div className="l-sec-eyebrow reveal-up">요금제</div>
+            <h2 className="reveal-up">
+              필요한 만큼만.
+              <span>시작은 부담 없이.</span>
+            </h2>
+            <p className="l-plan-gift reveal-up">가입 시 한 달 PRO PLAN 무료 지급!</p>
+          </div>
           <div className="l-plans">
             {plans.map((p) => (
               <div key={p.code} className={"l-plan reveal-up" + (p.code === "PRO" ? " pro" : "")}>
@@ -285,24 +324,21 @@ export default function Landing() {
               </div>
             ))}
           </div>
-          <p className="l-beta">얼리액세스 단계입니다. 가격·플랜 구성은 변경될 수 있습니다.</p>
+          <p className="l-beta">얼리액세스 단계입니다. 가격과 플랜 구성은 변경될 수 있습니다.</p>
         </div>
       </section>
 
-      {/* FINAL CTA */}
       <section className="l-final">
-        <div className="l-final-blob l-final-blob-a" aria-hidden="true" />
-        <div className="l-final-blob l-final-blob-b" aria-hidden="true" />
         <div className="l-wrap l-final-grid reveal-up">
           <div>
+            <div className="l-sec-eyebrow">바로 확인하기</div>
             <h2>
               당신의 적자 상품,
-              <br />
-              <span className="l-burn-heading">지금 확인하셨나요?</span>
+              <span>오늘부터 숫자로 확인하세요.</span>
             </h2>
-            <p>쿠팡 계정만 연동하면, 광고비까지 반영한 진짜 순이익을 상품별로 바로 보여드립니다.</p>
+            <p>쿠팡 계정만 연동하면 광고비까지 반영한 진짜 순이익을 상품별로 보여드립니다.</p>
             <Link className="btn btn-primary btn-lg" to="/signup">
-              무료로 내 손익 보기 <span aria-hidden="true">→</span>
+              무료로 내 손익 보기
             </Link>
           </div>
           <IllustrationBrowserMock />
@@ -311,11 +347,8 @@ export default function Landing() {
 
       <footer className="l-footer">
         <div className="l-wrap l-footer-row">
-          <div className="l-brand l-footer-brand">
-            SELLER PROFIT
-          </div>
+          <div className="l-brand l-footer-brand">SELLER PROFIT</div>
           <div className="l-footer-copy">쿠팡 셀러를 위한 진짜 순이익 분석 · 얼리액세스 단계</div>
-          {/* 법적 필수 페이지 링크(docs/trust-legal-tasks.md T14.1) — 랜딩 푸터에서 항상 도달 가능해야 함 */}
           <div className="l-footer-legal">
             <Link to="/terms">이용약관</Link>
             <span aria-hidden="true">·</span>
