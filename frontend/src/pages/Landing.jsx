@@ -98,9 +98,18 @@ export default function Landing() {
   usePageTitle("셀러프로핏 - 쿠팡 셀러 진짜 순이익 계산");
   const { user } = useAuth();
   const [plans, setPlans] = useState([]);
+  const [activeFlow, setActiveFlow] = useState(0);
 
   useEffect(() => {
     api("/api/plans").then(setPlans).catch(() => setPlans([]));
+  }, []);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return undefined;
+    const timer = window.setInterval(() => {
+      setActiveFlow((current) => (current + 1) % flowSteps.length);
+    }, 2200);
+    return () => window.clearInterval(timer);
   }, []);
 
   useScrollReveal(plans.length);
@@ -177,7 +186,6 @@ export default function Landing() {
           <div className="l-product-stage reveal-up">
             <div className="l-stage-top">
               <div>
-                <span className="l-stage-kicker">PROFIT CONTROL CENTER</span>
                 <strong>광고후 순이익 실시간 진단</strong>
               </div>
               <span className="l-stage-status">적자 SKU 감지</span>
@@ -256,10 +264,11 @@ export default function Landing() {
             </p>
           </div>
           <div className="l-flow-steps reveal-up" aria-label="자동 계산 단계">
-            {flowSteps.map((step) => (
+            {flowSteps.map((step, index) => (
               <div
-                className="l-flow-step"
+                className={`l-flow-step${activeFlow === index ? " is-active" : ""}`}
                 key={step.num}
+                aria-current={activeFlow === index ? "step" : undefined}
               >
                 <span className="l-flow-orb">
                   <img
