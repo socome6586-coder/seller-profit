@@ -74,6 +74,8 @@ app:
   mail:
     # 미설정이면 spring.mail.username 을 그대로 발신자로 쓴다(둘 다 없으면 아래 기본값).
     from: ${MAIL_FROM:${MAIL_USERNAME:noreply@sellerprofit.co.kr}}
+    # 문의하기 폼 수신 주소. 미설정이면 기존 공개 문의 메일로 보낸다.
+    contact-to: ${MAIL_CONTACT_TO:socome6586@gmail.com}
 
 toss:
   billing:

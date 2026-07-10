@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth.jsx";
-import { mailto } from "../contact";
+import { contactPath } from "../contact";
 import { usePageTitle } from "../hooks/usePageTitle";
 
 const CONFIRM_PHRASE = "회원탈퇴";
@@ -107,7 +107,7 @@ export default function MyPage() {
           {busy ? "탈퇴 처리 중…" : "회원 탈퇴"}
         </button>
         <div className="guide-note muted" style={{ marginTop: 12 }}>
-          관리자 계정이거나 처리에 문제가 있다면 <a href={mailto("회원 탈퇴 요청")}>문의하기</a>로
+          관리자 계정이거나 처리에 문제가 있다면 <Link to={contactPath("회원 탈퇴 요청")}>문의하기</Link>로
           연락해 주세요.
         </div>
       </div>

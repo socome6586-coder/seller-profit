@@ -36,16 +36,25 @@ public class EmailService {
     }
 
     public void send(String to, String subject, String text) {
+        send(to, subject, text, null);
+    }
+
+    public void send(String to, String subject, String text, String replyTo) {
         if (!configured) {
-            log.warn("[email] SMTP 미설정(MAIL_USERNAME 없음) — 실제 발송 대신 로그로 남김.\nto={}\nsubject={}\n{}",
-                    to, subject, text);
+            log.warn("[email] SMTP 미설정(MAIL_USERNAME 없음) — 실제 발송 대신 로그로 남김.\nto={}\nreplyTo={}\nsubject={}\n{}",
+                    to, replyTo, subject, text);
             return;
         }
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(from);
         message.setTo(to);
+        if (replyTo != null && !replyTo.isBlank()) {
+            message.setReplyTo(replyTo);
+        }
         message.setSubject(subject);
         message.setText(text);
+        log.info("[email] sending mail to={} replyTo={} subject={}", to, replyTo, subject);
         mailSender.send(message);
+        log.info("[email] sent mail to={} subject={}", to, subject);
     }
 }

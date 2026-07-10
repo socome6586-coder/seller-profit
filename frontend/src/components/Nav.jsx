@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../auth.jsx";
-import { mailto } from "../contact";
 
 // 모바일(<=720px, styles.css 참고)에서는 링크가 6~7개라 한 줄에 다 못 들어가 글자 단위로
 // 줄바꿈되며 깨지는 문제가 있었다. 좁은 화면에서는 햄버거 버튼으로 접어두고, 눌렀을 때만
@@ -44,10 +43,9 @@ export default function Nav() {
             <NavLink to="/admin" className={linkClass}>관리자</NavLink>
           ) : null}
           <span className="spacer" />
-          {/* 문의 채널(docs/trust-legal-tasks.md T15.1) — 베타 단계라 mailto 로 충분, 전 화면 공통 nav 에 상시 노출. */}
-          <a className="nav-contact" href={mailto("seller-profit 문의")}>
+          <NavLink to="/contact" className={linkClass}>
             문의하기
-          </a>
+          </NavLink>
           <span className="who">{user?.email}</span>
           <button className="ghost" onClick={logout}>
             로그아웃

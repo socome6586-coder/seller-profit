@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
-import { mailto } from "../contact";
+import { contactPath } from "../contact";
 import { usePageTitle } from "../hooks/usePageTitle";
 
 // 쿠팡 계정 연동/해제. 키는 서버에서 암호화 저장되며 응답엔 절대 노출되지 않는다.
@@ -213,7 +213,7 @@ export default function Accounts() {
         </div>
         {/* 문의 채널(docs/trust-legal-tasks.md T15.1) — 연동 실패가 가장 많이 발생하는 지점 바로 옆에 배치. */}
         <div className="guide-note muted">
-          연동이 잘 안 되시나요? <a href={mailto("쿠팡 계정 연동 문의")}>문의하기</a>
+          연동이 잘 안 되시나요? <Link to={contactPath("쿠팡 계정 연동 문의")}>문의하기</Link>
         </div>
       </details>
 
